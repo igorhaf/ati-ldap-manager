@@ -1,0 +1,43 @@
+# Schema personalizado para o Gerenciador LDAP
+# Este arquivo pode ser importado no servidor LDAP para definir atributos customizados
+
+# Definir atributo para matrícula (employeeNumber já existe no schema padrão)
+# Definir atributo para emails de redirecionamento
+# Definir atributo para múltiplas unidades organizacionais
+
+# Exemplo de entrada LDAP para usuário
+dn: uid=exemplo,ou=users,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: exemplo
+givenName: João
+sn: Silva
+cn: João Silva
+mail: joao.silva@example.com
+mail: joao@outro.com
+employeeNumber: 12345
+emailForwardAddress: joao.forward@example.com
+userPassword: {SSHA}senha123
+ou: TI
+ou: Desenvolvimento
+
+# Exemplo de entrada LDAP para unidade organizacional
+dn: ou=TI,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: TI
+description: Departamento de Tecnologia da Informação
+
+dn: ou=Desenvolvimento,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Desenvolvimento
+description: Equipe de Desenvolvimento de Software
+
+dn: ou=users,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: users
+description: Usuários do sistema 

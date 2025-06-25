@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Servidor LDAP (OpenLDAP)
+  ldap:
+    image: osixia/openldap:1.5.0
+    container_name: ati-ldap
+    environment:
+      LDAP_ORGANISATION: "ATI LDAP Manager"
+      LDAP_DOMAIN: "example.com"
+      LDAP_ADMIN_PASSWORD: "admin"
+      LDAP_CONFIG_PASSWORD: "config"
+      LDAP_READONLY_USER: "false"
+      LDAP_RFC2307BIS_SCHEMA: "false"
+      LDAP_BACKEND: "mdb"
+      LDAP_TLS: "false"
+      LDAP_REPLICATION: "false"
+      LDAP_REMOVE_CONFIG_AFTER_SETUP: "true"
+      LDAP_SSL_HELPER_PREFIX: "ldap"
+    ports:
+      - "389:389"
+      - "636:636"
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+    networks:
+      - ati-network
+
+  # Interface web para gerenciar LDAP (phpLDAPadmin)
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: ati-phpldapadmin
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "ldap"
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "8080:80"
+    depends_on:
+      - ldap
+    networks:
+      - ati-network
+
+  # PostgreSQL para logs e sessões
+  postgres:
+    image: postgres:15
+    container_name: ati-postgres
+    environment:
+      POSTGRES_DB: atildaplogs
+      POSTGRES_USER: ati
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ati-network
+
+volumes:
+  ldap_data:
+  ldap_config:
+  postgres_data:
+
+networks:
+  ati-network:
+    driver: bridge 
