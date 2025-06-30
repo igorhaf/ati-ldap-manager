@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Gerenciador LDAP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -21,7 +22,7 @@
                             ➕ Novo Usuário
                         </button>
                         <button @click="showCreateOuModal = true" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                            📁 Nova OU
+                            📁 Nova Unidade Organizacional
                         </button>
                     </div>
                 </div>
@@ -166,6 +167,115 @@
                  </div>
              </div>
          </main>
+
+        <!-- Create User Modal -->
+        <div v-if="showCreateUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">➕ Criar Novo Usuário</h3>
+                        <button @click="showCreateUserModal = false" class="text-gray-400 hover:text-gray-600">
+                            ✖️
+                        </button>
+                    </div>
+                    
+                    <form @submit.prevent="createUser" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">UID (Login)</label>
+                                <input v-model="newUser.uid" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Matrícula</label>
+                                <input v-model="newUser.employeeNumber" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                                <input v-model="newUser.givenName" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Sobrenome</label>
+                                <input v-model="newUser.sn" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                                <input v-model="newUser.userPassword" type="password" required minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email Principal</label>
+                                <input v-model="newUser.mail[0]" type="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Emails Adicionais</label>
+                            <div class="space-y-2">
+                                <div v-for="(email, index) in newUser.mail.slice(1)" :key="index" class="flex gap-2">
+                                    <input v-model="newUser.mail[index + 1]" type="email" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <button @click="removeEmail(index + 1)" type="button" class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">🗑️</button>
+                                </div>
+                                <button @click="addEmail" type="button" class="text-blue-600 hover:text-blue-800 text-sm">➕ Adicionar Email</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
+                            <div class="space-y-2">
+                                <div v-for="(ou, index) in newUser.organizationalUnits" :key="index" class="flex gap-2">
+                                    <select v-model="newUser.organizationalUnits[index]" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Selecione uma Unidade Organizacional</option>
+                                        <option v-for="ouOption in organizationalUnits" :key="ouOption.ou" :value="ouOption.ou">@{{ ouOption.ou }}</option>
+                                    </select>
+                                    <button @click="removeOu(index)" type="button" class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">🗑️</button>
+                                </div>
+                                <button @click="addOu" type="button" class="text-blue-600 hover:text-blue-800 text-sm">➕ Adicionar Unidade Organizacional</button>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button @click="showCreateUserModal = false" type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Criar Usuário</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create UO Modal -->
+        <div v-if="showCreateOuModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">📁 Criar Nova Unidade Organizacional</h3>
+                        <button @click="showCreateOuModal = false" class="text-gray-400 hover:text-gray-600">
+                            ✖️
+                        </button>
+                    </div>
+                    
+                    <form @submit.prevent="createOu" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Unidade Organizacional</label>
+                            <input v-model="newOu.ou" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                            <textarea v-model="newOu.description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button @click="showCreateOuModal = false" type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Criar Unidade Organizacional</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification -->
+        <div v-if="notification.show" :class="notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'" class="fixed top-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            @{{ notification.message }}
+        </div>
     </div>
 
     <script>
@@ -192,6 +302,20 @@
                             show: false,
                             message: '',
                             type: 'success'
+                        },
+                        newUser: {
+                            uid: '',
+                            givenName: '',
+                            sn: '',
+                            employeeNumber: '',
+                            mail: [''],
+                            userPassword: '',
+                            organizationalUnits: [''],
+                            emailForwardAddress: []
+                        },
+                        newOu: {
+                            ou: '',
+                            description: ''
                         }
                     }
                 },
@@ -234,20 +358,20 @@
                     },
                     
                     async loadOrganizationalUnits() {
-                        console.log('🔄 Carregando OUs...');
+                        console.log('🔄 Carregando Unidades Organizacionais...');
                         try {
                             const response = await fetch('/api/ldap/organizational-units');
                             const data = await response.json();
                             
                             if (data.success) {
                                 this.organizationalUnits = data.data;
-                                console.log('✅ OUs carregadas:', data.data.length);
+                                console.log('✅ Unidades Organizacionais carregadas:', data.data.length);
                             } else {
-                                console.log('⚠️ Erro na API OU:', data.message);
+                                console.log('⚠️ Erro na API Unidade Organizacional:', data.message);
                                 this.handleApiError('Erro de Conexão LDAP', data.message);
                             }
                         } catch (error) {
-                            console.log('❌ Erro de rede OU:', error);
+                            console.log('❌ Erro de rede Unidade Organizacional:', error);
                             this.handleNetworkError('Erro ao carregar unidades organizacionais', error);
                         }
                     },
@@ -278,6 +402,94 @@
                     
                     editUser(user) {
                         this.showNotification('Funcionalidade de edição será implementada em breve', 'success');
+                    },
+                    
+                    async createUser() {
+                        try {
+                            const response = await fetch('/api/ldap/users', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                },
+                                body: JSON.stringify(this.newUser)
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                this.showNotification('Usuário criado com sucesso', 'success');
+                                this.showCreateUserModal = false;
+                                this.resetNewUser();
+                                this.loadUsers();
+                            } else {
+                                this.showNotification(data.message, 'error');
+                            }
+                        } catch (error) {
+                            this.showNotification('Erro ao criar usuário', 'error');
+                        }
+                    },
+                    
+                    async createOu() {
+                        try {
+                            const response = await fetch('/api/ldap/organizational-units', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                },
+                                body: JSON.stringify(this.newOu)
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                this.showNotification('Unidade organizacional criada com sucesso', 'success');
+                                this.showCreateOuModal = false;
+                                this.resetNewOu();
+                                this.loadOrganizationalUnits();
+                            } else {
+                                this.showNotification(data.message, 'error');
+                            }
+                        } catch (error) {
+                            this.showNotification('Erro ao criar unidade organizacional', 'error');
+                        }
+                    },
+                    
+                    addEmail() {
+                        this.newUser.mail.push('');
+                    },
+                    
+                    removeEmail(index) {
+                        this.newUser.mail.splice(index, 1);
+                    },
+                    
+                    addOu() {
+                        this.newUser.organizationalUnits.push('');
+                    },
+                    
+                    removeOu(index) {
+                        this.newUser.organizationalUnits.splice(index, 1);
+                    },
+                    
+                    resetNewUser() {
+                        this.newUser = {
+                            uid: '',
+                            givenName: '',
+                            sn: '',
+                            employeeNumber: '',
+                            mail: [''],
+                            userPassword: '',
+                            organizationalUnits: [''],
+                            emailForwardAddress: []
+                        };
+                    },
+                    
+                    resetNewOu() {
+                        this.newOu = {
+                            ou: '',
+                            description: ''
+                        };
                     },
                     
                     showNotification(message, type = 'success') {

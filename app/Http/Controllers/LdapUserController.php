@@ -327,14 +327,6 @@ class LdapUserController extends Controller
                 'description' => 'sometimes|string|max:255',
             ]);
 
-            $existingOu = OrganizationalUnit::where('ou', $request->ou)->first();
-            if ($existingOu) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unidade organizacional já existe'
-                ], 422);
-            }
-
             $ou = new OrganizationalUnit();
             $ou->ou = $request->ou;
             
@@ -357,6 +349,16 @@ class LdapUserController extends Controller
                 'message' => 'Unidade organizacional criada com sucesso'
             ], 201);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dados inválidos: ' . implode(', ', $e->validator->errors()->all())
+            ], 422);
+        } catch (\LdapRecord\LdapRecordException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro LDAP: ' . $e->getMessage()
+            ], 503);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

@@ -2,7 +2,7 @@
 
 namespace App\Ldap;
 
-use LdapRecord\Models\ActiveDirectory\OrganizationalUnit as LdapOrganizationalUnit;
+use LdapRecord\Models\OpenLDAP\OrganizationalUnit as LdapOrganizationalUnit;
 
 class OrganizationalUnit extends LdapOrganizationalUnit
 {
