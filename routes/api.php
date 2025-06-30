@@ -20,4 +20,5 @@ Route::prefix('ldap')->group(function () {
     // Rotas para unidades organizacionais
     Route::get('/organizational-units', [LdapUserController::class, 'getOrganizationalUnits']);
     Route::post('/organizational-units', [LdapUserController::class, 'createOrganizationalUnit']);
+    Route::put('/organizational-units/{ou}', [LdapUserController::class, 'updateOrganizationalUnit']);
 }); 

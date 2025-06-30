@@ -148,6 +148,7 @@
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DN</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
                                  </tr>
                              </thead>
                              <tbody class="bg-white divide-y divide-gray-200">
@@ -155,6 +156,9 @@
                                      <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ ou.ou }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">@{{ ou.description || '-' }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-500 font-mono">@{{ ou.dn }}</td>
+                                     <td class="px-6 py-4 text-sm font-medium">
+                                         <button @click="editOu(ou)" class="text-blue-600 hover:text-blue-900">✏️ Editar</button>
+                                     </td>
                                  </tr>
                                  <tr v-if="organizationalUnits.length === 0">
                                      <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
@@ -342,6 +346,31 @@
                 </div>
             </div>
         </div>
+        <!-- Edit Organizational Unit Modal -->
+        <div v-if="showEditOuModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">✏️ Editar Unidade Organizacional</h3>
+                        <button @click="showEditOuModal = false" class="text-gray-400 hover:text-gray-600">✖️</button>
+                    </div>
+                    <form @submit.prevent="updateOu" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Unidade Organizacional</label>
+                            <input v-model="editOuData.ou" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                            <textarea v-model="editOuData.description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button @click="showEditOuModal = false" type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -385,7 +414,9 @@
                         editUserData: null,
                         showEditUserModal: false,
                         showDeleteUserModal: false,
-                        userToDelete: null
+                        userToDelete: null,
+                        showEditOuModal: false,
+                        editOuData: { ou: '', description: '', dn: '' }
                     }
                 },
                 computed: {
@@ -661,6 +692,43 @@
                             this.showNotification('Erro ao excluir usuário', 'error');
                         } finally {
                             this.showDeleteUserModal = false;
+                        }
+                    },
+
+                    /**
+                     * Abre o modal de edição de OU
+                     */
+                    editOu(ou) {
+                        this.editOuData = JSON.parse(JSON.stringify(ou));
+                        this.showEditOuModal = true;
+                    },
+
+                    /**
+                     * Atualiza a unidade organizacional selecionada
+                     */
+                    async updateOu() {
+                        try {
+                            const response = await fetch(`/api/ldap/organizational-units/${encodeURIComponent(this.editOuData.ou)}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                },
+                                body: JSON.stringify({
+                                    ou: this.editOuData.ou,
+                                    description: this.editOuData.description
+                                })
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                this.showNotification('Unidade organizacional atualizada com sucesso', 'success');
+                                this.showEditOuModal = false;
+                                this.loadOrganizationalUnits();
+                            } else {
+                                this.showNotification(data.message, 'error');
+                            }
+                        } catch (error) {
+                            this.showNotification('Erro ao atualizar unidade organizacional', 'error');
                         }
                     }
                 }

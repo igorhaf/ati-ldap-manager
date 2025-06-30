@@ -353,4 +353,63 @@ class LdapUserController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update the specified organizational unit.
+     */
+    public function updateOrganizationalUnit(Request $request, string $ou): JsonResponse
+    {
+        try {
+            $request->validate([
+                'ou' => 'sometimes|required|string|max:255',
+                'description' => 'sometimes|nullable|string|max:255',
+            ]);
+
+            // Buscar OU existente pelo atributo 'ou'
+            $organizationalUnit = OrganizationalUnit::where('ou', $ou)->first();
+            if (!$organizationalUnit) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unidade organizacional não encontrada'
+                ], 404);
+            }
+
+            // Atualizar atributos
+            if ($request->has('ou')) {
+                $organizationalUnit->setFirstAttribute('ou', $request->ou);
+            }
+            if ($request->has('description')) {
+                $organizationalUnit->setFirstAttribute('description', $request->description);
+            }
+
+            // Se o nome mudou, atualizar o DN
+            if ($request->has('ou')) {
+                $baseDn = config('ldap.connections.default.base_dn');
+                $organizationalUnit->setDn("ou={$request->ou},{$baseDn}");
+            }
+
+            $organizationalUnit->save();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'dn' => $organizationalUnit->getDn(),
+                    'ou' => $organizationalUnit->getFirstAttribute('ou'),
+                    'description' => $organizationalUnit->getFirstAttribute('description'),
+                ],
+                'message' => 'Unidade organizacional atualizada com sucesso'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dados inválidos: ' . implode(', ', $e->validator->errors()->all())
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar unidade organizacional: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
