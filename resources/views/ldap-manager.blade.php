@@ -254,14 +254,14 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
                             <div class="space-y-2">
-                                <div v-for="(ou, index) in newUser.organizationalUnits" :key="index" class="flex gap-2">
-                                    <select v-model="newUser.organizationalUnits[index]" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="">Selecione uma OU</option>
-                                        <option v-for="ouOption in organizationalUnits" :key="ouOption.ou" :value="ouOption.ou">@{{ ouOption.ou }}</option>
+                                <div v-for="(ou, index) in newUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
+                                    <select v-model="newUser.organizationalUnits[index]" class="flex-1 border rounded px-3 py-2">
+                                        <option value="" disabled>Selecione...</option>
+                                        <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">@{{ ouOpt.ou }}</option>
                                     </select>
-                                    <button @click="removeOu(index)" type="button" class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Remover</button>
+                                    <button v-if="index > 0" @click="newUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                                 </div>
-                                <button @click="addOu" type="button" class="text-blue-600 hover:text-blue-800 text-sm">+ Adicionar OU</button>
+                                <button @click="newUser.organizationalUnits.push('')" class="mt-2 text-blue-600">+ adicionar OU</button>
                             </div>
                         </div>
 
@@ -311,6 +311,57 @@
         <div v-if="notification.show" :class="notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'" class="fixed top-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg z-50">
             @{{ notification.message }}
         </div>
+
+        <!-- Modal Edit User -->
+        <div v-if="showEditUserModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white w-full max-w-lg rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">✏️ Editar Usuário</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">UID (não editável)</label>
+                        <input type="text" v-model="editUserData.uid" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled />
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nome</label>
+                            <input type="text" v-model="editUserData.givenName" class="mt-1 block w-full border rounded px-3 py-2" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Sobrenome</label>
+                            <input type="text" v-model="editUserData.sn" class="mt-1 block w-full border rounded px-3 py-2" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Matrícula (não editável)</label>
+                        <input type="text" v-model="editUserData.employeeNumber" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">E-mails</label>
+                        <div v-for="(email, index) in editUserData.mail" :key="index" class="flex items-center space-x-2 mt-1">
+                            <input type="email" v-model="editUserData.mail[index]" class="flex-1 border rounded px-3 py-2" />
+                            <button v-if="index > 0" @click="editUserData.mail.splice(index,1)" class="text-red-500">✖</button>
+                        </div>
+                        <button @click="editUserData.mail.push('')" class="mt-2 text-blue-600">+ adicionar email</button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Unidades Organizacionais</label>
+                        <div v-for="(ou, index) in editUserData.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
+                            <select v-model="editUserData.organizationalUnits[index]" class="flex-1 border rounded px-3 py-2">
+                                <option value="" disabled>Selecione...</option>
+                                <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">@{{ ouOpt.ou }}</option>
+                            </select>
+                            <button v-if="index > 0" @click="editUserData.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
+                        </div>
+                        <button @click="editUserData.organizationalUnits.push('')" class="mt-2 text-blue-600">+ adicionar OU</button>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-4">
+                        <button @click="showEditUserModal=false" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button>
+                        <button @click="updateUser" class="px-4 py-2 bg-blue-600 text-white rounded">Salvar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Fim modal edit -->
     </div>
 
     <script>
@@ -336,6 +387,7 @@
                             searchTerm: '',
                             showCreateUserModal: false,
                             showCreateOuModal: false,
+                            showEditUserModal: false,
                             systemStatus: null,
                             newUser: {
                                 uid: '',
@@ -349,6 +401,15 @@
                             newOu: {
                                 ou: '',
                                 description: ''
+                            },
+                            editUserData: {
+                                uid: '',
+                                givenName: '',
+                                sn: '',
+                                employeeNumber: '',
+                                mail: [],
+                                userPassword: '',
+                                organizationalUnits: []
                             },
                             notification: {
                                 show: false,
@@ -482,8 +543,34 @@
                         },
                         
                         editUser(user) {
-                            // Implementar edição de usuário
-                            this.showNotification('Funcionalidade de edição será implementada em breve', 'success');
+                            // Copia profunda para não alterar a lista diretamente
+                            this.editUserData = JSON.parse(JSON.stringify(user));
+                            this.showEditUserModal = true;
+                        },
+                        
+                        async updateUser() {
+                            try {
+                                const response = await fetch(`/api/ldap/users/${this.editUserData.uid}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                    },
+                                    body: JSON.stringify(this.editUserData)
+                                });
+
+                                const data = await response.json();
+
+                                if (data.success) {
+                                    this.showNotification('Usuário atualizado com sucesso', 'success');
+                                    this.showEditUserModal = false;
+                                    this.loadUsers();
+                                } else {
+                                    this.showNotification(data.message, 'error');
+                                }
+                            } catch (error) {
+                                this.showNotification('Erro ao atualizar usuário', 'error');
+                            }
                         },
                         
                         addEmail() {
@@ -518,6 +605,18 @@
                             this.newOu = {
                                 ou: '',
                                 description: ''
+                            };
+                        },
+                        
+                        resetEditUser() {
+                            this.editUserData = {
+                                uid: '',
+                                givenName: '',
+                                sn: '',
+                                employeeNumber: '',
+                                mail: [],
+                                userPassword: '',
+                                organizationalUnits: []
                             };
                         },
                         
