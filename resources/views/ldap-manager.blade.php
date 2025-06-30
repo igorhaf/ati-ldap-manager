@@ -344,8 +344,7 @@
                                 employeeNumber: '',
                                 mail: [''],
                                 userPassword: '',
-                                organizationalUnits: [''],
-                                emailForwardAddress: []
+                                organizationalUnits: ['']
                             },
                             newOu: {
                                 ou: '',
@@ -511,8 +510,7 @@
                                 employeeNumber: '',
                                 mail: [''],
                                 userPassword: '',
-                                organizationalUnits: [''],
-                                emailForwardAddress: []
+                                organizationalUnits: ['']
                             };
                         },
                         

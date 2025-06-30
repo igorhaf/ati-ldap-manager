@@ -23,15 +23,14 @@ class LdapUserController extends Controller
             $formattedUsers = $users->map(function ($user) {
                 return [
                     'dn' => $user->getDn(),
-                    'uid' => $user->uid,
-                    'givenName' => $user->givenName,
-                    'sn' => $user->sn,
-                    'cn' => $user->cn,
-                    'fullName' => $user->fullName,
-                    'mail' => $user->mail,
-                    'employeeNumber' => $user->employeeNumber,
-                    'emailForwardAddress' => $user->emailForwardAddress,
-                    'organizationalUnits' => $user->organizationalUnits,
+                    'uid' => $user->getFirstAttribute('uid'),
+                    'givenName' => $user->getFirstAttribute('givenName'),
+                    'sn' => $user->getFirstAttribute('sn'),
+                    'cn' => $user->getFirstAttribute('cn'),
+                    'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
+                    'mail' => $user->getAttribute('mail') ?? [],
+                    'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
+                    'organizationalUnits' => $user->getAttribute('ou') ?? [],
                 ];
             });
 
@@ -64,8 +63,6 @@ class LdapUserController extends Controller
                 'userPassword' => 'required|string|min:6',
                 'organizationalUnits' => 'array',
                 'organizationalUnits.*' => 'string',
-                'emailForwardAddress' => 'array',
-                'emailForwardAddress.*' => 'email',
             ]);
 
             // Verificar se o UID já existe
@@ -87,20 +84,16 @@ class LdapUserController extends Controller
             }
 
             $user = new User();
-            $user->uid = $request->uid;
-            $user->givenName = $request->givenName;
-            $user->sn = $request->sn;
-            $user->cn = $request->givenName . ' ' . $request->sn;
-            $user->mail = $request->mail;
-            $user->employeeNumber = $request->employeeNumber;
-            $user->userPassword = $request->userPassword;
+            $user->setFirstAttribute('uid', $request->uid);
+            $user->setFirstAttribute('givenName', $request->givenName);
+            $user->setFirstAttribute('sn', $request->sn);
+            $user->setFirstAttribute('cn', $request->givenName . ' ' . $request->sn);
+            $user->setAttribute('mail', $request->mail);
+            $user->setFirstAttribute('employeeNumber', $request->employeeNumber);
+            $user->setFirstAttribute('userPassword', $request->userPassword);
             
             if ($request->has('organizationalUnits')) {
-                $user->organizationalUnits = $request->organizationalUnits;
-            }
-            
-            if ($request->has('emailForwardAddress')) {
-                $user->emailForwardAddress = $request->emailForwardAddress;
+                $user->setAttribute('ou', $request->organizationalUnits);
             }
 
             // Definir DN baseado na primeira unidade organizacional ou DN padrão
@@ -114,15 +107,14 @@ class LdapUserController extends Controller
                 'success' => true,
                 'data' => [
                     'dn' => $user->getDn(),
-                    'uid' => $user->uid,
-                    'givenName' => $user->givenName,
-                    'sn' => $user->sn,
-                    'cn' => $user->cn,
-                    'fullName' => $user->fullName,
-                    'mail' => $user->mail,
-                    'employeeNumber' => $user->employeeNumber,
-                    'emailForwardAddress' => $user->emailForwardAddress,
-                    'organizationalUnits' => $user->organizationalUnits,
+                    'uid' => $user->getFirstAttribute('uid'),
+                    'givenName' => $user->getFirstAttribute('givenName'),
+                    'sn' => $user->getFirstAttribute('sn'),
+                    'cn' => $user->getFirstAttribute('cn'),
+                    'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
+                    'mail' => $user->getAttribute('mail') ?? [],
+                    'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
+                    'organizationalUnits' => $user->getAttribute('ou') ?? [],
                 ],
                 'message' => 'Usuário criado com sucesso'
             ], 201);
@@ -154,15 +146,14 @@ class LdapUserController extends Controller
                 'success' => true,
                 'data' => [
                     'dn' => $user->getDn(),
-                    'uid' => $user->uid,
-                    'givenName' => $user->givenName,
-                    'sn' => $user->sn,
-                    'cn' => $user->cn,
-                    'fullName' => $user->fullName,
-                    'mail' => $user->mail,
-                    'employeeNumber' => $user->employeeNumber,
-                    'emailForwardAddress' => $user->emailForwardAddress,
-                    'organizationalUnits' => $user->organizationalUnits,
+                    'uid' => $user->getFirstAttribute('uid'),
+                    'givenName' => $user->getFirstAttribute('givenName'),
+                    'sn' => $user->getFirstAttribute('sn'),
+                    'cn' => $user->getFirstAttribute('cn'),
+                    'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
+                    'mail' => $user->getAttribute('mail') ?? [],
+                    'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
+                    'organizationalUnits' => $user->getAttribute('ou') ?? [],
                 ],
                 'message' => 'Usuário encontrado com sucesso'
             ]);
@@ -189,8 +180,6 @@ class LdapUserController extends Controller
                 'userPassword' => 'sometimes|required|string|min:6',
                 'organizationalUnits' => 'sometimes|array',
                 'organizationalUnits.*' => 'string',
-                'emailForwardAddress' => 'sometimes|array',
-                'emailForwardAddress.*' => 'email',
             ]);
 
             $user = User::where('uid', $uid)->first();
@@ -203,31 +192,29 @@ class LdapUserController extends Controller
             }
 
             if ($request->has('givenName')) {
-                $user->givenName = $request->givenName;
+                $user->setFirstAttribute('givenName', $request->givenName);
             }
 
             if ($request->has('sn')) {
-                $user->sn = $request->sn;
+                $user->setFirstAttribute('sn', $request->sn);
             }
 
             if ($request->has('givenName') || $request->has('sn')) {
-                $user->cn = ($user->givenName ?? '') . ' ' . ($user->sn ?? '');
+                $givenName = $user->getFirstAttribute('givenName') ?? '';
+                $sn = $user->getFirstAttribute('sn') ?? '';
+                $user->setFirstAttribute('cn', trim($givenName . ' ' . $sn));
             }
 
             if ($request->has('mail')) {
-                $user->mail = $request->mail;
+                $user->setAttribute('mail', $request->mail);
             }
 
             if ($request->has('userPassword')) {
-                $user->userPassword = $request->userPassword;
+                $user->setFirstAttribute('userPassword', $request->userPassword);
             }
 
             if ($request->has('organizationalUnits')) {
-                $user->organizationalUnits = $request->organizationalUnits;
-            }
-
-            if ($request->has('emailForwardAddress')) {
-                $user->emailForwardAddress = $request->emailForwardAddress;
+                $user->setAttribute('ou', $request->organizationalUnits);
             }
 
             $user->save();
@@ -236,15 +223,14 @@ class LdapUserController extends Controller
                 'success' => true,
                 'data' => [
                     'dn' => $user->getDn(),
-                    'uid' => $user->uid,
-                    'givenName' => $user->givenName,
-                    'sn' => $user->sn,
-                    'cn' => $user->cn,
-                    'fullName' => $user->fullName,
-                    'mail' => $user->mail,
-                    'employeeNumber' => $user->employeeNumber,
-                    'emailForwardAddress' => $user->emailForwardAddress,
-                    'organizationalUnits' => $user->organizationalUnits,
+                    'uid' => $user->getFirstAttribute('uid'),
+                    'givenName' => $user->getFirstAttribute('givenName'),
+                    'sn' => $user->getFirstAttribute('sn'),
+                    'cn' => $user->getFirstAttribute('cn'),
+                    'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
+                    'mail' => $user->getAttribute('mail') ?? [],
+                    'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
+                    'organizationalUnits' => $user->getAttribute('ou') ?? [],
                 ],
                 'message' => 'Usuário atualizado com sucesso'
             ]);
