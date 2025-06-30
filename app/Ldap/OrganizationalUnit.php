@@ -16,37 +16,8 @@ class OrganizationalUnit extends LdapOrganizationalUnit
         'organizationalUnit',
     ];
 
-    /**
-     * Get the organizational unit name
-     */
-    public function getOuAttribute()
-    {
-        return $this->getFirstAttribute('ou');
-    }
-
-    /**
-     * Set the organizational unit name
-     */
-    public function setOuAttribute($value)
-    {
-        $this->setFirstAttribute('ou', $value);
-    }
-
-    /**
-     * Get the description
-     */
-    public function getDescriptionAttribute()
-    {
-        return $this->getFirstAttribute('description');
-    }
-
-    /**
-     * Set the description
-     */
-    public function setDescriptionAttribute($value)
-    {
-        $this->setFirstAttribute('description', $value);
-    }
+    // Removidos os atributos customizados que causavam loop infinito
+    // Agora usaremos diretamente os métodos padrão do LdapRecord
 
     /**
      * Get users in this organizational unit

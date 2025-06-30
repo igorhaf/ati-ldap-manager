@@ -2,7 +2,7 @@
 
 namespace App\Ldap;
 
-use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use LdapRecord\Models\OpenLDAP\User as LdapUser;
 
 class User extends LdapUser
 {
@@ -177,8 +177,8 @@ class User extends LdapUser
      */
     public function getFullNameAttribute()
     {
-        $givenName = $this->givenName ?? '';
-        $sn = $this->sn ?? '';
+        $givenName = $this->getFirstAttribute('givenName') ?? '';
+        $sn = $this->getFirstAttribute('sn') ?? '';
         return trim($givenName . ' ' . $sn);
     }
 
@@ -188,8 +188,8 @@ class User extends LdapUser
     public function setFullNameAttribute($value)
     {
         $parts = explode(' ', $value, 2);
-        $this->givenName = $parts[0] ?? '';
-        $this->sn = $parts[1] ?? '';
-        $this->cn = $value;
+        $this->setFirstAttribute('givenName', $parts[0] ?? '');
+        $this->setFirstAttribute('sn', $parts[1] ?? '');
+        $this->setFirstAttribute('cn', $value);
     }
 } 

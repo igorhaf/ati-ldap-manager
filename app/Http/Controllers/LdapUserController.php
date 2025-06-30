@@ -6,6 +6,7 @@ use App\Ldap\User;
 use App\Ldap\OrganizationalUnit;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+
 use LdapRecord\Connection;
 use LdapRecord\Container;
 
@@ -297,8 +298,8 @@ class LdapUserController extends Controller
             $formattedOus = $ous->map(function ($ou) {
                 return [
                     'dn' => $ou->getDn(),
-                    'ou' => $ou->ou,
-                    'description' => $ou->description,
+                    'ou' => $ou->getFirstAttribute('ou'),
+                    'description' => $ou->getFirstAttribute('description'),
                 ];
             });
 
@@ -328,23 +329,23 @@ class LdapUserController extends Controller
             ]);
 
             $ou = new OrganizationalUnit();
-            $ou->ou = $request->ou;
+            $ou->setFirstAttribute('ou', $request->ou);
             
             if ($request->has('description')) {
-                $ou->description = $request->description;
+                $ou->setFirstAttribute('description', $request->description);
             }
 
             $baseDn = config('ldap.connections.default.base_dn');
-            $ou->setDn("ou={$request->ou},{$baseDn}");
-
+            $dn = "ou={$request->ou},{$baseDn}";
+            $ou->setDn($dn);
             $ou->save();
 
             return response()->json([
                 'success' => true,
                 'data' => [
                     'dn' => $ou->getDn(),
-                    'ou' => $ou->ou,
-                    'description' => $ou->description,
+                    'ou' => $ou->getFirstAttribute('ou'),
+                    'description' => $ou->getFirstAttribute('description'),
                 ],
                 'message' => 'Unidade organizacional criada com sucesso'
             ], 201);

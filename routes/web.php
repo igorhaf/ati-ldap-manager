@@ -7,19 +7,9 @@ Route::get('/', function () {
     return redirect()->route('ldap.manager');
 });
 
-// Rotas para o gerenciador de usuários LDAP
-Route::prefix('api/ldap')->group(function () {
-    // Rotas para usuários
-    Route::get('/users', [LdapUserController::class, 'index']);
-    Route::post('/users', [LdapUserController::class, 'store']);
-    Route::get('/users/{uid}', [LdapUserController::class, 'show']);
-    Route::put('/users/{uid}', [LdapUserController::class, 'update']);
-    Route::delete('/users/{uid}', [LdapUserController::class, 'destroy']);
-    
-    // Rotas para unidades organizacionais
-    Route::get('/organizational-units', [LdapUserController::class, 'getOrganizationalUnits']);
-    Route::post('/organizational-units', [LdapUserController::class, 'createOrganizationalUnit']);
-});
+// As rotas da API foram movidas para routes/api.php
+
+
 
 // Rota principal do gerenciador
 Route::get('/ldap-manager', function () {
