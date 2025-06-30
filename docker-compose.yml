@@ -1,6 +1,25 @@
-version: '3.8'
-
 services:
+  # Laravel App com Sail
+  laravel.test:
+    build:
+      context: ./vendor/laravel/sail/runtimes/8.2
+      dockerfile: Dockerfile
+      args:
+        WWWGROUP: '${WWWGROUP}'
+    image: sail-8.2/app
+    ports:
+      - "80:80"
+    environment:
+      WWWUSER: '${WWWUSER}'
+      LARAVEL_SAIL: 1
+    volumes:
+      - '.:/var/www/html'
+    networks:
+      - ati-network
+    depends_on:
+      - postgres
+      - ldap
+
   # Servidor LDAP (OpenLDAP)
   ldap:
     image: osixia/openldap:1.5.0
@@ -62,4 +81,5 @@ volumes:
 
 networks:
   ati-network:
-    driver: bridge 
+    driver: bridge
+
