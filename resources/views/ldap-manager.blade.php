@@ -362,6 +362,22 @@
             </div>
         </div>
         <!-- Fim modal edit -->
+
+        <!-- Delete User Confirmation Modal -->
+        <div v-if="showDeleteUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">Tem certeza que deseja excluir o usuário <strong>@{{ userToDelete.fullName }}</strong>?</p>
+                    </div>
+                    <div class="mt-4 flex justify-center space-x-4">
+                        <button @click="showDeleteUserModal = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">Cancelar</button>
+                        <button @click="confirmDeleteUser" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Excluir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -388,6 +404,8 @@
                             showCreateUserModal: false,
                             showCreateOuModal: false,
                             showEditUserModal: false,
+                            showDeleteUserModal: false,
+                            userToDelete: {},
                             systemStatus: null,
                             newUser: {
                                 uid: '',
@@ -519,18 +537,20 @@
                         },
                         
                         async deleteUser(uid) {
-                            if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
-                            
+                            const user = this.users.find(u => u.uid === uid);
+                            this.userToDelete = user;
+                            this.showDeleteUserModal = true;
+                        },
+                        
+                        async confirmDeleteUser() {
                             try {
-                                const response = await fetch(`/api/ldap/users/${uid}`, {
+                                const response = await fetch(`/api/ldap/users/${this.userToDelete.uid}`, {
                                     method: 'DELETE',
                                     headers: {
                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                     }
                                 });
-                                
                                 const data = await response.json();
-                                
                                 if (data.success) {
                                     this.showNotification('Usuário excluído com sucesso', 'success');
                                     this.loadUsers();
@@ -539,6 +559,8 @@
                                 }
                             } catch (error) {
                                 this.showNotification('Erro ao excluir usuário', 'error');
+                            } finally {
+                                this.showDeleteUserModal = false;
                             }
                         },
                         
