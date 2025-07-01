@@ -74,6 +74,9 @@
                      <button @click="activeTab = 'organizational-units'" :class="activeTab === 'organizational-units' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
                          🏢 Unidades Organizacionais
                      </button>
+                     <button @click="activeTab = 'logs'" :class="activeTab === 'logs' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                         📜 Logs
+                     </button>
                  </nav>
              </div>
 
@@ -164,6 +167,42 @@
                                      <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
                                          📁 Nenhuma unidade organizacional encontrada
                                      </td>
+                                 </tr>
+                             </tbody>
+                         </table>
+                     </div>
+                 </div>
+             </div>
+
+             <!-- Logs Tab -->
+             <div v-if="activeTab === 'logs'" class="space-y-6">
+                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                     <div class="px-6 py-4 border-b border-gray-200">
+                         <h3 class="text-lg font-medium text-gray-900">Logs de Operações (@{{ logs.length }})</h3>
+                     </div>
+                     <div class="overflow-x-auto">
+                         <table class="min-w-full divide-y divide-gray-200">
+                             <thead class="bg-gray-50">
+                                 <tr>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operação</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade ID</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
+                                 </tr>
+                             </thead>
+                             <tbody class="bg-white divide-y divide-gray-200">
+                                 <tr v-for="log in logs" :key="log.id" class="hover:bg-gray-50">
+                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ log.id }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.operation }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity_id }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.created_at).toLocaleString() }}</td>
+                                 </tr>
+                                 <tr v-if="logs.length === 0">
+                                     <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log encontrado</td>
                                  </tr>
                              </tbody>
                          </table>
@@ -385,6 +424,7 @@
                         activeTab: 'users',
                         users: [],
                         organizationalUnits: [],
+                        logs: [],
                         searchTerm: '',
                         showCreateUserModal: false,
                         showCreateOuModal: false,
@@ -435,6 +475,13 @@
                     console.log('✅ LDAP Manager montado com sucesso!');
                     this.loadUsers();
                     this.loadOrganizationalUnits();
+                },
+                watch: {
+                    activeTab(newVal) {
+                        if (newVal === 'logs') {
+                            this.loadLogs();
+                        }
+                    }
                 },
                 methods: {
                     async loadUsers() {
@@ -729,6 +776,23 @@
                             }
                         } catch (error) {
                             this.showNotification('Erro ao atualizar unidade organizacional', 'error');
+                        }
+                    },
+
+                    /**
+                     * Carrega logs de operações
+                     */
+                    async loadLogs() {
+                        try {
+                            const response = await fetch('/api/ldap/logs');
+                            const data = await response.json();
+                            if (data.success) {
+                                this.logs = data.data;
+                            } else {
+                                this.showNotification(data.message, 'error');
+                            }
+                        } catch (error) {
+                            this.showNotification('Erro ao carregar logs', 'error');
                         }
                     }
                 }

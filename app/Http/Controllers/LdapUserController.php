@@ -6,6 +6,7 @@ use App\Ldap\User;
 use App\Ldap\OrganizationalUnit;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Models\OperationLog;
 
 use LdapRecord\Connection;
 use LdapRecord\Container;
@@ -102,6 +103,13 @@ class LdapUserController extends Controller
             $user->setDn("uid={$request->uid},ou={$ou},{$baseDn}");
 
             $user->save();
+
+            OperationLog::create([
+                'operation' => 'create_user',
+                'entity' => 'User',
+                'entity_id' => $user->getFirstAttribute('uid'),
+                'description' => 'Usuário ' . $user->getFirstAttribute('uid') . ' criado',
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -219,6 +227,13 @@ class LdapUserController extends Controller
 
             $user->save();
 
+            OperationLog::create([
+                'operation' => 'update_user',
+                'entity' => 'User',
+                'entity_id' => $user->getFirstAttribute('uid'),
+                'description' => 'Usuário ' . $user->getFirstAttribute('uid') . ' atualizado',
+            ]);
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -250,6 +265,7 @@ class LdapUserController extends Controller
     {
         try {
             $user = User::where('uid', $uid)->first();
+            $uidToDelete = $user?->getFirstAttribute('uid');
             
             if (!$user) {
                 return response()->json([
@@ -259,6 +275,13 @@ class LdapUserController extends Controller
             }
 
             $user->delete();
+
+            OperationLog::create([
+                'operation' => 'delete_user',
+                'entity' => 'User',
+                'entity_id' => $uidToDelete,
+                'description' => 'Usuário ' . $uidToDelete . ' excluído',
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -326,6 +349,13 @@ class LdapUserController extends Controller
             $ou->setDn($dn);
             $ou->save();
 
+            OperationLog::create([
+                'operation' => 'create_ou',
+                'entity' => 'OrganizationalUnit',
+                'entity_id' => $ou->getFirstAttribute('ou'),
+                'description' => 'OU ' . $ou->getFirstAttribute('ou') . ' criada',
+            ]);
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -390,6 +420,13 @@ class LdapUserController extends Controller
 
             $organizationalUnit->save();
 
+            OperationLog::create([
+                'operation' => 'update_ou',
+                'entity' => 'OrganizationalUnit',
+                'entity_id' => $organizationalUnit->getFirstAttribute('ou'),
+                'description' => 'OU ' . $organizationalUnit->getFirstAttribute('ou') . ' atualizada',
+            ]);
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -411,5 +448,17 @@ class LdapUserController extends Controller
                 'message' => 'Erro ao atualizar unidade organizacional: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get operation logs
+     */
+    public function getOperationLogs(): JsonResponse
+    {
+        $logs = OperationLog::orderBy('created_at', 'desc')->get();
+        return response()->json([
+            'success' => true,
+            'data' => $logs,
+        ]);
     }
 }

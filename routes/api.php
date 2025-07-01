@@ -21,4 +21,5 @@ Route::prefix('ldap')->group(function () {
     Route::get('/organizational-units', [LdapUserController::class, 'getOrganizationalUnits']);
     Route::post('/organizational-units', [LdapUserController::class, 'createOrganizationalUnit']);
     Route::put('/organizational-units/{ou}', [LdapUserController::class, 'updateOrganizationalUnit']);
+    Route::get('/logs', [LdapUserController::class, 'getOperationLogs']);
 }); 
