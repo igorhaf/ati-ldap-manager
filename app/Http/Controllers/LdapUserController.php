@@ -21,19 +21,28 @@ class LdapUserController extends Controller
         try {
             $users = User::all();
             
-            $formattedUsers = $users->map(function ($user) {
-                return [
-                    'dn' => $user->getDn(),
-                    'uid' => $user->getFirstAttribute('uid'),
-                    'givenName' => $user->getFirstAttribute('givenName'),
-                    'sn' => $user->getFirstAttribute('sn'),
-                    'cn' => $user->getFirstAttribute('cn'),
-                    'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
-                    'mail' => $user->getAttribute('mail') ?? [],
-                    'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
-                    'organizationalUnits' => $user->getAttribute('ou') ?? [],
-                ];
-            });
+            // Agrupar por UID e consolidar as OUs para evitar duplicação de usuários na grid
+            $formattedUsers = $users->groupBy(fn ($u) => $u->getFirstAttribute('uid'))
+                ->map(function ($entries) {
+                    $first = $entries->first();
+                    $ous = $entries->map(fn ($e) => $e->getFirstAttribute('ou'))
+                                    ->filter()
+                                    ->unique()
+                                    ->values();
+
+                    return [
+                        'dn' => $first->getDn(),
+                        'uid' => $first->getFirstAttribute('uid'),
+                        'givenName' => $first->getFirstAttribute('givenName'),
+                        'sn' => $first->getFirstAttribute('sn'),
+                        'cn' => $first->getFirstAttribute('cn'),
+                        'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
+                        'mail' => $first->getAttribute('mail') ?? [],
+                        'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
+                        'organizationalUnits' => $ous,
+                    ];
+                })
+                ->values();
 
             return response()->json([
                 'success' => true,
@@ -84,45 +93,38 @@ class LdapUserController extends Controller
                 ], 422);
             }
 
-            $user = new User();
-            $user->setFirstAttribute('uid', $request->uid);
-            $user->setFirstAttribute('givenName', $request->givenName);
-            $user->setFirstAttribute('sn', $request->sn);
-            $user->setFirstAttribute('cn', $request->givenName . ' ' . $request->sn);
-            $user->setAttribute('mail', $request->mail);
-            $user->setFirstAttribute('employeeNumber', $request->employeeNumber);
-            $user->setFirstAttribute('userPassword', $request->userPassword);
-            
-            if ($request->has('organizationalUnits')) {
-                $user->setAttribute('ou', $request->organizationalUnits);
-            }
-
-            // Definir DN baseado na primeira unidade organizacional ou DN padrão
             $baseDn = config('ldap.connections.default.base_dn');
-            $ou = $request->organizationalUnits[0] ?? 'users';
-            $user->setDn("uid={$request->uid},ou={$ou},{$baseDn}");
 
-            $user->save();
+            // Criar uma entrada de usuário separada para cada OU
+            foreach ($request->organizationalUnits as $ou) {
+                $user = new User();
+                $user->setFirstAttribute('uid', $request->uid);
+                $user->setFirstAttribute('givenName', $request->givenName);
+                $user->setFirstAttribute('sn', $request->sn);
+                $user->setFirstAttribute('cn', $request->givenName . ' ' . $request->sn);
+                $user->setAttribute('mail', $request->mail);
+                $user->setFirstAttribute('employeeNumber', $request->employeeNumber);
+                $user->setFirstAttribute('userPassword', $request->userPassword);
+                $user->setFirstAttribute('ou', $ou);
+                $user->setDn("uid={$request->uid},ou={$ou},{$baseDn}");
+                $user->save();
+            }
 
             OperationLog::create([
                 'operation' => 'create_user',
                 'entity' => 'User',
-                'entity_id' => $user->getFirstAttribute('uid'),
-                'description' => 'Usuário ' . $user->getFirstAttribute('uid') . ' criado',
+                'entity_id' => $request->uid,
+                'description' => 'Usuário ' . $request->uid . ' criado',
             ]);
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'dn' => $user->getDn(),
-                    'uid' => $user->getFirstAttribute('uid'),
-                    'givenName' => $user->getFirstAttribute('givenName'),
-                    'sn' => $user->getFirstAttribute('sn'),
-                    'cn' => $user->getFirstAttribute('cn'),
-                    'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
-                    'mail' => $user->getAttribute('mail') ?? [],
-                    'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
-                    'organizationalUnits' => $user->getAttribute('ou') ?? [],
+                    'uid' => $request->uid,
+                    'givenName' => $request->givenName,
+                    'sn' => $request->sn,
+                    'employeeNumber' => $request->employeeNumber,
+                    'mail' => $request->mail,
                 ],
                 'message' => 'Usuário criado com sucesso'
             ], 201);

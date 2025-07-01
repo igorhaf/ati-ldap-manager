@@ -109,6 +109,7 @@
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UID</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matrícula</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidades</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Emails</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
                                  </tr>
@@ -118,6 +119,9 @@
                                      <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ user.uid }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">@{{ user.fullName }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">@{{ user.employeeNumber }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">
+                                         <div v-for="ou in user.organizationalUnits" :key="ou" class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">@{{ ou }}</div>
+                                     </td>
                                      <td class="px-6 py-4 text-sm text-gray-900">
                                          <div v-for="email in user.mail" :key="email" class="text-xs">@{{ email }}</div>
                                      </td>
@@ -361,6 +365,10 @@
                             <button v-if="index>0" @click="editUserData.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                         </div>
                         <button @click="editUserData.organizationalUnits.push('')" class="mt-2 text-blue-600">+ adicionar OU</button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Senha</label>
+                        <input type="password" v-model="editUserData.userPassword" class="mt-1 block w-full border rounded px-3 py-2" minlength="6" />
                     </div>
                     <div class="flex justify-end space-x-3 mt-4">
                         <button @click="showEditUserModal=false" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button>
