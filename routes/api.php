@@ -36,4 +36,7 @@ Route::middleware(['web','auth'])->prefix('ldap')->group(function () {
 
     // Rota para usuário comum acessar seu próprio perfil (ou root/admin OU também passam)
     Route::middleware(IsSelfAccess::class)->get('/users/{uid}', [LdapUserController::class, 'show']);
+
+    // Rota para usuário comum alterar sua própria senha
+    Route::middleware(IsSelfAccess::class)->put('/users/{uid}/password', [LdapUserController::class, 'updatePassword']);
 }); 

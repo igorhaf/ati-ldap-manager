@@ -16,5 +16,6 @@ class OperationLog extends Model
         'entity',
         'entity_id',
         'description',
+        'ou',
     ];
 } 

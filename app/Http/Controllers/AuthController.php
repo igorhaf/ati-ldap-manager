@@ -22,6 +22,12 @@ class AuthController extends Controller
 
         if (Auth::attempt(['uid' => $credentials['uid'], 'password' => $credentials['password']], $request->boolean('remember'))) {
             $request->session()->regenerate();
+
+            $role = \App\Services\RoleResolver::resolve(Auth::user());
+            if ($role === \App\Services\RoleResolver::ROLE_USER) {
+                return redirect('/password-change');
+            }
+
             return redirect()->intended('/ldap-manager');
         }
 

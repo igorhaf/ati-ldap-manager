@@ -203,6 +203,7 @@
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operação</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade ID</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">OU</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
                                  </tr>
@@ -213,11 +214,12 @@
                                      <td class="px-6 py-4 text-sm text-gray-900">@{{ log.operation }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity_id }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.ou || '-' }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.created_at).toLocaleString() }}</td>
                                  </tr>
                                  <tr v-if="logs.length === 0">
-                                     <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log encontrado</td>
+                                     <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log encontrado</td>
                                  </tr>
                              </tbody>
                          </table>

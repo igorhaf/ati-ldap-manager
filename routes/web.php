@@ -20,6 +20,13 @@ Route::get('/ldap-manager', function () {
     ]);
 })->middleware(['auth', IsOUAdmin::class])->name('ldap.manager');
 
+// Página de troca de senha para usuários comuns
+Route::get('/password-change', function () {
+    return view('password-change', [
+        'uid' => auth()->user()->getFirstAttribute('uid') ?? ''
+    ]);
+})->middleware(['auth'])->name('password.change');
+
 // Rota para phpinfo (apenas para debug)
 Route::get('/phpinfo', function () {
     return response(phpinfo(), 200, ['Content-Type' => 'text/html']);

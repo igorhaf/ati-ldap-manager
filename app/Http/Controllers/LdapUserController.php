@@ -166,6 +166,7 @@ class LdapUserController extends Controller
                 'operation' => 'create_user',
                 'entity' => 'User',
                 'entity_id' => $request->uid,
+                'ou' => $units->pluck('ou')->unique()->join(','),
                 'description' => 'Usuário ' . $request->uid . ' criado',
             ]);
 
@@ -343,7 +344,8 @@ class LdapUserController extends Controller
                 'operation' => 'update_user',
                 'entity' => 'User',
                 'entity_id' => $uid,
-                'description' => 'Usuário ' . $uid . ' atualizado em todas as OUs',
+                'ou' => ($units->isEmpty() ? $users->map(fn($u)=>$u->getFirstAttribute('ou'))->unique()->join(',') : $units->pluck('ou')->unique()->join(',')),
+                'description' => 'Usuário ' . $uid . ' atualizado',
             ]);
 
             // Retornar primeira entrada consolidada
@@ -411,7 +413,8 @@ class LdapUserController extends Controller
                 'operation' => 'delete_user',
                 'entity' => 'User',
                 'entity_id' => $uid,
-                'description' => 'Usuário ' . $uid . ' excluído de todas as OUs',
+                'ou' => $users->map(fn($u)=>$u->getFirstAttribute('ou'))->unique()->join(','),
+                'description' => 'Usuário ' . $uid . ' excluído',
             ]);
 
             return response()->json([
@@ -490,6 +493,7 @@ class LdapUserController extends Controller
                 'operation' => 'create_ou',
                 'entity' => 'OrganizationalUnit',
                 'entity_id' => $ou->getFirstAttribute('ou'),
+                'ou' => $ou->getFirstAttribute('ou'),
                 'description' => 'OU ' . $ou->getFirstAttribute('ou') . ' criada',
             ]);
 
@@ -561,6 +565,7 @@ class LdapUserController extends Controller
                 'operation' => 'update_ou',
                 'entity' => 'OrganizationalUnit',
                 'entity_id' => $organizationalUnit->getFirstAttribute('ou'),
+                'ou' => $organizationalUnit->getFirstAttribute('ou'),
                 'description' => 'OU ' . $organizationalUnit->getFirstAttribute('ou') . ' atualizada',
             ]);
 
@@ -597,5 +602,46 @@ class LdapUserController extends Controller
             'success' => true,
             'data' => $logs,
         ]);
+    }
+
+    public function updatePassword(Request $request, string $uid): JsonResponse
+    {
+        try {
+            $request->validate([
+                'userPassword' => 'required|string|min:6',
+            ]);
+
+            $users = User::where('uid', $uid)->get();
+            if ($users->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuário não encontrado'
+                ], 404);
+            }
+
+            foreach ($users as $user) {
+                $user->setFirstAttribute('userPassword', $request->userPassword);
+                $user->save();
+            }
+
+            OperationLog::create([
+                'operation' => 'update_password',
+                'entity' => 'User',
+                'entity_id' => $uid,
+                'ou' => $users->map(fn($u)=>$u->getFirstAttribute('ou'))->unique()->join(','),
+                'description' => 'Senha do usuário ' . $uid . ' alterada',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Senha alterada com sucesso'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao alterar senha: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
