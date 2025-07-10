@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LdapUserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Middleware\IsOUAdmin;
 
 Route::get('/', function () {
     return redirect()->route('ldap.manager');
@@ -17,7 +18,7 @@ Route::get('/ldap-manager', function () {
     return view('ldap-simple', [
         'userRole' => \App\Services\RoleResolver::resolve(auth()->user())
     ]);
-})->middleware(['auth', 'ou.admin'])->name('ldap.manager');
+})->middleware(['auth', IsOUAdmin::class])->name('ldap.manager');
 
 // Rota para phpinfo (apenas para debug)
 Route::get('/phpinfo', function () {

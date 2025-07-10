@@ -63,4 +63,24 @@ class Kernel extends HttpKernel
         'ou.admin' => \App\Http\Middleware\IsOUAdmin::class,
         'self.access' => \App\Http\Middleware\IsSelfAccess::class,
     ];
+
+    /**
+     * The application's route middleware aliases.
+     *
+     * These middleware may be assigned to groups or used individually.
+     *
+     * @var array
+     */
+    protected $middlewareAliases = [
+        'auth' => \App\Http\Middleware\Authenticate::class,
+        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+        'can' => \Illuminate\Auth\Middleware\Authorize::class,
+        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
+        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'root.user' => \App\Http\Middleware\IsRootUser::class,
+        'ou.admin' => \App\Http\Middleware\IsOUAdmin::class,
+        'self.access' => \App\Http\Middleware\IsSelfAccess::class,
+    ];
 } 

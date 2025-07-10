@@ -118,10 +118,10 @@
                                  </tr>
                              </thead>
                              <tbody class="bg-white divide-y divide-gray-200">
-                                 <tr v-for="user in filteredUsers" :key="user.uid" class="hover:bg-gray-50">
-                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ user.uid }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ user.fullName }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ user.employeeNumber }}</td>
+                                 <tr v-for="user in filteredUsers" :key="user.uid" :class="[user.uid === 'root' ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'hover:bg-gray-50']">
+                                     <td class="px-6 py-4 text-sm font-medium" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.uid }}</td>
+                                     <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.fullName }}</td>
+                                     <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.employeeNumber }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">
                                          <div v-for="ou in user.organizationalUnits" :key="ou" class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">@{{ ou }}</div>
                                      </td>
@@ -129,8 +129,10 @@
                                          <div v-for="email in user.mail" :key="email" class="text-xs">@{{ email }}</div>
                                      </td>
                                      <td v-if="canManageUsers" class="px-6 py-4 text-sm font-medium">
-                                         <button @click="editUser(user)" class="text-blue-600 hover:text-blue-900 mr-3">✏️ Editar</button>
-                                         <button @click="deleteUser(user.uid)" class="text-red-600 hover:text-red-900">🗑️ Excluir</button>
+                                         <template v-if="user.uid !== 'root'">
+                                             <button @click="editUser(user)" class="text-blue-600 hover:text-blue-900 mr-3">✏️ Editar</button>
+                                             <button @click="deleteUser(user.uid)" class="text-red-600 hover:text-red-900">🗑️ Excluir</button>
+                                         </template>
                                      </td>
                                  </tr>
                                  <tr v-if="filteredUsers.length === 0">
@@ -432,6 +434,7 @@
             createApp({
                 data() {
                     return {
+                        userRole: window.USER_ROLE,
                         activeTab: 'users',
                         users: [],
                         organizationalUnits: [],

@@ -83,7 +83,8 @@ class LdapUserController extends Controller
                 'mail.*' => 'email',
                 'userPassword' => 'required|string|min:6',
                 'organizationalUnits' => 'array',
-                'organizationalUnits.*' => 'string',
+                // Cada item pode ser string (OU) ou objeto {ou, role}
+                'organizationalUnits.*' => 'required',
             ]);
 
             $role = RoleResolver::resolve(auth()->user());
@@ -94,13 +95,19 @@ class LdapUserController extends Controller
                 ]);
             }
 
-            // Verificar se o UID já existe
-            $existingUser = User::where('uid', $request->uid)->first();
-            if ($existingUser) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Usuário com este UID já existe'
-                ], 422);
+            // Verificar se já existem entradas com UID e mesma OU
+            $existingEntries = User::where('uid', $request->uid)->get();
+
+            $unitsInput = collect($request->organizationalUnits)->map(function($i){return is_string($i)? $i : ($i['ou'] ?? null);})->filter();
+
+            foreach ($existingEntries as $entry){
+                $existingOu = strtolower($entry->getFirstAttribute('ou'));
+                if ($unitsInput->contains(fn($ou)=> strtolower($ou) === $existingOu)){
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Usuário já existe na OU {$existingOu}"
+                    ], 422);
+                }
             }
 
             // Verificar se a matrícula já existe
@@ -114,19 +121,30 @@ class LdapUserController extends Controller
 
             $baseDn = config('ldap.connections.default.base_dn');
 
-            // Criar uma entrada de usuário separada para cada OU
-            foreach ($request->organizationalUnits as $ou) {
-                $user = new User();
-                $user->setFirstAttribute('uid', $request->uid);
-                $user->setFirstAttribute('givenName', $request->givenName);
-                $user->setFirstAttribute('sn', $request->sn);
-                $user->setFirstAttribute('cn', $request->givenName . ' ' . $request->sn);
-                $user->setAttribute('mail', $request->mail);
-                $user->setFirstAttribute('employeeNumber', $request->employeeNumber);
-                $user->setFirstAttribute('userPassword', $request->userPassword);
-                $user->setFirstAttribute('ou', $ou);
-                $user->setDn("uid={$request->uid},ou={$ou},{$baseDn}");
-                $user->save();
+            $units = collect($request->organizationalUnits)->map(function ($item) {
+                // aceitar string simples também (default role user)
+                if (is_string($item)) {
+                    return ['ou' => $item, 'role' => 'user'];
+                }
+                return $item;
+            });
+
+            foreach ($units as $unit) {
+                $ou = $unit['ou'];
+                $role = $unit['role'] ?? 'user';
+
+                $entry = new User();
+                $entry->setFirstAttribute('uid', $request->uid);
+                $entry->setFirstAttribute('givenName', $request->givenName);
+                $entry->setFirstAttribute('sn', $request->sn);
+                $entry->setFirstAttribute('cn', $request->givenName . ' ' . $request->sn);
+                $entry->setAttribute('mail', $request->mail);
+                $entry->setFirstAttribute('employeeNumber', $request->employeeNumber);
+                $entry->setFirstAttribute('userPassword', $request->userPassword);
+                $entry->setFirstAttribute('ou', $ou);
+                $entry->setAttribute('employeeType', [$role]);
+                $entry->setDn("uid={$request->uid},ou={$ou},{$baseDn}");
+                $entry->save();
             }
 
             OperationLog::create([
