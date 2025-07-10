@@ -16,8 +16,8 @@ class RoleResolver
      */
     public static function resolve(Authenticatable $user): string
     {
-        // 1. Verifica atributo personalizado 'ouRole' (pode ser multivalorado)
-        $roleAttr = method_exists($user, 'getAttribute') ? $user->getAttribute('ouRole') : ($user->ouRole ?? []);
+        // 1. Verifica atributo 'employeeType' (pode ser multivalorado) para o papel
+        $roleAttr = method_exists($user, 'getAttribute') ? $user->getAttribute('employeeType') : ($user->employeeType ?? []);
         $roles = collect((array) $roleAttr)->map(fn($v) => strtolower($v));
 
         if ($roles->contains(self::ROLE_ROOT)) {

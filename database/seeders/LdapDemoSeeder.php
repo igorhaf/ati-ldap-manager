@@ -31,7 +31,7 @@ class LdapDemoSeeder extends Seeder
             $root->setFirstAttribute('sn', 'root');
             $root->setFirstAttribute('givenName', 'root');
             $root->setFirstAttribute('userPassword', 'password');
-            $root->setAttribute('ouRole', ['root']);
+            $root->setAttribute('employeeType', ['root']);
             $root->setDn("cn=root,{$baseDn}");
             $root->save();
         }
@@ -47,7 +47,7 @@ class LdapDemoSeeder extends Seeder
             $admin->setFirstAttribute('givenName', 'Admin Fin');
             $admin->setFirstAttribute('userPassword', 'password');
             $admin->setFirstAttribute('ou', 'Financeiro');
-            $admin->setAttribute('ouRole', ['admin']);
+            $admin->setAttribute('employeeType', ['admin']);
             $admin->setDn("cn=admin.{$financeOu->getFirstAttribute('ou')},ou={$financeOu->getFirstAttribute('ou')},{$baseDn}");
             $admin->save();
         }
@@ -63,7 +63,7 @@ class LdapDemoSeeder extends Seeder
             $user->setFirstAttribute('givenName', 'Jane');
             $user->setFirstAttribute('userPassword', 'password');
             $user->setFirstAttribute('ou', 'Financeiro');
-            $user->setAttribute('ouRole', ['user']);
+            $user->setAttribute('employeeType', ['user']);
             $user->setDn("uid={$userUid},ou={$financeOu->getFirstAttribute('ou')},{$baseDn}");
             $user->save();
         }
