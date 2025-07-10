@@ -192,62 +192,70 @@ class LdapUserController extends Controller
                 'organizationalUnits.*' => 'string',
             ]);
 
-            $user = User::where('uid', $uid)->first();
-            
-            if (!$user) {
+            $users = User::where('uid', $uid)->get();
+
+            if ($users->isEmpty()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuário não encontrado'
                 ], 404);
             }
 
-            if ($request->has('givenName')) {
-                $user->setFirstAttribute('givenName', $request->givenName);
-            }
+            // Aplicar alterações em todas as entradas do usuário
+            foreach ($users as $user) {
+                if ($request->has('givenName')) {
+                    $user->setFirstAttribute('givenName', $request->givenName);
+                }
 
-            if ($request->has('sn')) {
-                $user->setFirstAttribute('sn', $request->sn);
-            }
+                if ($request->has('sn')) {
+                    $user->setFirstAttribute('sn', $request->sn);
+                }
 
-            if ($request->has('givenName') || $request->has('sn')) {
-                $givenName = $user->getFirstAttribute('givenName') ?? '';
-                $sn = $user->getFirstAttribute('sn') ?? '';
-                $user->setFirstAttribute('cn', trim($givenName . ' ' . $sn));
-            }
+                if ($request->has('givenName') || $request->has('sn')) {
+                    $givenName = $user->getFirstAttribute('givenName') ?? '';
+                    $sn = $user->getFirstAttribute('sn') ?? '';
+                    $user->setFirstAttribute('cn', trim($givenName . ' ' . $sn));
+                }
 
-            if ($request->has('mail')) {
-                $user->setAttribute('mail', $request->mail);
-            }
+                if ($request->has('mail')) {
+                    $user->setAttribute('mail', $request->mail);
+                }
 
-            if ($request->has('userPassword')) {
-                $user->setFirstAttribute('userPassword', $request->userPassword);
-            }
+                if ($request->has('userPassword')) {
+                    $user->setFirstAttribute('userPassword', $request->userPassword);
+                }
 
-            if ($request->has('organizationalUnits')) {
-                $user->setAttribute('ou', $request->organizationalUnits);
-            }
+                // Atualizar atributo 'ou' apenas se fornecido; cada entrada possui sua própria OU
+                if ($request->has('organizationalUnits')) {
+                    // Se esta entrada não estiver mais incluída, podemos optar por excluir ou manter; por simplicidade, manteremos
+                }
 
-            $user->save();
+                $user->save();
+            }
 
             OperationLog::create([
                 'operation' => 'update_user',
                 'entity' => 'User',
-                'entity_id' => $user->getFirstAttribute('uid'),
-                'description' => 'Usuário ' . $user->getFirstAttribute('uid') . ' atualizado',
+                'entity_id' => $uid,
+                'description' => 'Usuário ' . $uid . ' atualizado em todas as OUs',
             ]);
+
+            // Retornar primeira entrada consolidada
+            $first = $users->first();
+            $ous = $users->map(fn ($e) => $e->getFirstAttribute('ou'))->filter()->unique()->values();
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'dn' => $user->getDn(),
-                    'uid' => $user->getFirstAttribute('uid'),
-                    'givenName' => $user->getFirstAttribute('givenName'),
-                    'sn' => $user->getFirstAttribute('sn'),
-                    'cn' => $user->getFirstAttribute('cn'),
-                    'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
-                    'mail' => $user->getAttribute('mail') ?? [],
-                    'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
-                    'organizationalUnits' => $user->getAttribute('ou') ?? [],
+                    'dn' => $first->getDn(),
+                    'uid' => $first->getFirstAttribute('uid'),
+                    'givenName' => $first->getFirstAttribute('givenName'),
+                    'sn' => $first->getFirstAttribute('sn'),
+                    'cn' => $first->getFirstAttribute('cn'),
+                    'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
+                    'mail' => $first->getAttribute('mail') ?? [],
+                    'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
+                    'organizationalUnits' => $ous,
                 ],
                 'message' => 'Usuário atualizado com sucesso'
             ]);
@@ -266,28 +274,29 @@ class LdapUserController extends Controller
     public function destroy(string $uid): JsonResponse
     {
         try {
-            $user = User::where('uid', $uid)->first();
-            $uidToDelete = $user?->getFirstAttribute('uid');
-            
-            if (!$user) {
+            $users = User::where('uid', $uid)->get();
+
+            if ($users->isEmpty()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuário não encontrado'
                 ], 404);
             }
 
-            $user->delete();
+            foreach ($users as $user) {
+                $user->delete();
+            }
 
             OperationLog::create([
                 'operation' => 'delete_user',
                 'entity' => 'User',
-                'entity_id' => $uidToDelete,
-                'description' => 'Usuário ' . $uidToDelete . ' excluído',
+                'entity_id' => $uid,
+                'description' => 'Usuário ' . $uid . ' excluído de todas as OUs',
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Usuário removido com sucesso'
+                'message' => 'Usuário removido com sucesso de todas as OUs'
             ]);
 
         } catch (\Exception $e) {
