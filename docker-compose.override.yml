@@ -1,4 +1,6 @@
 services:
   ldap:
-    volumes:
-      - ./docker/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom 
+     environment:
+       LDAP_CUSTOM_LDIF_DIR: /ldif
+     volumes:
+      - ./docker/ldap/custom:/ldif:ro

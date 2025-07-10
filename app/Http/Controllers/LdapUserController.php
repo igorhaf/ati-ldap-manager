@@ -19,12 +19,7 @@ class LdapUserController extends Controller
      */
     private function safeGetAttribute($user, $attribute)
     {
-        try {
-            return $user->getFirstAttribute($attribute);
-        } catch (\Exception $e) {
-            \Log::warning("Attribute {$attribute} não suportado pelo schema LDAP: " . $e->getMessage());
-            return null;
-        }
+        return $user->getFirstAttribute($attribute);
     }
 
     /**
@@ -36,7 +31,7 @@ class LdapUserController extends Controller
             $role = RoleResolver::resolve(auth()->user());
 
             $users = User::all();
-
+            
             // Se admin de OU, filtrar apenas entradas da sua OU
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
@@ -69,7 +64,7 @@ class LdapUserController extends Controller
                     ->unique('ou')
                     ->values();
 
-                    return [
+                return [
                         'dn' => $first->getDn(),
                         'uid' => $first->getFirstAttribute('uid'),
                         'givenName' => $first->getFirstAttribute('givenName'),
@@ -80,7 +75,7 @@ class LdapUserController extends Controller
                         'mailForwardingAddress' => $this->safeGetAttribute($first, 'mailForwardingAddress'),
                         'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                         'organizationalUnits' => $ous,
-                    ];
+                ];
                 })
                 ->values();
 
@@ -121,7 +116,7 @@ class LdapUserController extends Controller
                 $adminOu = RoleResolver::getUserOu(auth()->user());
                 $request->merge([
                     'organizationalUnits' => [$adminOu],
-                ]);
+            ]);
             }
 
             // Verificar se já existem entradas com UID e mesma OU
@@ -132,10 +127,10 @@ class LdapUserController extends Controller
             foreach ($existingEntries as $entry){
                 $existingOu = strtolower($entry->getFirstAttribute('ou'));
                 if ($unitsInput->contains(fn($ou)=> strtolower($ou) === $existingOu)){
-                    return response()->json([
-                        'success' => false,
+                return response()->json([
+                    'success' => false,
                         'message' => "Usuário já existe na OU {$existingOu}"
-                    ], 422);
+                ], 422);
                 }
             }
 
@@ -358,7 +353,7 @@ class LdapUserController extends Controller
                         try {
                             if ($request->mailForwardingAddress) {
                                 $entry->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
-                            }
+            }
                         } catch (\Exception $e) {
                             // Ignorar se mailForwardingAddress não for suportado pelo schema
                             \Log::warning('mailForwardingAddress não suportado pelo schema LDAP: ' . $e->getMessage());
@@ -406,7 +401,7 @@ class LdapUserController extends Controller
                         } catch (\Exception $e) {
                             // Ignorar se mailForwardingAddress não for suportado pelo schema
                             \Log::warning('mailForwardingAddress não suportado pelo schema LDAP: ' . $e->getMessage());
-                        }
+            }
                     }
                     
                     if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
@@ -485,7 +480,7 @@ class LdapUserController extends Controller
             }
 
             foreach ($users as $user) {
-                $user->delete();
+            $user->delete();
             }
 
             OperationLog::create([

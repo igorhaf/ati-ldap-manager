@@ -57,5 +57,27 @@ class LdapDemoSeeder extends Seeder
             $user->setDn("uid={$userUid},ou=Financeiro,{$baseDn}");
             $user->save();
         }
+
+        // Usuário root (super-admin)
+        $root = User::where('uid', 'root')->first();
+        if (!$root) {
+            $root = new User();
+            $root->setFirstAttribute('uid', 'root');
+            $root->setFirstAttribute('cn',  'root');
+            $root->setFirstAttribute('sn',  'root');
+            $root->setFirstAttribute('givenName', 'root');
+            $root->setFirstAttribute('userPassword', 'password');
+            $root->setFirstAttribute('mail', 'root@example.com');
+            // O atributo abaixo só será salvo se o schema misc estiver presente
+            try {
+               // $root->setFirstAttribute('mailForwardingAddress', 'admin@example.com');
+            } catch (\Exception $e) {
+                // ignora se schema não disponível
+            }
+            $root->setFirstAttribute('employeeNumber', '000');
+            $root->setAttribute('employeeType', ['root']);
+            $root->setDn("uid=root,{$baseDn}");
+            $root->save();
+        }
     }
 } 
