@@ -32,7 +32,7 @@ class User extends LdapUser
      *
      * @var array
      */
-    protected $attributes = [
+    protected array $attributes = [
         'mailForwardingAddress' => [],
     ];
 
