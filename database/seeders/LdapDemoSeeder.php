@@ -22,37 +22,25 @@ class LdapDemoSeeder extends Seeder
             $financeOu->save();
         }
 
-        // 2. Usuário root
-        $root = User::where('uid', 'root')->first();
-        if (!$root) {
-            $root = new User();
-            $root->setFirstAttribute('uid', 'root');
-            $root->setFirstAttribute('cn', 'root');
-            $root->setFirstAttribute('sn', 'root');
-            $root->setFirstAttribute('givenName', 'root');
-            $root->setFirstAttribute('userPassword', 'password');
-            $root->setAttribute('employeeType', ['root']);
-            $root->setDn("cn=root,{$baseDn}");
-            $root->save();
-        }
-
-        // 3. Admin da OU Financeiro
+        // 2. Admin da OU Financeiro
         $adminUid = 'admin.financeiro';
         $admin = User::where('uid', $adminUid)->first();
         if (!$admin) {
             $admin = new User();
             $admin->setFirstAttribute('uid', $adminUid);
-            $admin->setFirstAttribute('cn', 'admin.financeiro');
+            $admin->setFirstAttribute('cn', 'Admin Financeiro');
             $admin->setFirstAttribute('sn', 'Admin');
-            $admin->setFirstAttribute('givenName', 'Admin Fin');
+            $admin->setFirstAttribute('givenName', 'Admin');
             $admin->setFirstAttribute('userPassword', 'password');
+            $admin->setFirstAttribute('mail', 'admin.financeiro@empresa.com');
+            $admin->setFirstAttribute('employeeNumber', '001');
             $admin->setFirstAttribute('ou', 'Financeiro');
             $admin->setAttribute('employeeType', ['admin']);
-            $admin->setDn("cn=admin.{$financeOu->getFirstAttribute('ou')},ou={$financeOu->getFirstAttribute('ou')},{$baseDn}");
+            $admin->setDn("uid={$adminUid},ou=Financeiro,{$baseDn}");
             $admin->save();
         }
 
-        // 4. Usuário comum dentro da OU Financeiro
+        // 3. Usuário comum dentro da OU Financeiro  
         $userUid = 'jane.doe';
         $user = User::where('uid', $userUid)->first();
         if (!$user) {
@@ -62,9 +50,11 @@ class LdapDemoSeeder extends Seeder
             $user->setFirstAttribute('sn', 'Doe');
             $user->setFirstAttribute('givenName', 'Jane');
             $user->setFirstAttribute('userPassword', 'password');
+            $user->setFirstAttribute('mail', 'jane.doe@empresa.com');
+            $user->setFirstAttribute('employeeNumber', '002');
             $user->setFirstAttribute('ou', 'Financeiro');
             $user->setAttribute('employeeType', ['user']);
-            $user->setDn("uid={$userUid},ou={$financeOu->getFirstAttribute('ou')},{$baseDn}");
+            $user->setDn("uid={$userUid},ou=Financeiro,{$baseDn}");
             $user->save();
         }
     }

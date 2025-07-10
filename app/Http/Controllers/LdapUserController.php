@@ -63,7 +63,8 @@ class LdapUserController extends Controller
                         'sn' => $first->getFirstAttribute('sn'),
                         'cn' => $first->getFirstAttribute('cn'),
                         'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
-                        'mail' => $first->getAttribute('mail') ?? [],
+                        'mail' => $first->getFirstAttribute('mail'),
+                        'mailForwardingAddress' => $first->getFirstAttribute('mailForwardingAddress'),
                         'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                         'organizationalUnits' => $ous,
                     ];
@@ -94,8 +95,8 @@ class LdapUserController extends Controller
                 'givenName' => 'required|string|max:255',
                 'sn' => 'required|string|max:255',
                 'employeeNumber' => 'required|string|max:255',
-                'mail' => 'required|array',
-                'mail.*' => 'email',
+                'mail' => 'required|email',
+                'mailForwardingAddress' => 'nullable|email',
                 'userPassword' => 'required|string|min:6',
                 'organizationalUnits' => 'array',
                 // Cada item pode ser string (OU) ou objeto {ou, role}
@@ -153,7 +154,10 @@ class LdapUserController extends Controller
                 $entry->setFirstAttribute('givenName', $request->givenName);
                 $entry->setFirstAttribute('sn', $request->sn);
                 $entry->setFirstAttribute('cn', $request->givenName . ' ' . $request->sn);
-                $entry->setAttribute('mail', $request->mail);
+                $entry->setFirstAttribute('mail', $request->mail);
+                if ($request->has('mailForwardingAddress') && $request->mailForwardingAddress) {
+                    $entry->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
+                }
                 $entry->setFirstAttribute('employeeNumber', $request->employeeNumber);
                 $entry->setFirstAttribute('userPassword', $request->userPassword);
                 $entry->setFirstAttribute('ou', $ou);
@@ -214,7 +218,8 @@ class LdapUserController extends Controller
                     'sn' => $user->getFirstAttribute('sn'),
                     'cn' => $user->getFirstAttribute('cn'),
                     'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
-                    'mail' => $user->getAttribute('mail') ?? [],
+                    'mail' => $user->getFirstAttribute('mail'),
+                    'mailForwardingAddress' => $user->getFirstAttribute('mailForwardingAddress'),
                     'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
                     'organizationalUnits' => $user->getAttribute('ou') ?? [],
                 ],
@@ -238,8 +243,8 @@ class LdapUserController extends Controller
             $request->validate([
                 'givenName' => 'sometimes|required|string|max:255',
                 'sn' => 'sometimes|required|string|max:255',
-                'mail' => 'sometimes|required|array',
-                'mail.*' => 'email',
+                'mail' => 'sometimes|required|email',
+                'mailForwardingAddress' => 'sometimes|nullable|email',
                 'userPassword' => 'sometimes|required|string|min:6',
                 'organizationalUnits' => 'sometimes|array',
                 // aceitar string ou objeto {ou, role}
@@ -294,7 +299,14 @@ class LdapUserController extends Controller
 
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
-                    if ($request->has('mail'))     $user->setAttribute('mail',          $request->mail);
+                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
+                    if ($request->has('mailForwardingAddress')) {
+                        if ($request->mailForwardingAddress) {
+                            $user->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
+                        } else {
+                            $user->setFirstAttribute('mailForwardingAddress', null);
+                        }
+                    }
                     if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
 
                     // Nome completo
@@ -311,7 +323,17 @@ class LdapUserController extends Controller
                     $entry->setFirstAttribute('givenName', $request->get('givenName', $users->first()->getFirstAttribute('givenName')));
                     $entry->setFirstAttribute('sn', $request->get('sn', $users->first()->getFirstAttribute('sn')));
                     $entry->setFirstAttribute('cn', trim(($request->get('givenName', $users->first()->getFirstAttribute('givenName'))) . ' ' . ($request->get('sn', $users->first()->getFirstAttribute('sn')))));
-                    $entry->setAttribute('mail', $request->get('mail', $users->first()->getAttribute('mail')));
+                    $entry->setFirstAttribute('mail', $request->get('mail', $users->first()->getFirstAttribute('mail')));
+                    if ($request->has('mailForwardingAddress')) {
+                        if ($request->mailForwardingAddress) {
+                            $entry->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
+                        }
+                    } else {
+                        $forwardingAddr = $users->first()->getFirstAttribute('mailForwardingAddress');
+                        if ($forwardingAddr) {
+                            $entry->setFirstAttribute('mailForwardingAddress', $forwardingAddr);
+                        }
+                    }
                     $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
                     if ($request->has('userPassword')) {
                         $entry->setFirstAttribute('userPassword', $request->userPassword);
@@ -330,7 +352,14 @@ class LdapUserController extends Controller
                 foreach ($users as $user) {
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
-                    if ($request->has('mail'))     $user->setAttribute('mail',          $request->mail);
+                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
+                    if ($request->has('mailForwardingAddress')) {
+                        if ($request->mailForwardingAddress) {
+                            $user->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
+                        } else {
+                            $user->setFirstAttribute('mailForwardingAddress', null);
+                        }
+                    }
                     if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
 
                     if ($request->has('givenName') || $request->has('sn')) {
@@ -361,7 +390,8 @@ class LdapUserController extends Controller
                     'sn' => $first->getFirstAttribute('sn'),
                     'cn' => $first->getFirstAttribute('cn'),
                     'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
-                    'mail' => $first->getAttribute('mail') ?? [],
+                    'mail' => $first->getFirstAttribute('mail'),
+                    'mailForwardingAddress' => $first->getFirstAttribute('mailForwardingAddress'),
                     'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                     'organizationalUnits' => $ous,
                 ],

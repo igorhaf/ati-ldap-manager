@@ -150,19 +150,18 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50 sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matrícula</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidades</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Emails</th>
-                                    <th v-if="canManageUsers" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidades</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matrícula</th>
+                                    <th v-if="canManageUsers" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="user in filteredUsers" :key="user.uid" :class="[user.uid === 'root' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'hover:bg-gray-50 odd:bg-gray-50']">
                                     <td class="px-6 py-4 text-sm font-medium" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.uid }}</td>
                                     <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.fullName }}</td>
-                                    <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.employeeNumber }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
                                         <div v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" class="inline-flex items-center gap-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border border-blue-300/30">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,9 +171,15 @@
                                             <span v-if="(unit.role ?? 'user') === 'admin'" class="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">Admin</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">
-                                        <div v-for="email in user.mail" :key="email" class="text-xs">@{{ email }}</div>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <div class="space-y-1">
+                                            <div class="text-sm font-medium text-gray-900">{{ user.mail }}</div>
+                                            <div v-if="user.mailForwardingAddress" class="text-xs text-gray-500">
+                                                ➤ {{ user.mailForwardingAddress }}
+                                            </div>
+                                        </div>
                                     </td>
+                                    <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.employeeNumber }}</td>
                                     <td v-if="canManageUsers" class="px-6 py-4 text-sm font-medium">
                                         <template v-if="user.uid !== 'root'">
                                             <button @click="editUser(user)" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900 mr-4 transition-colors">
@@ -325,22 +330,28 @@
                                 <input v-model="newUser.userPassword" type="password" required minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Email Principal</label>
-                                <input v-model="newUser.mail[0]" type="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <label for="mail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input 
+                                    v-model="newUser.mail" 
+                                    type="email" 
+                                    id="mail"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="exemplo@empresa.com"
+                                    required
+                                >
+                            </div>
+                            <div>
+                                <label for="mailForwardingAddress" class="block text-sm font-medium text-gray-700 mb-1">Email de Redirecionamento (Opcional)</label>
+                                <input 
+                                    v-model="newUser.mailForwardingAddress" 
+                                    type="email" 
+                                    id="mailForwardingAddress"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="redirecionamento@exemplo.com"
+                                >
                             </div>
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Emails Adicionais</label>
-                            <div class="space-y-2">
-                                <div v-for="(email, index) in newUser.mail.slice(1)" :key="index" class="flex gap-2">
-                                    <input v-model="newUser.mail[index + 1]" type="email" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <button @click="removeEmail(index + 1)" type="button" class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">🗑️</button>
-                                </div>
-                                <button @click="addEmail" type="button" class="text-blue-600 hover:text-blue-800 text-sm">➕ Adicionar Email</button>
-                            </div>
-                        </div>
-
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
                             <div class="space-y-2">
@@ -411,48 +422,61 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">UID (não editável)</label>
-                        <input type="text" v-model="editUserData.uid" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled />
+                        <input type="text" v-model="editUser.uid" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled />
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Nome</label>
-                            <input type="text" v-model="editUserData.givenName" class="mt-1 block w-full border rounded px-3 py-2" />
+                            <input type="text" v-model="editUser.givenName" class="mt-1 block w-full border rounded px-3 py-2" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Sobrenome</label>
-                            <input type="text" v-model="editUserData.sn" class="mt-1 block w-full border rounded px-3 py-2" />
+                            <input type="text" v-model="editUser.sn" class="mt-1 block w-full border rounded px-3 py-2" />
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Matrícula (não editável)</label>
-                        <input type="text" v-model="editUserData.employeeNumber" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled />
+                        <input type="text" v-model="editUser.employeeNumber" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">E-mails</label>
-                        <div v-for="(email, index) in editUserData.mail" :key="index" class="flex items-center space-x-2 mt-1">
-                            <input type="email" v-model="editUserData.mail[index]" class="flex-1 border rounded px-3 py-2" />
-                            <button v-if="index>0" @click="editUserData.mail.splice(index,1)" class="text-red-500">✖</button>
-                        </div>
-                        <button @click="editUserData.mail.push('')" class="mt-2 text-blue-600">+ adicionar email</button>
+                        <label for="edit-mail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input 
+                            v-model="editUser.mail" 
+                            type="email" 
+                            id="edit-mail"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="exemplo@empresa.com"
+                            required
+                        >
+                    </div>
+                    <div>
+                        <label for="edit-mailForwardingAddress" class="block text-sm font-medium text-gray-700 mb-1">Email de Redirecionamento (Opcional)</label>
+                        <input 
+                            v-model="editUser.mailForwardingAddress" 
+                            type="email" 
+                            id="edit-mailForwardingAddress"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="redirecionamento@exemplo.com"
+                        >
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Unidades Organizacionais</label>
-                        <div v-for="(unit,index) in editUserData.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
-                            <select v-model="editUserData.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
+                        <div v-for="(unit,index) in editUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
+                            <select v-model="editUser.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
                                 <option value="" disabled>Selecione OU...</option>
                                 <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">@{{ ouOpt.ou }}</option>
                             </select>
-                            <select v-model="editUserData.organizationalUnits[index].role" class="border rounded px-2 py-2">
+                            <select v-model="editUser.organizationalUnits[index].role" class="border rounded px-2 py-2">
                                 <option value="user">Usuário</option>
                                 <option value="admin">Admin</option>
                             </select>
-                            <button v-if="index>0" @click="editUserData.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
+                            <button v-if="index>0" @click="editUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                         </div>
-                        <button @click="editUserData.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
+                        <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Senha</label>
-                        <input type="password" v-model="editUserData.userPassword" class="mt-1 block w-full border rounded px-3 py-2" minlength="6" />
+                        <input type="password" v-model="editUser.userPassword" class="mt-1 block w-full border rounded px-3 py-2" minlength="6" />
                     </div>
                     <div class="flex justify-end space-x-3 mt-4">
                         <button @click="showEditUserModal=false" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button>
@@ -536,15 +560,25 @@
                             givenName: '',
                             sn: '',
                             employeeNumber: '',
-                            mail: [''],
+                            mail: '',
+                            mailForwardingAddress: '',
                             userPassword: '',
-                            organizationalUnits: [{ ou: '', role: 'user' }]
+                            organizationalUnits: [{ou: '', role: 'user'}]
                         },
                         newOu: {
                             ou: '',
                             description: ''
                         },
-                        editUserData: null,
+                        editUser: {
+                            uid: '',
+                            givenName: '',
+                            sn: '',
+                            employeeNumber: '',
+                            mail: '',
+                            mailForwardingAddress: '',
+                            userPassword: '',
+                            organizationalUnits: [{ou: '', role: 'user'}]
+                        },
                         showEditUserModal: false,
                         showDeleteUserModal: false,
                         userToDelete: null,
@@ -632,19 +666,37 @@
                     },
                     
                     editUser(user) {
-                        this.editUserData = JSON.parse(JSON.stringify(user));
+                        this.editUser.uid = user.uid;
+                        this.editUser.givenName = user.givenName;
+                        this.editUser.sn = user.sn;
+                        this.editUser.employeeNumber = user.employeeNumber;
+                        this.editUser.mail = user.mail;
+                        this.editUser.mailForwardingAddress = user.mailForwardingAddress;
+                        this.editUser.userPassword = '';
+                        
+                        // Garantir que organizationalUnits seja um array de objetos
+                        if (Array.isArray(user.organizationalUnits)) {
+                            if (typeof user.organizationalUnits[0] === 'string') {
+                                this.editUser.organizationalUnits = user.organizationalUnits.map(ou => ({ ou, role: 'user' }));
+                            } else {
+                                this.editUser.organizationalUnits = JSON.parse(JSON.stringify(user.organizationalUnits));
+                            }
+                        } else {
+                            this.editUser.organizationalUnits = [{ ou: '', role: 'user' }];
+                        }
+                        
                         this.showEditUserModal = true;
                     },
                     
                     async updateUser() {
                         try {
-                            const response = await fetch(`/api/ldap/users/${this.editUserData.uid}`, {
+                            const response = await fetch(`/api/ldap/users/${this.editUser.uid}`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                 },
-                                body: JSON.stringify(this.editUserData)
+                                body: JSON.stringify(this.editUser)
                             });
                             const data = await response.json();
                             if (data.success) {
@@ -726,23 +778,16 @@
                         }
                     },
                     
-                    addEmail() {
-                        this.newUser.mail.push('');
-                    },
-                    
-                    removeEmail(index) {
-                        this.newUser.mail.splice(index, 1);
-                    },
-                    
                     resetNewUser() {
                         this.newUser = {
                             uid: '',
                             givenName: '',
                             sn: '',
                             employeeNumber: '',
-                            mail: [''],
+                            mail: '',
+                            mailForwardingAddress: '',
                             userPassword: '',
-                            organizationalUnits: [{ ou: '', role: 'user' }]
+                            organizationalUnits: [{ou: '', role: 'user'}]
                         };
                     },
                     
