@@ -1,0 +1,3 @@
+dn: cn=misc,cn=schema,cn=config
+changetype: add
+include: file:///etc/ldap/schema/misc.ldif 

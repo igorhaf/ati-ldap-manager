@@ -1,4 +1,4 @@
 services:
   ldap:
     volumes:
-      - ./docker/ldap/custom/:/container/service/slapd/assets/config/bootstrap/ldif/custom 
+      - ./docker/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom 
