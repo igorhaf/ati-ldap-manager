@@ -226,7 +226,8 @@ class LdapUserController extends Controller
                 'mail.*' => 'email',
                 'userPassword' => 'sometimes|required|string|min:6',
                 'organizationalUnits' => 'sometimes|array',
-                'organizationalUnits.*' => 'string',
+                // aceitar string ou objeto {ou, role}
+                'organizationalUnits.*' => 'required',
             ]);
 
             $users = User::where('uid', $uid)->get();
@@ -252,36 +253,75 @@ class LdapUserController extends Controller
                 ], 404);
             }
 
-            // Aplicar alterações em todas as entradas do usuário
-            foreach ($users as $user) {
-                if ($request->has('givenName')) {
-                    $user->setFirstAttribute('givenName', $request->givenName);
-                }
+            // Mapear entradas existentes por OU (lowercase)
+            $existingByOu = $users->keyBy(fn($u) => strtolower($u->getFirstAttribute('ou')));
 
-                if ($request->has('sn')) {
-                    $user->setFirstAttribute('sn', $request->sn);
-                }
+            $baseDn = config('ldap.connections.default.base_dn');
 
-                if ($request->has('givenName') || $request->has('sn')) {
-                    $givenName = $user->getFirstAttribute('givenName') ?? '';
-                    $sn = $user->getFirstAttribute('sn') ?? '';
-                    $user->setFirstAttribute('cn', trim($givenName . ' ' . $sn));
-                }
+            // Unidades enviadas na requisição
+            $units = collect($request->organizationalUnits ?? [])->map(function($i){
+                if (is_string($i)) return ['ou'=>$i,'role'=>'user'];
+                return [
+                    'ou' => $i['ou'],
+                    'role' => $i['role'] ?? 'user'
+                ];
+            });
 
-                if ($request->has('mail')) {
-                    $user->setAttribute('mail', $request->mail);
-                }
+            // Loop unidades solicitadas
+            foreach ($units as $unit) {
+                $ouLower = strtolower($unit['ou']);
+                $role     = $unit['role'];
 
-                if ($request->has('userPassword')) {
-                    $user->setFirstAttribute('userPassword', $request->userPassword);
-                }
+                if ($existingByOu->has($ouLower)) {
+                    // Atualizar entrada existente
+                    $user = $existingByOu[$ouLower];
 
-                // Atualizar atributo 'ou' apenas se fornecido; cada entrada possui sua própria OU
-                if ($request->has('organizationalUnits')) {
-                    // Se esta entrada não estiver mais incluída, podemos optar por excluir ou manter; por simplicidade, manteremos
-                }
+                    if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
+                    if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
+                    if ($request->has('mail'))     $user->setAttribute('mail',          $request->mail);
+                    if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
 
-                $user->save();
+                    // Nome completo
+                    $user->setFirstAttribute('cn', trim(($request->givenName ?? $user->getFirstAttribute('givenName')) . ' ' . ($request->sn ?? $user->getFirstAttribute('sn'))));
+
+                    // Papel
+                    $user->setAttribute('employeeType', [$role]);
+
+                    $user->save();
+                } else {
+                    // Criar nova entrada nessa OU
+                    $entry = new User();
+                    $entry->setFirstAttribute('uid', $uid);
+                    $entry->setFirstAttribute('givenName', $request->get('givenName', $users->first()->getFirstAttribute('givenName')));
+                    $entry->setFirstAttribute('sn', $request->get('sn', $users->first()->getFirstAttribute('sn')));
+                    $entry->setFirstAttribute('cn', trim(($request->get('givenName', $users->first()->getFirstAttribute('givenName'))) . ' ' . ($request->get('sn', $users->first()->getFirstAttribute('sn')))));
+                    $entry->setAttribute('mail', $request->get('mail', $users->first()->getAttribute('mail')));
+                    $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
+                    if ($request->has('userPassword')) {
+                        $entry->setFirstAttribute('userPassword', $request->userPassword);
+                    } else {
+                        $entry->setFirstAttribute('userPassword', $users->first()->getFirstAttribute('userPassword'));
+                    }
+                    $entry->setFirstAttribute('ou', $unit['ou']);
+                    $entry->setAttribute('employeeType', [$role]);
+                    $entry->setDn("uid={$uid},ou={$unit['ou']},{$baseDn}");
+                    $entry->save();
+                }
+            }
+
+            // Atualizar atributos comuns nos casos em que nenhuma OU informada (apenas email, nome etc.)
+            if ($units->isEmpty()) {
+                foreach ($users as $user) {
+                    if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
+                    if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
+                    if ($request->has('mail'))     $user->setAttribute('mail',          $request->mail);
+                    if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
+
+                    if ($request->has('givenName') || $request->has('sn')) {
+                        $user->setFirstAttribute('cn', trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')));
+                    }
+                    $user->save();
+                }
             }
 
             OperationLog::create([
