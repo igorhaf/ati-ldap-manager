@@ -27,6 +27,9 @@
                         <button v-if="isRoot" @click="showCreateOuModal = true" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                             📁 Nova Unidade Organizacional
                         </button>
+                        <button @click="logout" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors">
+                            🚪 Sair
+                        </button>
                     </div>
                 </div>
             </div>
@@ -123,7 +126,10 @@
                                      <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.fullName }}</td>
                                      <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.employeeNumber }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">
-                                         <div v-for="ou in user.organizationalUnits" :key="ou" class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">@{{ ou }}</div>
+                                         <div v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                                             @{{ unit.ou ?? unit }}
+                                             <span v-if="(unit.role ?? 'user') === 'admin'" class="font-semibold">(Admin)</span>
+                                         </div>
                                      </td>
                                      <td class="px-6 py-4 text-sm text-gray-900">
                                          <div v-for="email in user.mail" :key="email" class="text-xs">@{{ email }}</div>
@@ -273,14 +279,18 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
                             <div class="space-y-2">
-                                <div v-for="(ou, index) in newUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
-                                    <select v-model="newUser.organizationalUnits[index]" class="flex-1 border rounded px-3 py-2">
-                                        <option value="" disabled>Selecione...</option>
+                                <div v-for="(unit, index) in newUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
+                                    <select v-model="newUser.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
+                                        <option value="" disabled>Selecione OU...</option>
                                         <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">@{{ ouOpt.ou }}</option>
                                     </select>
-                                    <button v-if="index>0" @click="newUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
+                                    <select v-model="newUser.organizationalUnits[index].role" class="border rounded px-2 py-2">
+                                        <option value="user">Usuário</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                    <button v-if="index > 0" @click="newUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                                 </div>
-                                <button @click="newUser.organizationalUnits.push('')" class="mt-2 text-blue-600">+ adicionar OU</button>
+                                <button @click="newUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
                             </div>
                         </div>
 
@@ -362,14 +372,18 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Unidades Organizacionais</label>
-                        <div v-for="(ou,index) in editUserData.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
-                            <select v-model="editUserData.organizationalUnits[index]" class="flex-1 border rounded px-3 py-2">
-                                <option value="" disabled>Selecione...</option>
+                        <div v-for="(unit,index) in editUserData.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
+                            <select v-model="editUserData.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
+                                <option value="" disabled>Selecione OU...</option>
                                 <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">@{{ ouOpt.ou }}</option>
+                            </select>
+                            <select v-model="editUserData.organizationalUnits[index].role" class="border rounded px-2 py-2">
+                                <option value="user">Usuário</option>
+                                <option value="admin">Admin</option>
                             </select>
                             <button v-if="index>0" @click="editUserData.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                         </div>
-                        <button @click="editUserData.organizationalUnits.push('')" class="mt-2 text-blue-600">+ adicionar OU</button>
+                        <button @click="editUserData.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Senha</label>
@@ -459,7 +473,7 @@
                             employeeNumber: '',
                             mail: [''],
                             userPassword: '',
-                            organizationalUnits: ['']
+                            organizationalUnits: [{ ou: '', role: 'user' }]
                         },
                         newOu: {
                             ou: '',
@@ -508,7 +522,13 @@
                             const data = await response.json();
                             
                             if (data.success) {
-                                this.users = data.data;
+                                // Garantir que organizationalUnits esteja no formato de objetos {ou, role}
+                                this.users = data.data.map(u => {
+                                    if (Array.isArray(u.organizationalUnits) && typeof u.organizationalUnits[0] === 'string') {
+                                        u.organizationalUnits = u.organizationalUnits.map(o => ({ ou: o, role: 'user' }));
+                                    }
+                                    return u;
+                                });
                                 this.systemStatus = null;
                                 console.log('✅ Usuários carregados:', data.data.length);
                             } else {
@@ -625,6 +645,21 @@
                             this.showNotification('Erro ao criar unidade organizacional', 'error');
                         }
                     },
+
+                    async logout() {
+                        try {
+                            await fetch('/logout', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                }
+                            });
+                        } catch (e) {
+                            console.error('Erro ao fazer logout', e);
+                        } finally {
+                            window.location.href = '/login';
+                        }
+                    },
                     
                     addEmail() {
                         this.newUser.mail.push('');
@@ -632,14 +667,6 @@
                     
                     removeEmail(index) {
                         this.newUser.mail.splice(index, 1);
-                    },
-                    
-                    addOu() {
-                        this.newUser.organizationalUnits.push('');
-                    },
-                    
-                    removeOu(index) {
-                        this.newUser.organizationalUnits.splice(index, 1);
                     },
                     
                     resetNewUser() {
@@ -650,7 +677,7 @@
                             employeeNumber: '',
                             mail: [''],
                             userPassword: '',
-                            organizationalUnits: ['']
+                            organizationalUnits: [{ ou: '', role: 'user' }]
                         };
                     },
                     

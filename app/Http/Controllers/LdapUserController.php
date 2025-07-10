@@ -36,10 +36,25 @@ class LdapUserController extends Controller
             $formattedUsers = $users->groupBy(fn ($u) => $u->getFirstAttribute('uid'))
                 ->map(function ($entries) {
                     $first = $entries->first();
-                    $ous = $entries->map(fn ($e) => $e->getFirstAttribute('ou'))
-                                    ->filter()
-                                    ->unique()
-                                    ->values();
+                    // Para cada entrada, extrai a OU e o papel (employeeType) do usuário
+                    $ous = $entries->map(function ($e) {
+                        $ouName = $e->getFirstAttribute('ou');
+                        $roleAttr = $e->getAttribute('employeeType') ?? [];
+                        // employeeType pode ser string ou array
+                        if (is_array($roleAttr)) {
+                            $role = strtolower($roleAttr[0] ?? 'user');
+                        } else {
+                            $role = strtolower($roleAttr ?: 'user');
+                        }
+
+                        return [
+                            'ou'   => $ouName,
+                            'role' => $role,
+                        ];
+                    })
+                    ->filter(fn ($i) => !empty($i['ou']))
+                    ->unique('ou')
+                    ->values();
 
                     return [
                         'dn' => $first->getDn(),
