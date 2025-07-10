@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LdapUserController;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
     return redirect()->route('ldap.manager');
@@ -13,8 +14,10 @@ Route::get('/', function () {
 
 // Rota principal do gerenciador
 Route::get('/ldap-manager', function () {
-    return view('ldap-simple');
-})->name('ldap.manager');
+    return view('ldap-simple', [
+        'userRole' => \App\Services\RoleResolver::resolve(auth()->user())
+    ]);
+})->middleware(['auth', 'ou.admin'])->name('ldap.manager');
 
 // Rota para phpinfo (apenas para debug)
 Route::get('/phpinfo', function () {
@@ -35,3 +38,8 @@ Route::get('/debug', function () {
 Route::get('/ldap-original', function () {
     return view('ldap-manager');
 })->name('ldap.original');
+
+// Rotas de autenticação LDAP
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

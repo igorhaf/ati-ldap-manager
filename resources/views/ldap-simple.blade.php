@@ -7,6 +7,9 @@
     <title>Gerenciador LDAP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        window.USER_ROLE = "{{ $userRole ?? 'user' }}";
+    </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div id="app">
@@ -18,10 +21,10 @@
                         <p class="text-gray-600">Gerenciamento de Usuários e Unidades Organizacionais</p>
                     </div>
                     <div class="flex space-x-3">
-                        <button @click="showCreateUserModal = true" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <button v-if="canManageUsers" @click="showCreateUserModal = true" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                             ➕ Novo Usuário
                         </button>
-                        <button @click="showCreateOuModal = true" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <button v-if="isRoot" @click="showCreateOuModal = true" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                             📁 Nova Unidade Organizacional
                         </button>
                     </div>
@@ -111,7 +114,7 @@
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matrícula</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidades</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Emails</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                     <th v-if="canManageUsers" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
                                  </tr>
                              </thead>
                              <tbody class="bg-white divide-y divide-gray-200">
@@ -125,7 +128,7 @@
                                      <td class="px-6 py-4 text-sm text-gray-900">
                                          <div v-for="email in user.mail" :key="email" class="text-xs">@{{ email }}</div>
                                      </td>
-                                     <td class="px-6 py-4 text-sm font-medium">
+                                     <td v-if="canManageUsers" class="px-6 py-4 text-sm font-medium">
                                          <button @click="editUser(user)" class="text-blue-600 hover:text-blue-900 mr-3">✏️ Editar</button>
                                          <button @click="deleteUser(user.uid)" class="text-red-600 hover:text-red-900">🗑️ Excluir</button>
                                      </td>
@@ -468,6 +471,9 @@
                     }
                 },
                 computed: {
+                    isRoot() { return this.userRole === 'root'; },
+                    isOuAdmin() { return this.userRole === 'ou_admin'; },
+                    canManageUsers() { return this.isRoot || this.isOuAdmin; },
                     filteredUsers() {
                         if (!this.searchTerm) return this.users;
                         

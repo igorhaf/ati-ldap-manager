@@ -10,6 +10,7 @@ use App\Models\OperationLog;
 
 use LdapRecord\Connection;
 use LdapRecord\Container;
+use App\Services\RoleResolver;
 
 class LdapUserController extends Controller
 {
@@ -19,7 +20,17 @@ class LdapUserController extends Controller
     public function index(): JsonResponse
     {
         try {
+            $role = RoleResolver::resolve(auth()->user());
+
             $users = User::all();
+
+            // Se admin de OU, filtrar apenas entradas da sua OU
+            if ($role === RoleResolver::ROLE_OU_ADMIN) {
+                $adminOu = RoleResolver::getUserOu(auth()->user());
+                $users = $users->filter(function ($u) use ($adminOu) {
+                    return strtolower($u->getFirstAttribute('ou')) === strtolower($adminOu);
+                });
+            }
             
             // Agrupar por UID e consolidar as OUs para evitar duplicação de usuários na grid
             $formattedUsers = $users->groupBy(fn ($u) => $u->getFirstAttribute('uid'))
@@ -74,6 +85,14 @@ class LdapUserController extends Controller
                 'organizationalUnits' => 'array',
                 'organizationalUnits.*' => 'string',
             ]);
+
+            $role = RoleResolver::resolve(auth()->user());
+            if ($role === RoleResolver::ROLE_OU_ADMIN) {
+                $adminOu = RoleResolver::getUserOu(auth()->user());
+                $request->merge([
+                    'organizationalUnits' => [$adminOu],
+                ]);
+            }
 
             // Verificar se o UID já existe
             $existingUser = User::where('uid', $request->uid)->first();
@@ -193,6 +212,20 @@ class LdapUserController extends Controller
             ]);
 
             $users = User::where('uid', $uid)->get();
+            $role = RoleResolver::resolve(auth()->user());
+
+            if ($role === RoleResolver::ROLE_OU_ADMIN) {
+                $adminOu = RoleResolver::getUserOu(auth()->user());
+                $belongs = $users->every(function($u) use ($adminOu){
+                    return strtolower($u->getFirstAttribute('ou')) === strtolower($adminOu);
+                });
+                if (!$belongs) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Acesso negado: usuário fora da sua OU'
+                    ], 403);
+                }
+            }
 
             if ($users->isEmpty()) {
                 return response()->json([
@@ -275,6 +308,20 @@ class LdapUserController extends Controller
     {
         try {
             $users = User::where('uid', $uid)->get();
+            $role = RoleResolver::resolve(auth()->user());
+
+            if ($role === RoleResolver::ROLE_OU_ADMIN) {
+                $adminOu = RoleResolver::getUserOu(auth()->user());
+                $belongs = $users->every(function($u) use ($adminOu){
+                    return strtolower($u->getFirstAttribute('ou')) === strtolower($adminOu);
+                });
+                if (!$belongs) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Acesso negado: usuário fora da sua OU'
+                    ], 403);
+                }
+            }
 
             if ($users->isEmpty()) {
                 return response()->json([
@@ -314,6 +361,12 @@ class LdapUserController extends Controller
     {
         try {
             $ous = OrganizationalUnit::all();
+
+            $role = RoleResolver::resolve(auth()->user());
+            if ($role === RoleResolver::ROLE_OU_ADMIN) {
+                $adminOu = RoleResolver::getUserOu(auth()->user());
+                $ous = $ous->filter(fn($ou) => strtolower($ou->getFirstAttribute('ou')) === strtolower($adminOu));
+            }
             
             $formattedOus = $ous->map(function ($ou) {
                 return [
