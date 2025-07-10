@@ -6,29 +6,55 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Gerenciador LDAP</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
         window.USER_ROLE = "{{ $userRole ?? 'user' }}";
     </script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gradient-to-br from-indigo-50 to-blue-50 min-h-screen">
     <div id="app">
-        <header class="bg-white shadow-sm border-b border-gray-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <header class="bg-gradient-to-r from-indigo-600 to-blue-600 shadow-md">
+            <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center py-6">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">Gerenciador LDAP</h1>
-                        <p class="text-gray-600">Gerenciamento de Usuários e Unidades Organizacionais</p>
+                        <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clip-rule="evenodd" />
+                            </svg>
+                            Gerenciador LDAP
+                        </h1>
+                        <p class="text-blue-100">Gerenciamento de Usuários e Unidades Organizacionais</p>
                     </div>
                     <div class="flex space-x-3">
-                        <button v-if="canManageUsers" @click="showCreateUserModal = true" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                            ➕ Novo Usuário
+                        <button v-if="canManageUsers" @click="showCreateUserModal = true" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Novo Usuário
                         </button>
-                        <button v-if="isRoot" @click="showCreateOuModal = true" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                            📁 Nova Unidade Organizacional
+                        <button v-if="isRoot" @click="showCreateOuModal = true" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            Nova OU
                         </button>
-                        <button @click="logout" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors">
-                            🚪 Sair
+                        <button @click="logout" class="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg backdrop-blur-sm flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Sair
                         </button>
                     </div>
                 </div>
@@ -73,169 +99,206 @@
 
              <!-- Tabs -->
              <div class="border-b border-gray-200 mb-8">
-                 <nav class="-mb-px flex space-x-8">
-                     <button @click="activeTab = 'users'" :class="activeTab === 'users' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                         👥 Usuários
-                     </button>
-                     <button @click="activeTab = 'organizational-units'" :class="activeTab === 'organizational-units' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                         🏢 Unidades Organizacionais
-                     </button>
-                     <button @click="activeTab = 'logs'" :class="activeTab === 'logs' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                         📜 Logs
-                     </button>
+                 <nav class="-mb-px inline-flex bg-white rounded-2xl p-2 gap-1 shadow-lg border border-gray-200">
+                     <button @click="activeTab = 'users'" :class="activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'" class="whitespace-nowrap px-6 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Usuários
+                    </button>
+                     <button @click="activeTab = 'organizational-units'" :class="activeTab === 'organizational-units' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'" class="whitespace-nowrap px-6 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        Unidades
+                    </button>
+                     <button @click="activeTab = 'logs'" :class="activeTab === 'logs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'" class="whitespace-nowrap px-6 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Logs
+                    </button>
                  </nav>
              </div>
 
              <!-- Users Tab -->
              <div v-if="activeTab === 'users'" class="space-y-6">
                  <!-- Search and Filters -->
-                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                 <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
                      <div class="flex flex-col sm:flex-row gap-4">
                          <div class="flex-1">
                              <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar Usuários</label>
                              <input v-model="searchTerm" type="text" id="search" placeholder="Buscar por nome, UID ou matrícula..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                          </div>
                          <div class="flex items-end">
-                             <button @click="loadUsers" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium">
-                                 🔄 Atualizar
-                             </button>
-                         </div>
-                     </div>
-                 </div>
+                             <button @click="loadUsers" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Atualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                 <!-- Users Table -->
-                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                     <div class="px-6 py-4 border-b border-gray-200">
-                         <h3 class="text-lg font-medium text-gray-900">Lista de Usuários (@{{ filteredUsers.length }})</h3>
-                     </div>
-                     <div class="overflow-x-auto">
-                         <table class="min-w-full divide-y divide-gray-200">
-                             <thead class="bg-gray-50">
-                                 <tr>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UID</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matrícula</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidades</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Emails</th>
-                                     <th v-if="canManageUsers" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
-                                 </tr>
-                             </thead>
-                             <tbody class="bg-white divide-y divide-gray-200">
-                                 <tr v-for="user in filteredUsers" :key="user.uid" :class="[user.uid === 'root' ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'hover:bg-gray-50']">
-                                     <td class="px-6 py-4 text-sm font-medium" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.uid }}</td>
-                                     <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.fullName }}</td>
-                                     <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.employeeNumber }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">
-                                         <div v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
-                                             @{{ unit.ou ?? unit }}
-                                             <span v-if="(unit.role ?? 'user') === 'admin'" class="font-semibold">(Admin)</span>
-                                         </div>
-                                     </td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">
-                                         <div v-for="email in user.mail" :key="email" class="text-xs">@{{ email }}</div>
-                                     </td>
-                                     <td v-if="canManageUsers" class="px-6 py-4 text-sm font-medium">
-                                         <template v-if="user.uid !== 'root'">
-                                             <button @click="editUser(user)" class="text-blue-600 hover:text-blue-900 mr-3">✏️ Editar</button>
-                                             <button @click="deleteUser(user.uid)" class="text-red-600 hover:text-red-900">🗑️ Excluir</button>
-                                         </template>
-                                     </td>
-                                 </tr>
-                                 <tr v-if="filteredUsers.length === 0">
-                                     <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-                                         <div v-if="users.length === 0">📭 Nenhum usuário encontrado</div>
-                                         <div v-else>🔍 Nenhum usuário corresponde à busca</div>
-                                     </td>
-                                 </tr>
-                             </tbody>
-                         </table>
-                     </div>
-                 </div>
-             </div>
+                <!-- Users Table -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Lista de Usuários (@{{ filteredUsers.length }})</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matrícula</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unidades</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Emails</th>
+                                    <th v-if="canManageUsers" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="user in filteredUsers" :key="user.uid" :class="[user.uid === 'root' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'hover:bg-gray-50 odd:bg-gray-50']">
+                                    <td class="px-6 py-4 text-sm font-medium" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.uid }}</td>
+                                    <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.fullName }}</td>
+                                    <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.employeeNumber }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">
+                                        <div v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" class="inline-flex items-center gap-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border border-blue-300/30">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                            </svg>
+                                            @{{ unit.ou ?? unit }}
+                                            <span v-if="(unit.role ?? 'user') === 'admin'" class="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">Admin</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">
+                                        <div v-for="email in user.mail" :key="email" class="text-xs">@{{ email }}</div>
+                                    </td>
+                                    <td v-if="canManageUsers" class="px-6 py-4 text-sm font-medium">
+                                        <template v-if="user.uid !== 'root'">
+                                            <button @click="editUser(user)" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900 mr-4 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                                Editar
+                                            </button>
+                                            <button @click="deleteUser(user.uid)" class="inline-flex items-center gap-1 text-red-600 hover:text-red-900 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                Excluir
+                                            </button>
+                                        </template>
+                                    </td>
+                                </tr>
+                                <tr v-if="filteredUsers.length === 0">
+                                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        <div v-if="users.length === 0">📭 Nenhum usuário encontrado</div>
+                                        <div v-else>🔍 Nenhum usuário corresponde à busca</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-             <!-- Organizational Units Tab -->
-             <div v-if="activeTab === 'organizational-units'" class="space-y-6">
-                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                     <div class="px-6 py-4 border-b border-gray-200">
-                         <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais (@{{ organizationalUnits.length }})</h3>
-                     </div>
-                     <div class="overflow-x-auto">
-                         <table class="min-w-full divide-y divide-gray-200">
-                             <thead class="bg-gray-50">
-                                 <tr>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DN</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
-                                 </tr>
-                             </thead>
-                             <tbody class="bg-white divide-y divide-gray-200">
-                                 <tr v-for="ou in organizationalUnits" :key="ou.dn" class="hover:bg-gray-50">
-                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ ou.ou }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ ou.description || '-' }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-500 font-mono">@{{ ou.dn }}</td>
-                                     <td class="px-6 py-4 text-sm font-medium">
-                                         <button @click="editOu(ou)" class="text-blue-600 hover:text-blue-900">✏️ Editar</button>
-                                     </td>
-                                 </tr>
-                                 <tr v-if="organizationalUnits.length === 0">
-                                     <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
-                                         📁 Nenhuma unidade organizacional encontrada
-                                     </td>
-                                 </tr>
-                             </tbody>
-                         </table>
-                     </div>
-                 </div>
-             </div>
+            <!-- Organizational Units Tab -->
+            <div v-if="activeTab === 'organizational-units'" class="space-y-6">
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais (@{{ organizationalUnits.length }})</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DN</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="ou in organizationalUnits" :key="ou.dn" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ ou.ou }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ ou.description || '-' }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-500 font-mono">@{{ ou.dn }}</td>
+                                    <td class="px-6 py-4 text-sm font-medium">
+                                        <button @click="editOu(ou)" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            Editar
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr v-if="organizationalUnits.length === 0">
+                                    <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                                        📁 Nenhuma unidade organizacional encontrada
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-             <!-- Logs Tab -->
-             <div v-if="activeTab === 'logs'" class="space-y-6">
-                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                     <div class="px-6 py-4 border-b border-gray-200">
-                         <h3 class="text-lg font-medium text-gray-900">Logs de Operações (@{{ logs.length }})</h3>
-                     </div>
-                     <div class="overflow-x-auto">
-                         <table class="min-w-full divide-y divide-gray-200">
-                             <thead class="bg-gray-50">
-                                 <tr>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operação</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade ID</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">OU</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
-                                 </tr>
-                             </thead>
-                             <tbody class="bg-white divide-y divide-gray-200">
-                                 <tr v-for="log in logs" :key="log.id" class="hover:bg-gray-50">
-                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ log.id }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.operation }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity_id }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.ou || '-' }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.created_at).toLocaleString() }}</td>
-                                 </tr>
-                                 <tr v-if="logs.length === 0">
-                                     <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log encontrado</td>
-                                 </tr>
-                             </tbody>
-                         </table>
-                     </div>
-                 </div>
-             </div>
-         </main>
+            <!-- Logs Tab -->
+            <div v-if="activeTab === 'logs'" class="space-y-6">
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Logs de Operações (@{{ logs.length }})</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operação</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">OU</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr v-for="log in logs" :key="log.id" class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ log.id }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.operation }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity_id }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.ou || '-' }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.created_at).toLocaleString() }}</td>
+                                </tr>
+                                <tr v-if="logs.length === 0">
+                                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log encontrado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
 
         <!-- Create User Modal -->
-        <div v-if="showCreateUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-                <div class="mt-3">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">➕ Criar Novo Usuário</h3>
-                        <button @click="showCreateUserModal = false" class="text-gray-400 hover:text-gray-600">
-                            ✖️
+        <div v-if="showCreateUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
+            <div class="w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100">
+                <div class="p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Criar Novo Usuário
+                        </h3>
+                        <button @click="showCreateUserModal = false" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
                     </div>
                     
@@ -296,9 +359,9 @@
                             </div>
                         </div>
 
-                        <div class="flex justify-end space-x-3 pt-4">
-                            <button @click="showCreateUserModal = false" type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancelar</button>
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Criar Usuário</button>
+                        <div class="flex justify-end space-x-4 pt-8 border-t border-gray-200">
+                            <button @click="showCreateUserModal = false" type="button" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-medium transition-colors">Cancelar</button>
+                            <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors hover:shadow-lg">Criar Usuário</button>
                         </div>
                     </form>
                 </div>
@@ -306,7 +369,7 @@
         </div>
 
         <!-- Create UO Modal -->
-        <div v-if="showCreateOuModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div v-if="showCreateOuModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div class="mt-3">
                     <div class="flex justify-between items-center mb-4">
@@ -342,7 +405,7 @@
         </div>
 
         <!-- Modal edição usuário -->
-        <div v-if="showEditUserModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div v-if="showEditUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="bg-white w-full max-w-lg rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold mb-4">✏️ Editar Usuário</h2>
                 <div class="space-y-4">
@@ -400,7 +463,7 @@
         </div>
         <!-- Fim modal edição -->
         <!-- Delete User Confirmation Modal -->
-        <div v-if="showDeleteUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div v-if="showDeleteUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div class="mt-3 text-center">
                     <h3 class="text-lg font-medium text-gray-900">Confirmar Exclusão</h3>
@@ -415,7 +478,7 @@
             </div>
         </div>
         <!-- Edit Organizational Unit Modal -->
-        <div v-if="showEditOuModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div v-if="showEditOuModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div class="mt-3">
                     <div class="flex justify-between items-center mb-4">
