@@ -38,7 +38,8 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'ldap',
+            // Ajustado para provider existente
+            'provider' => 'ldap_users',
         ],
     ],
 
@@ -60,15 +61,15 @@ return [
     */
 
     'providers' => [
-        'ldap' => [
+        'ldap_users' => [
             'driver' => 'ldap',
             'model' => App\Ldap\User::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
     ],
 
     /*

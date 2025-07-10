@@ -177,8 +177,8 @@ php artisan test
 2. Confirme as credenciais no `.env`
 3. Teste a conexão com: `php artisan tinker`
    ```php
-   use App\Ldap\User;
-   User::all();
+   use App\Ldap\LdapUserModel;
+   LdapUserModel::all();
    ```
 
 ### Erro de Permissões

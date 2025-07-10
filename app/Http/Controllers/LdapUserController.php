@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Ldap\User;
+use App\Ldap\LdapUserModel;
 use App\Ldap\OrganizationalUnit;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +20,18 @@ class LdapUserController extends Controller
     private function safeGetAttribute($user, $attribute)
     {
         return $user->getFirstAttribute($attribute);
+    }
+
+    /**
+     * Garantir que a entrada possua o objectClass necessário para gravar
+     * atributos de roteamento de email (ex.: mailForwardingAddress).
+     */
+    private function ensureInetLocalMailRecipient($model): void
+    {
+        $classes = array_map('strtolower', $model->getAttribute('objectClass') ?? []);
+        if (!in_array('inetlocalmailrecipient', $classes)) {
+            $model->addAttribute('objectClass', 'inetLocalMailRecipient');
+        }
     }
 
     /**
@@ -157,7 +169,7 @@ class LdapUserController extends Controller
                 $ou = $unit['ou'];
                 $role = $unit['role'] ?? 'user';
 
-                $entry = new User();
+                $entry = new LdapUserModel();
                 $entry->setFirstAttribute('uid', $request->uid);
                 $entry->setFirstAttribute('givenName', $request->givenName);
                 $entry->setFirstAttribute('sn', $request->sn);
@@ -165,13 +177,9 @@ class LdapUserController extends Controller
                 $entry->setFirstAttribute('mail', $request->mail);
                 
                 // Tentar definir mailForwardingAddress, mas continuar se não for suportado
-                if ($request->has('mailForwardingAddress') && $request->mailForwardingAddress) {
-                    try {
-                        $entry->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
-                    } catch (\Exception $e) {
-                        // Ignorar se mailForwardingAddress não for suportado pelo schema
-                        \Log::warning('mailForwardingAddress não suportado pelo schema LDAP: ' . $e->getMessage());
-                    }
+                if ($request->has('mailForwardingAddress')) {
+                    $this->ensureInetLocalMailRecipient($entry);
+                    $entry->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress ?: null);
                 }
                 $entry->setFirstAttribute('employeeNumber', $request->employeeNumber);
                 $entry->setFirstAttribute('userPassword', $request->userPassword);
@@ -318,16 +326,8 @@ class LdapUserController extends Controller
                     
                     // Tentar definir mailForwardingAddress, mas continuar se não for suportado
                     if ($request->has('mailForwardingAddress')) {
-                        try {
-                            if ($request->mailForwardingAddress) {
-                                $user->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
-                            } else {
-                                $user->setFirstAttribute('mailForwardingAddress', null);
-                            }
-                        } catch (\Exception $e) {
-                            // Ignorar se mailForwardingAddress não for suportado pelo schema
-                            \Log::warning('mailForwardingAddress não suportado pelo schema LDAP: ' . $e->getMessage());
-                        }
+                        $this->ensureInetLocalMailRecipient($user);
+                        $user->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress ?: null);
                     }
                     
                     if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
@@ -341,7 +341,7 @@ class LdapUserController extends Controller
                     $user->save();
                 } else {
                     // Criar nova entrada nessa OU
-                    $entry = new User();
+                    $entry = new LdapUserModel();
                     $entry->setFirstAttribute('uid', $uid);
                     $entry->setFirstAttribute('givenName', $request->get('givenName', $users->first()->getFirstAttribute('givenName')));
                     $entry->setFirstAttribute('sn', $request->get('sn', $users->first()->getFirstAttribute('sn')));
@@ -349,24 +349,14 @@ class LdapUserController extends Controller
                     $entry->setFirstAttribute('mail', $request->get('mail', $users->first()->getFirstAttribute('mail')));
                     
                     // Tentar definir mailForwardingAddress, mas continuar se não for suportado
-                    if ($request->has('mailForwardingAddress')) {
-                        try {
-                            if ($request->mailForwardingAddress) {
-                                $entry->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
-            }
-                        } catch (\Exception $e) {
-                            // Ignorar se mailForwardingAddress não for suportado pelo schema
-                            \Log::warning('mailForwardingAddress não suportado pelo schema LDAP: ' . $e->getMessage());
-                        }
+                    if ($request->has('mailForwardingAddress') && $request->mailForwardingAddress) {
+                        $this->ensureInetLocalMailRecipient($entry);
+                        $entry->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
                     } else {
                         $forwardingAddr = $this->safeGetAttribute($users->first(), 'mailForwardingAddress');
                         if ($forwardingAddr) {
-                            try {
-                                $entry->setFirstAttribute('mailForwardingAddress', $forwardingAddr);
-                            } catch (\Exception $e) {
-                                // Ignorar se mailForwardingAddress não for suportado pelo schema
-                                \Log::warning('mailForwardingAddress não suportado pelo schema LDAP: ' . $e->getMessage());
-                            }
+                            $this->ensureInetLocalMailRecipient($entry);
+                            $entry->setFirstAttribute('mailForwardingAddress', $forwardingAddr);
                         }
                     }
                     
@@ -392,16 +382,8 @@ class LdapUserController extends Controller
                     
                     // Tentar definir mailForwardingAddress, mas continuar se não for suportado
                     if ($request->has('mailForwardingAddress')) {
-                        try {
-                            if ($request->mailForwardingAddress) {
-                                $user->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
-                            } else {
-                                $user->setFirstAttribute('mailForwardingAddress', null);
-                            }
-                        } catch (\Exception $e) {
-                            // Ignorar se mailForwardingAddress não for suportado pelo schema
-                            \Log::warning('mailForwardingAddress não suportado pelo schema LDAP: ' . $e->getMessage());
-            }
+                        $this->ensureInetLocalMailRecipient($user);
+                        $user->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress ?: null);
                     }
                     
                     if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);

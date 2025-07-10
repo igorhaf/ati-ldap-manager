@@ -16,7 +16,6 @@ class RoleResolver
      */
     public static function resolve(Authenticatable $user): string
     {
-        // 1. Verifica atributo 'employeeType' (pode ser multivalorado) para o papel
         $roleAttr = method_exists($user, 'getAttribute') ? $user->getAttribute('employeeType') : ($user->employeeType ?? []);
         $roles = collect((array) $roleAttr)->map(fn($v) => strtolower($v));
 
@@ -28,12 +27,10 @@ class RoleResolver
             return self::ROLE_OU_ADMIN;
         }
 
-        // 🔍 Caso o registro autenticado não contenha papel de admin/root,
-        // verificar outras entradas com o mesmo UID em diferentes OUs
-        if (method_exists($user, 'getFirstAttribute')) {
+        if ($user instanceof \LdapRecord\Models\Model) {
             $uid = $user->getFirstAttribute('uid');
             if ($uid) {
-                $entries = \App\Ldap\User::where('uid', $uid)->get();
+                $entries = \App\Ldap\LdapUserModel::where('uid', $uid)->get();
                 foreach ($entries as $entry) {
                     $entryRoles = collect((array) ($entry->getAttribute('employeeType') ?? []))->map(fn ($v) => strtolower($v));
                     if ($entryRoles->contains(self::ROLE_ROOT)) {
@@ -58,7 +55,7 @@ class RoleResolver
         if (method_exists($user, 'getFirstAttribute')) {
             $uid = $user->getFirstAttribute('uid');
             if ($uid) {
-                $entries = \App\Ldap\User::where('uid', $uid)->get();
+                $entries = \App\Ldap\LdapUserModel::where('uid', $uid)->get();
                 foreach ($entries as $entry) {
                     $entryRoles = collect((array) ($entry->getAttribute('employeeType') ?? []))->map(fn ($v) => strtolower($v));
                     if ($entryRoles->contains('admin')) {

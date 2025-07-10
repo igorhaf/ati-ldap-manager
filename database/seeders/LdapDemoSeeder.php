@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Ldap\User;
+use App\Ldap\LdapUserModel;
 use App\Ldap\OrganizationalUnit;
 
 class LdapDemoSeeder extends Seeder
@@ -24,9 +24,9 @@ class LdapDemoSeeder extends Seeder
 
         // 2. Admin da OU Financeiro
         $adminUid = 'admin.financeiro';
-        $admin = User::where('uid', $adminUid)->first();
+        $admin = LdapUserModel::where('uid', $adminUid)->first();
         if (!$admin) {
-            $admin = new User();
+            $admin = new LdapUserModel();
             $admin->setFirstAttribute('uid', $adminUid);
             $admin->setFirstAttribute('cn', 'Admin Financeiro');
             $admin->setFirstAttribute('sn', 'Admin');
@@ -42,9 +42,9 @@ class LdapDemoSeeder extends Seeder
 
         // 3. Usuário comum dentro da OU Financeiro  
         $userUid = 'jane.doe';
-        $user = User::where('uid', $userUid)->first();
+        $user = LdapUserModel::where('uid', $userUid)->first();
         if (!$user) {
-            $user = new User();
+            $user = new LdapUserModel();
             $user->setFirstAttribute('uid', $userUid);
             $user->setFirstAttribute('cn', 'Jane Doe');
             $user->setFirstAttribute('sn', 'Doe');
@@ -59,9 +59,9 @@ class LdapDemoSeeder extends Seeder
         }
 
         // Usuário root (super-admin)
-        $root = User::where('uid', 'root')->first();
+        $root = LdapUserModel::where('uid', 'root')->first();
         if (!$root) {
-            $root = new User();
+            $root = new LdapUserModel();
             $root->setFirstAttribute('uid', 'root');
             $root->setFirstAttribute('cn',  'root');
             $root->setFirstAttribute('sn',  'root');
@@ -70,7 +70,7 @@ class LdapDemoSeeder extends Seeder
             $root->setFirstAttribute('mail', 'root@example.com');
             // O atributo abaixo só será salvo se o schema misc estiver presente
             try {
-               // $root->setFirstAttribute('mailForwardingAddress', 'admin@example.com');
+                $root->setFirstAttribute('mailForwardingAddress', 'admin@example.com');
             } catch (\Exception $e) {
                 // ignora se schema não disponível
             }
