@@ -27,15 +27,6 @@ class LdapUserModel extends LdapUser
         'mail' => 'array',
     ];
 
-    /**
-     * The default attributes values.
-     *
-     * @var array
-     */
-    protected array $attributes = [
-        'mailForwardingAddress' => [],
-    ];
-
     // Removidos os atributos customizados que causavam loop infinito
     // Agora usaremos diretamente os métodos padrão do LdapRecord
 

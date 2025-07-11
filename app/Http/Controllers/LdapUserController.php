@@ -42,7 +42,7 @@ class LdapUserController extends Controller
         try {
             $role = RoleResolver::resolve(auth()->user());
 
-            $users = User::all();
+            $users = LdapUserModel::all();
             
             // Se admin de OU, filtrar apenas entradas da sua OU
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
@@ -84,7 +84,6 @@ class LdapUserController extends Controller
                         'cn' => $first->getFirstAttribute('cn'),
                         'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
                         'mail' => $first->getFirstAttribute('mail'),
-                        'mailForwardingAddress' => $this->safeGetAttribute($first, 'mailForwardingAddress'),
                         'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                         'organizationalUnits' => $ous,
                 ];
@@ -116,7 +115,6 @@ class LdapUserController extends Controller
                 'sn' => 'required|string|max:255',
                 'employeeNumber' => 'required|string|max:255',
                 'mail' => 'required|email',
-                'mailForwardingAddress' => 'nullable|email',
                 'userPassword' => 'required|string|min:6',
                 'organizationalUnits' => 'array',
                 // Cada item pode ser string (OU) ou objeto {ou, role}
@@ -132,7 +130,7 @@ class LdapUserController extends Controller
             }
 
             // Verificar se já existem entradas com UID e mesma OU
-            $existingEntries = User::where('uid', $request->uid)->get();
+            $existingEntries = LdapUserModel::where('uid', $request->uid)->get();
 
             $unitsInput = collect($request->organizationalUnits)->map(function($i){return is_string($i)? $i : ($i['ou'] ?? null);})->filter();
 
@@ -147,7 +145,7 @@ class LdapUserController extends Controller
             }
 
             // Verificar se a matrícula já existe
-            $existingEmployee = User::where('employeeNumber', $request->employeeNumber)->first();
+            $existingEmployee = LdapUserModel::where('employeeNumber', $request->employeeNumber)->first();
             if ($existingEmployee) {
                 return response()->json([
                     'success' => false,
@@ -169,24 +167,28 @@ class LdapUserController extends Controller
                 $ou = $unit['ou'];
                 $role = $unit['role'] ?? 'user';
 
-                $entry = new LdapUserModel();
+                $entry = new LdapUserModel();           // já usa o alias correto
                 $entry->setFirstAttribute('uid', $request->uid);
-                $entry->setFirstAttribute('givenName', $request->givenName);
-                $entry->setFirstAttribute('sn', $request->sn);
-                $entry->setFirstAttribute('cn', $request->givenName . ' ' . $request->sn);
-                $entry->setFirstAttribute('mail', $request->mail);
-                
-                // Tentar definir mailForwardingAddress, mas continuar se não for suportado
-                if ($request->has('mailForwardingAddress')) {
-                    $this->ensureInetLocalMailRecipient($entry);
-                    $entry->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress ?: null);
-                }
+                $entry->setFirstAttribute('givenName',  $request->givenName);
+                $entry->setFirstAttribute('sn',         $request->sn);
+                $entry->setFirstAttribute('cn',         $request->givenName.' '.$request->sn);
+                $entry->setFirstAttribute('mail',       $request->mail);
                 $entry->setFirstAttribute('employeeNumber', $request->employeeNumber);
-                $entry->setFirstAttribute('userPassword', $request->userPassword);
-                $entry->setFirstAttribute('ou', $ou);
-                $entry->setAttribute('employeeType', [$role]);
+                $entry->setFirstAttribute('userPassword',   $request->userPassword);
+                $entry->setFirstAttribute('ou',         $ou);
+                $entry->setAttribute('employeeType',    [$role]);
+
+                // 1⃣  defina o objectClass completo ANTES de salvar
+                $entry->setAttribute('objectClass', [
+                    'top',
+                    'person',
+                    'organizationalPerson',
+                    'inetOrgPerson',
+                ]);
+
                 $entry->setDn("uid={$request->uid},ou={$ou},{$baseDn}");
                 $entry->save();
+                //var_dump($entry);             // 1ª operação: cria a entrada
             }
 
             OperationLog::create([
@@ -223,7 +225,7 @@ class LdapUserController extends Controller
     public function show(string $uid): JsonResponse
     {
         try {
-            $user = User::where('uid', $uid)->first();
+            $user = LdapUserModel::where('uid', $uid)->first();
             
             if (!$user) {
                 return response()->json([
@@ -242,7 +244,6 @@ class LdapUserController extends Controller
                     'cn' => $user->getFirstAttribute('cn'),
                     'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
                     'mail' => $user->getFirstAttribute('mail'),
-                    'mailForwardingAddress' => $this->safeGetAttribute($user, 'mailForwardingAddress'),
                     'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
                     'organizationalUnits' => $user->getAttribute('ou') ?? [],
                 ],
@@ -267,14 +268,13 @@ class LdapUserController extends Controller
                 'givenName' => 'sometimes|required|string|max:255',
                 'sn' => 'sometimes|required|string|max:255',
                 'mail' => 'sometimes|required|email',
-                'mailForwardingAddress' => 'sometimes|nullable|email',
                 'userPassword' => 'sometimes|required|string|min:6',
                 'organizationalUnits' => 'sometimes|array',
                 // aceitar string ou objeto {ou, role}
                 'organizationalUnits.*' => 'required',
             ]);
 
-            $users = User::where('uid', $uid)->get();
+            $users = LdapUserModel::where('uid', $uid)->get();
             $role = RoleResolver::resolve(auth()->user());
 
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
@@ -324,12 +324,6 @@ class LdapUserController extends Controller
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
                     
-                    // Tentar definir mailForwardingAddress, mas continuar se não for suportado
-                    if ($request->has('mailForwardingAddress')) {
-                        $this->ensureInetLocalMailRecipient($user);
-                        $user->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress ?: null);
-                    }
-                    
                     if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
 
                     // Nome completo
@@ -348,20 +342,8 @@ class LdapUserController extends Controller
                     $entry->setFirstAttribute('cn', trim(($request->get('givenName', $users->first()->getFirstAttribute('givenName'))) . ' ' . ($request->get('sn', $users->first()->getFirstAttribute('sn')))));
                     $entry->setFirstAttribute('mail', $request->get('mail', $users->first()->getFirstAttribute('mail')));
                     
-                    // Tentar definir mailForwardingAddress, mas continuar se não for suportado
-                    if ($request->has('mailForwardingAddress') && $request->mailForwardingAddress) {
-                        $this->ensureInetLocalMailRecipient($entry);
-                        $entry->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress);
-                    } else {
-                        $forwardingAddr = $this->safeGetAttribute($users->first(), 'mailForwardingAddress');
-                        if ($forwardingAddr) {
-                            $this->ensureInetLocalMailRecipient($entry);
-                            $entry->setFirstAttribute('mailForwardingAddress', $forwardingAddr);
-                        }
-                    }
-                    
                     $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
-                    if ($request->has('userPassword')) {
+            if ($request->has('userPassword')) {
                         $entry->setFirstAttribute('userPassword', $request->userPassword);
                     } else {
                         $entry->setFirstAttribute('userPassword', $users->first()->getFirstAttribute('userPassword'));
@@ -379,12 +361,6 @@ class LdapUserController extends Controller
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
-                    
-                    // Tentar definir mailForwardingAddress, mas continuar se não for suportado
-                    if ($request->has('mailForwardingAddress')) {
-                        $this->ensureInetLocalMailRecipient($user);
-                        $user->setFirstAttribute('mailForwardingAddress', $request->mailForwardingAddress ?: null);
-                    }
                     
                     if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
 
@@ -417,7 +393,6 @@ class LdapUserController extends Controller
                     'cn' => $first->getFirstAttribute('cn'),
                     'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
                     'mail' => $first->getFirstAttribute('mail'),
-                    'mailForwardingAddress' => $this->safeGetAttribute($first, 'mailForwardingAddress'),
                     'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                     'organizationalUnits' => $ous,
                 ],
@@ -438,7 +413,7 @@ class LdapUserController extends Controller
     public function destroy(string $uid): JsonResponse
     {
         try {
-            $users = User::where('uid', $uid)->get();
+            $users = LdapUserModel::where('uid', $uid)->get();
             $role = RoleResolver::resolve(auth()->user());
 
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
@@ -667,7 +642,7 @@ class LdapUserController extends Controller
                 'userPassword' => 'required|string|min:6',
             ]);
 
-            $users = User::where('uid', $uid)->get();
+            $users = LdapUserModel::where('uid', $uid)->get();
             if ($users->isEmpty()) {
                 return response()->json([
                     'success' => false,
