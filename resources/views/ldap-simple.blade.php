@@ -26,7 +26,7 @@
 <body class="bg-gradient-to-br from-indigo-50 to-blue-50 min-h-screen">
     <div id="app">
         <header class="bg-gradient-to-r from-indigo-600 to-blue-600 shadow-md">
-            <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-full mx-auto px-6 xl:px-12">
                 <div class="flex justify-between items-center py-6">
                     <div>
                         <h1 class="text-3xl font-bold text-white flex items-center gap-3">
@@ -62,7 +62,7 @@
         </header>
 
                  <!-- Status Panel -->
-         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+         <main class="max-w-full mx-auto px-6 xl:px-12 py-8">
              <div v-if="systemStatus" class="mb-8">
                  <div :class="systemStatus.type === 'error' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'" class="border rounded-lg p-4">
                      <div class="flex items-start">
