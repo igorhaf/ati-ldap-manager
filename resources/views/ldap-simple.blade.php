@@ -159,11 +159,11 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="user in filteredUsers" :key="user.uid" :class="[user.uid === 'root' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'hover:bg-gray-50 odd:bg-gray-50']">
+                                <tr v-for="user in paginatedUsers" :key="user.uid" :class="[user.uid === 'root' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'hover:bg-gray-50 odd:bg-gray-50']">
                                     <td class="px-6 py-4 text-sm font-medium" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.uid }}</td>
                                     <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.fullName }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
-                                        <div v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" class="inline-flex items-center gap-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border border-blue-300/30">
+                                        <div v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" @click="setOuFilter(typeof unit==='string'?unit:unit.ou)" :class="['inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border cursor-pointer select-none', ((typeof unit==='string'?unit:unit.ou)===activeOuFilter) ? 'bg-blue-600 text-white border-blue-600' : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300/30 hover:brightness-90']">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                             </svg>
@@ -206,6 +206,12 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- Controles de paginação Usuários -->
+                    <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalUsersPages > 1">
+                        <button @click="prevPage('users')" :disabled="usersPage === 1" class="px-2 py-1 border rounded disabled:opacity-50">«</button>
+                        <button v-for="n in pageNumbers(totalUsersPages)" :key="'u'+n" @click="setPage('users',n)" :class="['px-3 py-1 rounded-full', usersPage===n ? 'bg-blue-600 text-white' : 'border border-gray-300 bg-white hover:bg-gray-100']">@{{ n }}</button>
+                        <button @click="nextPage('users')" :disabled="usersPage === totalUsersPages" class="px-2 py-1 border rounded disabled:opacity-50">»</button>
+                    </div>
                 </div>
             </div>
 
@@ -226,7 +232,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="ou in organizationalUnits" :key="ou.dn" class="hover:bg-gray-50">
+                                <tr v-for="ou in paginatedOus" :key="ou.dn" class="hover:bg-gray-50">
                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ ou.ou }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ ou.description || '-' }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-500 font-mono">@{{ ou.dn }}</td>
@@ -246,6 +252,12 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <!-- Paginação OUs -->
+                    <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalOusPages > 1">
+                        <button @click="prevPage('ous')" :disabled="ousPage === 1" class="px-2 py-1 border rounded disabled:opacity-50">«</button>
+                        <button v-for="n in pageNumbers(totalOusPages)" :key="'o'+n" @click="setPage('ous',n)" :class="['px-3 py-1 rounded-full', ousPage===n ? 'bg-blue-600 text-white' : 'border border-gray-300 bg-white hover:bg-gray-100']">@{{ n }}</button>
+                        <button @click="nextPage('ous')" :disabled="ousPage === totalOusPages" class="px-2 py-1 border rounded disabled:opacity-50">»</button>
                     </div>
                 </div>
             </div>
@@ -270,7 +282,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="log in logs" :key="log.id" class="hover:bg-gray-50">
+                                <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-gray-50">
                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ log.id }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.operation }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity }}</td>
@@ -284,6 +296,12 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <!-- Paginação Logs -->
+                    <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalLogPages > 1">
+                        <button @click="prevPage('logs')" :disabled="logsPage === 1" class="px-2 py-1 border rounded disabled:opacity-50">«</button>
+                        <button v-for="n in pageNumbers(totalLogPages)" :key="'l'+n" @click="setPage('logs',n)" :class="['px-3 py-1 rounded-full', logsPage===n ? 'bg-blue-600 text-white' : 'border border-gray-300 bg-white hover:bg-gray-100']">@{{ n }}</button>
+                        <button @click="nextPage('logs')" :disabled="logsPage === totalLogPages" class="px-2 py-1 border rounded disabled:opacity-50">»</button>
                     </div>
                 </div>
             </div>
@@ -542,6 +560,11 @@
                         users: [],
                         organizationalUnits: [],
                         logs: [],
+                        // Paginação
+                        itemsPerPage: 20,
+                        usersPage: 1,
+                        ousPage: 1,
+                        logsPage: 1,
                         searchTerm: '',
                         showCreateUserModal: false,
                         showCreateOuModal: false,
@@ -555,6 +578,7 @@
                             message: '',
                             type: 'success'
                         },
+                        activeOuFilter: '',
                         newUser: {
                             uid: '',
                             givenName: '',
@@ -591,15 +615,45 @@
                     isOuAdmin() { return this.userRole === 'ou_admin'; },
                     canManageUsers() { return this.isRoot || this.isOuAdmin; },
                     filteredUsers() {
-                        if (!this.searchTerm) return this.users;
-                        
+                        let list = this.users;
+
+                        // Aplica filtro de OU se selecionado
+                        if (this.activeOuFilter) {
+                            list = list.filter(u => {
+                                return (u.organizationalUnits || []).some(unit => {
+                                    const ouName = typeof unit === 'string' ? unit : (unit.ou ?? unit);
+                                    return ouName === this.activeOuFilter;
+                                });
+                            });
+                        }
+
+                        if (!this.searchTerm) return list;
+
                         const term = this.searchTerm.toLowerCase();
-                        return this.users.filter(user => 
+                        return list.filter(user => 
                             user.uid.toLowerCase().includes(term) ||
                             user.fullName.toLowerCase().includes(term) ||
                             user.employeeNumber.toLowerCase().includes(term)
                         );
-                    }
+                    },
+                    // Paginação usuários
+                    paginatedUsers() {
+                        const start = (this.usersPage - 1) * this.itemsPerPage;
+                        return this.filteredUsers.slice(start, start + this.itemsPerPage);
+                    },
+                    totalUsersPages() { return Math.ceil(this.filteredUsers.length / this.itemsPerPage) || 1; },
+                    // Paginação OUs
+                    paginatedOus() {
+                        const start = (this.ousPage - 1) * this.itemsPerPage;
+                        return this.organizationalUnits.slice(start, start + this.itemsPerPage);
+                    },
+                    totalOusPages() { return Math.ceil(this.organizationalUnits.length / this.itemsPerPage) || 1; },
+                    // Paginação logs
+                    paginatedLogs() {
+                        const start = (this.logsPage - 1) * this.itemsPerPage;
+                        return this.logs.slice(start, start + this.itemsPerPage);
+                    },
+                    totalLogPages() { return Math.ceil(this.logs.length / this.itemsPerPage) || 1; },
                 },
                 mounted() {
                     console.log('✅ LDAP Manager montado com sucesso!');
@@ -614,6 +668,30 @@
                     }
                 },
                 methods: {
+                    setOuFilter(ou){
+                        if(this.activeOuFilter===ou){
+                            this.activeOuFilter='';
+                        } else {
+                            this.activeOuFilter=ou;
+                        }
+                        this.usersPage=1; // reset page
+                    },
+                    // Navegação de página genérica
+                    prevPage(section) {
+                        if (section === 'users' && this.usersPage > 1) this.usersPage--;
+                        if (section === 'ous' && this.ousPage > 1) this.ousPage--;
+                        if (section === 'logs' && this.logsPage > 1) this.logsPage--;
+                    },
+                    setPage(section,page){
+                        if(section==='users') this.usersPage = page;
+                        if(section==='ous') this.ousPage = page;
+                        if(section==='logs') this.logsPage = page;
+                    },
+                    nextPage(section) {
+                        if (section === 'users' && this.usersPage < this.totalUsersPages) this.usersPage++;
+                        if (section === 'ous' && this.ousPage < this.totalOusPages) this.ousPage++;
+                        if (section === 'logs' && this.logsPage < this.totalLogPages) this.logsPage++;
+                    },
                     async loadUsers() {
                         console.log('🔄 Carregando usuários...');
                         try {
@@ -948,7 +1026,18 @@
                         } catch (error) {
                             this.showNotification('Erro ao carregar logs', 'error');
                         }
-                    }
+                    },
+                    pageNumbers(total) {
+                        const current = this.activeTab === 'users' ? this.usersPage : (this.activeTab === 'organizational-units' ? this.ousPage : this.logsPage);
+                        const delta = 2;
+                        const range = [];
+                        for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
+                            range.push(i);
+                        }
+                        if (range[0] > 1) range.unshift(1);
+                        if (range[range.length -1] < total) range.push(total);
+                        return range;
+                    },
                 }
             }).mount('#app');
         }
