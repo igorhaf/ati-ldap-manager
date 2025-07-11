@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Ldap\LdapUserModel;
 use App\Ldap\OrganizationalUnit;
 use Illuminate\Support\Str;
+use App\Utils\LdapUtils;
 
 class LdapRichSeeder extends Seeder
 {
@@ -216,33 +217,6 @@ class LdapRichSeeder extends Seeder
             }
         }
 
-        // Garante ao menos um USER (não-admin) em cada OU
-        $userIndex = 0;
-        foreach ($ous as $ouData) {
-            $ouName = $ouData['ou'];
-
-            $hasUser = collect($users)->contains(function ($u) use ($ouName) {
-                return collect($u['roles'])->contains(fn($r) => $r[0] === $ouName && $r[1] === 'user');
-            });
-
-            if (!$hasUser) {
-                // Seleciona usuário existente de forma circular (ignorando root)
-                do {
-                    $candidate = $users[$userIndex % count($users)];
-                    $userIndex++;
-                } while ($candidate['uid'] === 'root');
-
-                // Evita duplicidade
-                foreach ($users as &$uRef) {
-                    if ($uRef['uid'] === $candidate['uid']) {
-                        $uRef['roles'][] = [$ouName, 'user'];
-                        break;
-                    }
-                }
-                unset($uRef);
-            }
-        }
-
         foreach ($users as $userData) {
             // Garante employeeNumber único por UID
             $employeeNumber = $nextEmp();
@@ -263,7 +237,7 @@ class LdapRichSeeder extends Seeder
                 $entry->setFirstAttribute('sn',        $userData['sn']);
                 $entry->setFirstAttribute('cn',        $userData['givenName'].' '.$userData['sn']);
                 $entry->setFirstAttribute('mail',      $userData['mail']);
-                $entry->setFirstAttribute('userPassword', $userData['password']);
+                $entry->setFirstAttribute('userPassword', LdapUtils::hashSsha($userData['password']));
 
                 // Mantém mesmo employeeNumber para todas as OUs deste usuário
                 $currentEmp = $entry->getFirstAttribute('employeeNumber');

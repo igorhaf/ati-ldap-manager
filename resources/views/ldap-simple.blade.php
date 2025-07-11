@@ -619,7 +619,7 @@
                 },
                 computed: {
                     isRoot() { return this.userRole === 'root'; },
-                    isOuAdmin() { return this.userRole === 'ou_admin'; },
+                    isOuAdmin() { return this.userRole === 'admin'; },
                     canManageUsers() { return this.isRoot || this.isOuAdmin; },
                     filteredUsers() {
                         let list = this.users;

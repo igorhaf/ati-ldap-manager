@@ -8,7 +8,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 class RoleResolver
 {
     public const ROLE_ROOT = 'root';
-    public const ROLE_OU_ADMIN = 'ou_admin';
+    public const ROLE_OU_ADMIN = 'admin';
     public const ROLE_USER = 'user';
 
     /**

@@ -11,6 +11,7 @@ use App\Models\OperationLog;
 use LdapRecord\Connection;
 use LdapRecord\Container;
 use App\Services\RoleResolver;
+use App\Utils\LdapUtils;
 
 class LdapUserController extends Controller
 {
@@ -35,6 +36,22 @@ class LdapUserController extends Controller
     }
 
     /**
+     * Extrai o nome da OU a partir do atributo 'ou' ou, em fallback,
+     * do próprio DN da entrada.
+     */
+    private function extractOu($entry): ?string
+    {
+        $ou = $entry->getFirstAttribute('ou');
+        if ($ou) {
+            return $ou;
+        }
+        if (preg_match('/ou=([^,]+)/i', $entry->getDn(), $matches)) {
+            return $matches[1];
+        }
+        return null;
+    }
+
+    /**
      * Display a listing of users
      */
     public function index(): JsonResponse
@@ -48,7 +65,8 @@ class LdapUserController extends Controller
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
                 $users = $users->filter(function ($u) use ($adminOu) {
-                    return strtolower($u->getFirstAttribute('ou')) === strtolower($adminOu);
+                    $ouName = $this->extractOu($u);
+                    return $ouName && strtolower($ouName) === strtolower($adminOu);
                 });
             }
             
@@ -58,7 +76,7 @@ class LdapUserController extends Controller
                     $first = $entries->first();
                     // Para cada entrada, extrai a OU e o papel (employeeType) do usuário
                     $ous = $entries->map(function ($e) {
-                        $ouName = $e->getFirstAttribute('ou');
+                        $ouName = $this->extractOu($e);
                         $roleAttr = $e->getAttribute('employeeType') ?? [];
                         // employeeType pode ser string ou array
                         if (is_array($roleAttr)) {
@@ -163,6 +181,9 @@ class LdapUserController extends Controller
                 return $item;
             });
 
+            // Hash da senha uma única vez para reutilizar
+            $hashedPassword = LdapUtils::hashSsha($request->userPassword);
+
             foreach ($units as $unit) {
                 $ou = $unit['ou'];
                 $role = $unit['role'] ?? 'user';
@@ -174,7 +195,7 @@ class LdapUserController extends Controller
                 $entry->setFirstAttribute('cn',         $request->givenName.' '.$request->sn);
                 $entry->setFirstAttribute('mail',       $request->mail);
                 $entry->setFirstAttribute('employeeNumber', $request->employeeNumber);
-                $entry->setFirstAttribute('userPassword',   $request->userPassword);
+                $entry->setFirstAttribute('userPassword',   $hashedPassword);
                 $entry->setFirstAttribute('ou',         $ou);
                 $entry->setAttribute('employeeType',    [$role]);
 
@@ -324,7 +345,9 @@ class LdapUserController extends Controller
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
                     
-                    if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
+                    if ($request->has('userPassword')) {
+                        $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
+                    }
 
                     // Nome completo
                     $user->setFirstAttribute('cn', trim(($request->givenName ?? $user->getFirstAttribute('givenName')) . ' ' . ($request->sn ?? $user->getFirstAttribute('sn'))));
@@ -344,7 +367,7 @@ class LdapUserController extends Controller
                     
                     $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
             if ($request->has('userPassword')) {
-                        $entry->setFirstAttribute('userPassword', $request->userPassword);
+                        $entry->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     } else {
                         $entry->setFirstAttribute('userPassword', $users->first()->getFirstAttribute('userPassword'));
                     }
@@ -362,7 +385,9 @@ class LdapUserController extends Controller
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
                     
-                    if ($request->has('userPassword')) $user->setFirstAttribute('userPassword',$request->userPassword);
+                    if ($request->has('userPassword')) {
+                        $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
+                    }
 
                     if ($request->has('givenName') || $request->has('sn')) {
                         $user->setFirstAttribute('cn', trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')));
@@ -651,7 +676,7 @@ class LdapUserController extends Controller
             }
 
             foreach ($users as $user) {
-                $user->setFirstAttribute('userPassword', $request->userPassword);
+                $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                 $user->save();
             }
 
