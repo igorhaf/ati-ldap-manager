@@ -441,72 +441,90 @@
         </div>
 
         <!-- Modal edição usuário -->
-        <div v-if="showEditUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white w-full max-w-lg rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4">✏️ Editar Usuário</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">UID (não editável)</label>
-                        <input type="text" v-model="editUser.uid" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled />
+        <div v-if="showEditUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
+            <div class="w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100">
+                <div class="p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Editar Usuário
+                        </h3>
+                        <button @click="showEditUserModal = false" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    
+                    <form @submit.prevent="updateUser" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">UID (não editável)</label>
+                                <input type="text" v-model="editUser.uid" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100" disabled />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Matrícula (não editável)</label>
+                                <input type="text" v-model="editUser.employeeNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100" disabled />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                                <input v-model="editUser.givenName" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Sobrenome</label>
+                                <input v-model="editUser.sn" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Senha (deixe em branco para manter)</label>
+                                <input v-model="editUser.userPassword" type="password" minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="edit-mail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input 
+                                    v-model="editUser.mail" 
+                                    type="email" 
+                                    id="edit-mail"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="exemplo@empresa.com"
+                                >
+                            </div>
+                            <div>
+                                <label for="edit-mailForwardingAddress" class="block text-sm font-medium text-gray-700 mb-1">Email de Redirecionamento (Opcional)</label>
+                                <input 
+                                    v-model="editUser.mailForwardingAddress" 
+                                    type="email" 
+                                    id="edit-mailForwardingAddress"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="redirecionamento@exemplo.com"
+                                >
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Nome</label>
-                            <input type="text" v-model="editUser.givenName" class="mt-1 block w-full border rounded px-3 py-2" />
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
+                            <div class="space-y-2">
+                                <div v-for="(unit, index) in editUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
+                                    <select v-model="editUser.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
+                                        <option value="" disabled>Selecione OU...</option>
+                                        <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">@{{ ouOpt.ou }}</option>
+                                    </select>
+                                    <select v-model="editUser.organizationalUnits[index].role" class="border rounded px-2 py-2">
+                                        <option value="user">Usuário</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                    <button v-if="index > 0" @click="editUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
+                                </div>
+                                <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Sobrenome</label>
-                            <input type="text" v-model="editUser.sn" class="mt-1 block w-full border rounded px-3 py-2" />
+
+                        <div class="flex justify-end space-x-4 pt-8 border-t border-gray-200">
+                            <button @click="showEditUserModal = false" type="button" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-medium transition-colors">Cancelar</button>
+                            <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors hover:shadow-lg">Salvar Alterações</button>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Matrícula (não editável)</label>
-                        <input type="text" v-model="editUser.employeeNumber" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled />
-                    </div>
-                    <div>
-                        <label for="edit-mail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input 
-                            v-model="editUser.mail" 
-                            type="email" 
-                            id="edit-mail"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="exemplo@empresa.com"
-                            required
-                        >
-                        </div>
-                    <div>
-                        <label for="edit-mailForwardingAddress" class="block text-sm font-medium text-gray-700 mb-1">Email de Redirecionamento (Opcional)</label>
-                        <input 
-                            v-model="editUser.mailForwardingAddress" 
-                            type="email" 
-                            id="edit-mailForwardingAddress"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="redirecionamento@exemplo.com"
-                        >
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Unidades Organizacionais</label>
-                        <div v-for="(unit,index) in editUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
-                            <select v-model="editUser.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
-                                <option value="" disabled>Selecione OU...</option>
-                                <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">@{{ ouOpt.ou }}</option>
-                            </select>
-                            <select v-model="editUser.organizationalUnits[index].role" class="border rounded px-2 py-2">
-                                <option value="user">Usuário</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                            <button v-if="index>0" @click="editUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
-                        </div>
-                        <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Senha</label>
-                        <input type="password" v-model="editUser.userPassword" class="mt-1 block w-full border rounded px-3 py-2" minlength="6" />
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-4">
-                        <button @click="showEditUserModal=false" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button>
-                        <button @click="updateUser" class="px-4 py-2 bg-blue-600 text-white rounded">Salvar</button>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
