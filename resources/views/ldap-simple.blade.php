@@ -173,7 +173,7 @@
                                         </div>
                                         
                                         <!-- Para admins de OU: mostrar apenas o perfil -->
-                                        <div v-else v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" @click="setRoleFilter(unit.role ?? 'user')" :class="['inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border cursor-pointer select-none', (unit.role ?? 'user') === activeRoleFilter ? 'bg-blue-600 text-white border-blue-600' : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300/30 hover:brightness-90']">
+                                        <div v-else v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" @click="setRoleFilter(unit.role ?? 'user')" :class="['inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border cursor-pointer select-none', (unit.role ?? 'user') === activeRoleFilter ? ((unit.role ?? 'user') === 'admin' ? 'bg-orange-500 text-white border-orange-500' : 'bg-blue-600 text-white border-blue-600') : ((unit.role ?? 'user') === 'admin' ? 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300/30 hover:brightness-90' : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300/30 hover:brightness-90')]">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                             </svg>
