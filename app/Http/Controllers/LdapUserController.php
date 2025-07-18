@@ -549,7 +549,7 @@ class LdapUserController extends Controller
         try {
             $request->validate([
                 'ou' => 'required|string|max:255',
-                'description' => 'required|string|max:255',
+                'description' => 'nullable|string|max:255',
             ]);
 
             // Verificar se a OU já existe
@@ -565,7 +565,9 @@ class LdapUserController extends Controller
 
             $ou = new OrganizationalUnit();
             $ou->setFirstAttribute('ou', $request->ou);
-            $ou->setFirstAttribute('description', $request->description);
+            if ($request->has('description') && !empty($request->description)) {
+                $ou->setFirstAttribute('description', $request->description);
+            }
             $ou->setAttribute('objectClass', [
                 'top',
                 'organizationalUnit',
@@ -585,7 +587,7 @@ class LdapUserController extends Controller
                 'success' => true,
                 'data' => [
                     'ou' => $request->ou,
-                    'description' => $request->description,
+                    'description' => $request->description ?? null,
                 ],
                 'message' => 'Unidade organizacional criada com sucesso'
             ], 201);
@@ -607,7 +609,7 @@ class LdapUserController extends Controller
         
         try {
             $request->validate([
-                'description' => 'required|string|max:255',
+                'description' => 'nullable|string|max:255',
             ]);
 
             $ou = OrganizationalUnit::where('ou', $ouName)->first();
@@ -618,7 +620,9 @@ class LdapUserController extends Controller
                 ], 404);
             }
 
-            $ou->setFirstAttribute('description', $request->description);
+            if ($request->has('description')) {
+                $ou->setFirstAttribute('description', $request->description);
+            }
             $ou->save();
 
             OperationLog::create([
@@ -633,7 +637,7 @@ class LdapUserController extends Controller
                 'success' => true,
                 'data' => [
                     'ou' => $ouName,
-                    'description' => $request->description,
+                    'description' => $request->description ?? null,
                 ],
                 'message' => 'Unidade organizacional atualizada com sucesso'
             ]);
