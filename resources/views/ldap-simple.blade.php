@@ -169,16 +169,15 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                             </svg>
                                             @{{ unit.ou ?? unit }}
-                                            <span v-if="(unit.role ?? 'user') === 'admin'" class="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">Admin</span>
+                                            <span v-if="(unit.role ?? 'user') === 'admin'" class="ml-1 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">Admin</span>
                                         </div>
                                         
-                                        <!-- Para admins de OU: mostrar apenas o perfil com badge -->
+                                        <!-- Para admins de OU: mostrar apenas o perfil -->
                                         <div v-else v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" @click="setRoleFilter(unit.role ?? 'user')" :class="['inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border cursor-pointer select-none', (unit.role ?? 'user') === activeRoleFilter ? 'bg-blue-600 text-white border-blue-600' : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300/30 hover:brightness-90']">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                             </svg>
                                             @{{ (unit.role ?? 'user') === 'admin' ? 'Admin' : 'Usuário' }}
-                                            <span v-if="(unit.role ?? 'user') === 'admin'" class="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">Admin</span>
                                         </div>
                                      </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
