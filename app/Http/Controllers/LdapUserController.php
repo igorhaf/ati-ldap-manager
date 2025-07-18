@@ -367,23 +367,28 @@ class LdapUserController extends Controller
                     $user->setAttribute('employeeType', [$role]);
 
                     $user->save();
-                
-                    // Criar nova entrada nessa OU
+                } else {
+                    // Criar nova entrada nessa OU apenas se não existir
                     $entry = new LdapUserModel();
                     $entry->setFirstAttribute('uid', $uid);
                     $entry->setFirstAttribute('givenName', $request->get('givenName', $users->first()->getFirstAttribute('givenName')));
                     $entry->setFirstAttribute('sn', $request->get('sn', $users->first()->getFirstAttribute('sn')));
                     $entry->setFirstAttribute('cn', trim(($request->get('givenName', $users->first()->getFirstAttribute('givenName'))) . ' ' . ($request->get('sn', $users->first()->getFirstAttribute('sn')))));
                     $entry->setFirstAttribute('mail', $request->get('mail', $users->first()->getFirstAttribute('mail')));
-                    
                     $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
-            if ($request->has('userPassword')) {
+                    if ($request->has('userPassword')) {
                         $entry->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     } else {
                         $entry->setFirstAttribute('userPassword', $users->first()->getFirstAttribute('userPassword'));
                     }
                     $entry->setFirstAttribute('ou', $unit['ou']);
                     $entry->setAttribute('employeeType', [$role]);
+                    $entry->setAttribute('objectClass', [
+                        'top',
+                        'person',
+                        'organizationalPerson',
+                        'inetOrgPerson',
+                    ]);
                     $entry->setDn("uid={$uid},ou={$unit['ou']},{$baseDn}");
                     $entry->save();
                 }
