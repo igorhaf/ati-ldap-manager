@@ -47,13 +47,23 @@ class AuthController extends Controller
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
 
-        // Buscar usuário pelo uid e OU
-        $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])
-            ->where('ou', $ou)
-            ->first();
+        // Buscar usuário - lógica diferente para root vs outros usuários
+        if ($host === 'contasadmin.sei.pe.gov.br') {
+            // Para usuários root: buscar apenas pelo uid (estão na raiz do LDAP)
+            $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
+        } else {
+            // Para outros usuários: buscar pelo uid e OU específica
+            $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])
+                ->where('ou', $ou)
+                ->first();
+        }
 
         if (!$user) {
-            return back()->withErrors(['uid' => 'Usuário não encontrado para esta OU.'])->onlyInput('uid');
+            if ($host === 'contasadmin.sei.pe.gov.br') {
+                return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');
+            } else {
+                return back()->withErrors(['uid' => 'Usuário não encontrado para esta OU.'])->onlyInput('uid');
+            }
         }
 
         // Verificar senha usando SSHA
