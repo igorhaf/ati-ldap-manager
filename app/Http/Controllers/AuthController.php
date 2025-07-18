@@ -14,6 +14,18 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    /**
+     * Extrai a OU do subdomínio da URL
+     * Exemplo: contas.moreno.sei.pe.gov.br => moreno
+     */
+    private function extractOuFromHost($host)
+    {
+        if (preg_match('/contas\\.([a-z0-9-]+)\\.sei\\.pe\\.gov\\.br/i', $host, $matches)) {
+            return $matches[1];
+        }
+        return null;
+    }
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -21,36 +33,51 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (Auth::attempt(['uid' => $credentials['uid'], 'password' => $credentials['password']], $request->boolean('remember'))) {
-            $request->session()->regenerate();
-
-            $user = Auth::user();
-            $role = RoleResolver::resolve($user);
-
-            // Verificar se usuário root está tentando acessar pela URL correta
-            if ($role === RoleResolver::ROLE_ROOT) {
-                $host = $request->getHost();
-                
-                if ($host !== 'contasadmin.sei.pe.gov.br') {
-                    // Fazer logout do usuário
-                    Auth::logout();
-                    $request->session()->invalidate();
-                    $request->session()->regenerateToken();
-                    
-                    return back()->withErrors([
-                        'uid' => 'O acesso a este usuário não pode ser feito por essa URL'
-                    ])->onlyInput('uid');
-                }
-            }
-
-            if ($role === RoleResolver::ROLE_USER) {
-                return redirect('/password-change');
-            }
-
-            return redirect()->intended('/ldap-manager');
+        $host = $request->getHost();
+        $ou = $this->extractOuFromHost($host);
+        if (!$ou) {
+            return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
 
-        return back()->withErrors(['uid' => 'Credenciais inválidas'])->onlyInput('uid');
+        // Buscar usuário pelo uid e OU
+        $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])
+            ->where('ou', $ou)
+            ->first();
+
+        if (!$user) {
+            return back()->withErrors(['uid' => 'Usuário não encontrado para esta OU.'])->onlyInput('uid');
+        }
+
+        // Verificar senha usando SSHA
+        $storedPassword = $user->getFirstAttribute('userPassword');
+        if (!\App\Utils\LdapUtils::verifySsha($credentials['password'], $storedPassword)) {
+            return back()->withErrors(['uid' => 'Credenciais inválidas'])->onlyInput('uid');
+        }
+
+        // Login bem-sucedido
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $role = $user->getFirstAttribute('employeeType') ?? 'user';
+        $role = is_array($role) ? strtolower($role[0]) : strtolower($role);
+
+        // Permissão root (mantém regra antiga)
+        if ($role === 'root') {
+            if ($host !== 'contasadmin.sei.pe.gov.br') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors([
+                    'uid' => 'O acesso a este usuário não pode ser feito por essa URL'
+                ])->onlyInput('uid');
+            }
+        }
+
+        if ($role === 'user') {
+            return redirect('/password-change');
+        }
+
+        return redirect('/ldap-manager');
     }
 
     public function logout(Request $request)
