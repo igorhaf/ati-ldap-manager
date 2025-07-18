@@ -7,6 +7,7 @@ use App\Ldap\OrganizationalUnit;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\OperationLog;
+use App\Traits\ChecksRootAccess;
 
 use LdapRecord\Connection;
 use LdapRecord\Container;
@@ -15,6 +16,8 @@ use App\Utils\LdapUtils;
 
 class LdapUserController extends Controller
 {
+    use ChecksRootAccess;
+
     /**
      * Safely get an attribute that might not be supported by the LDAP schema
      */
@@ -56,6 +59,8 @@ class LdapUserController extends Controller
      */
     public function index(): JsonResponse
     {
+        $this->checkRootAccess(request());
+        
         try {
             $role = RoleResolver::resolve(auth()->user());
 
@@ -126,6 +131,8 @@ class LdapUserController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $this->checkRootAccess($request);
+        
         try {
             $request->validate([
                 'uid' => 'required|string|max:255',
@@ -245,6 +252,8 @@ class LdapUserController extends Controller
      */
     public function show(string $uid): JsonResponse
     {
+        $this->checkRootAccess(request());
+        
         try {
             $user = LdapUserModel::where('uid', $uid)->first();
             
@@ -284,6 +293,8 @@ class LdapUserController extends Controller
      */
     public function update(Request $request, string $uid): JsonResponse
     {
+        $this->checkRootAccess($request);
+        
         try {
             $request->validate([
                 'givenName' => 'sometimes|required|string|max:255',
@@ -356,7 +367,7 @@ class LdapUserController extends Controller
                     $user->setAttribute('employeeType', [$role]);
 
                     $user->save();
-                } else {
+                
                     // Criar nova entrada nessa OU
                     $entry = new LdapUserModel();
                     $entry->setFirstAttribute('uid', $uid);
@@ -391,8 +402,8 @@ class LdapUserController extends Controller
 
                     if ($request->has('givenName') || $request->has('sn')) {
                         $user->setFirstAttribute('cn', trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')));
-                    }
-                    $user->save();
+            }
+            $user->save();
                 }
             }
 
@@ -437,6 +448,8 @@ class LdapUserController extends Controller
      */
     public function destroy(string $uid): JsonResponse
     {
+        $this->checkRootAccess(request());
+        
         try {
             $users = LdapUserModel::where('uid', $uid)->get();
             $role = RoleResolver::resolve(auth()->user());
@@ -491,20 +504,25 @@ class LdapUserController extends Controller
      */
     public function getOrganizationalUnits(): JsonResponse
     {
+        $this->checkRootAccess(request());
+        
         try {
+            $role = RoleResolver::resolve(auth()->user());
             $ous = OrganizationalUnit::all();
 
-            $role = RoleResolver::resolve(auth()->user());
+            // Se admin de OU, filtrar apenas sua própria OU
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
-                $ous = $ous->filter(fn($ou) => strtolower($ou->getFirstAttribute('ou')) === strtolower($adminOu));
+                $ous = $ous->filter(function ($ou) use ($adminOu) {
+                    return strtolower($ou->getFirstAttribute('ou')) === strtolower($adminOu);
+                });
             }
-            
+
             $formattedOus = $ous->map(function ($ou) {
                 return [
-                    'dn' => $ou->getDn(),
                     'ou' => $ou->getFirstAttribute('ou'),
                     'description' => $ou->getFirstAttribute('description'),
+                    'dn' => $ou->getDn(),
                 ];
             });
 
@@ -513,7 +531,6 @@ class LdapUserController extends Controller
                 'data' => $formattedOus,
                 'message' => 'Unidades organizacionais carregadas com sucesso'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -527,52 +544,52 @@ class LdapUserController extends Controller
      */
     public function createOrganizationalUnit(Request $request): JsonResponse
     {
+        $this->checkRootAccess($request);
+        
         try {
             $request->validate([
                 'ou' => 'required|string|max:255',
-                'description' => 'sometimes|string|max:255',
+                'description' => 'required|string|max:255',
             ]);
 
-            $ou = new OrganizationalUnit();
-            $ou->setFirstAttribute('ou', $request->ou);
-            
-            if ($request->has('description')) {
-                $ou->setFirstAttribute('description', $request->description);
+            // Verificar se a OU já existe
+            $existingOu = OrganizationalUnit::where('ou', $request->ou)->first();
+            if ($existingOu) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unidade organizacional já existe'
+                ], 422);
             }
 
             $baseDn = config('ldap.connections.default.base_dn');
-            $dn = "ou={$request->ou},{$baseDn}";
-            $ou->setDn($dn);
+
+            $ou = new OrganizationalUnit();
+            $ou->setFirstAttribute('ou', $request->ou);
+            $ou->setFirstAttribute('description', $request->description);
+            $ou->setAttribute('objectClass', [
+                'top',
+                'organizationalUnit',
+            ]);
+            $ou->setDn("ou={$request->ou},{$baseDn}");
             $ou->save();
 
             OperationLog::create([
                 'operation' => 'create_ou',
                 'entity' => 'OrganizationalUnit',
-                'entity_id' => $ou->getFirstAttribute('ou'),
-                'ou' => $ou->getFirstAttribute('ou'),
-                'description' => 'OU ' . $ou->getFirstAttribute('ou') . ' criada',
+                'entity_id' => $request->ou,
+                'ou' => $request->ou,
+                'description' => 'Unidade organizacional ' . $request->ou . ' criada',
             ]);
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'dn' => $ou->getDn(),
-                    'ou' => $ou->getFirstAttribute('ou'),
-                    'description' => $ou->getFirstAttribute('description'),
+                    'ou' => $request->ou,
+                    'description' => $request->description,
                 ],
                 'message' => 'Unidade organizacional criada com sucesso'
             ], 201);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Dados inválidos: ' . implode(', ', $e->validator->errors()->all())
-            ], 422);
-        } catch (\LdapRecord\LdapRecordException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro LDAP: ' . $e->getMessage()
-            ], 503);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -582,64 +599,45 @@ class LdapUserController extends Controller
     }
 
     /**
-     * Update the specified organizational unit.
+     * Update organizational unit
      */
-    public function updateOrganizationalUnit(Request $request, string $ou): JsonResponse
+    public function updateOrganizationalUnit(Request $request, string $ouName): JsonResponse
     {
+        $this->checkRootAccess($request);
+        
         try {
             $request->validate([
-                'ou' => 'sometimes|required|string|max:255',
-                'description' => 'sometimes|nullable|string|max:255',
+                'description' => 'required|string|max:255',
             ]);
 
-            // Buscar OU existente pelo atributo 'ou'
-            $organizationalUnit = OrganizationalUnit::where('ou', $ou)->first();
-            if (!$organizationalUnit) {
+            $ou = OrganizationalUnit::where('ou', $ouName)->first();
+            if (!$ou) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Unidade organizacional não encontrada'
                 ], 404);
             }
 
-            // Atualizar atributos
-            if ($request->has('ou')) {
-                $organizationalUnit->setFirstAttribute('ou', $request->ou);
-            }
-            if ($request->has('description')) {
-                $organizationalUnit->setFirstAttribute('description', $request->description);
-            }
-
-            // Se o nome mudou, atualizar o DN
-            if ($request->has('ou')) {
-                $baseDn = config('ldap.connections.default.base_dn');
-                $organizationalUnit->setDn("ou={$request->ou},{$baseDn}");
-            }
-
-            $organizationalUnit->save();
+            $ou->setFirstAttribute('description', $request->description);
+            $ou->save();
 
             OperationLog::create([
                 'operation' => 'update_ou',
                 'entity' => 'OrganizationalUnit',
-                'entity_id' => $organizationalUnit->getFirstAttribute('ou'),
-                'ou' => $organizationalUnit->getFirstAttribute('ou'),
-                'description' => 'OU ' . $organizationalUnit->getFirstAttribute('ou') . ' atualizada',
+                'entity_id' => $ouName,
+                'ou' => $ouName,
+                'description' => 'Unidade organizacional ' . $ouName . ' atualizada',
             ]);
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'dn' => $organizationalUnit->getDn(),
-                    'ou' => $organizationalUnit->getFirstAttribute('ou'),
-                    'description' => $organizationalUnit->getFirstAttribute('description'),
+                    'ou' => $ouName,
+                    'description' => $request->description,
                 ],
                 'message' => 'Unidade organizacional atualizada com sucesso'
             ]);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Dados inválidos: ' . implode(', ', $e->validator->errors()->all())
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -653,15 +651,31 @@ class LdapUserController extends Controller
      */
     public function getOperationLogs(): JsonResponse
     {
-        $logs = OperationLog::orderBy('created_at', 'desc')->get();
-        return response()->json([
-            'success' => true,
-            'data' => $logs,
-        ]);
+        $this->checkRootAccess(request());
+        
+        try {
+            $logs = OperationLog::orderBy('created_at', 'desc')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $logs,
+                'message' => 'Logs carregados com sucesso'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao carregar logs: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
+    /**
+     * Update user password
+     */
     public function updatePassword(Request $request, string $uid): JsonResponse
     {
+        $this->checkRootAccess($request);
+        
         try {
             $request->validate([
                 'userPassword' => 'required|string|min:6',

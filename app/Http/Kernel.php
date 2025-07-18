@@ -62,6 +62,7 @@ class Kernel extends HttpKernel
         'root.user' => \App\Http\Middleware\IsRootUser::class,
         'ou.admin' => \App\Http\Middleware\IsOUAdmin::class,
         'self.access' => \App\Http\Middleware\IsSelfAccess::class,
+        'restrict.root' => \App\Http\Middleware\RestrictRootAccess::class,
     ];
 
     /**
@@ -82,5 +83,6 @@ class Kernel extends HttpKernel
         'root.user' => \App\Http\Middleware\IsRootUser::class,
         'ou.admin' => \App\Http\Middleware\IsOUAdmin::class,
         'self.access' => \App\Http\Middleware\IsSelfAccess::class,
+        'restrict.root' => \App\Http\Middleware\RestrictRootAccess::class,
     ];
 } 

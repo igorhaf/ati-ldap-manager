@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Gerenciador LDAP</title>
+    <title>SEI LDAP Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -33,7 +33,7 @@
                             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clip-rule="evenodd" />
                             </svg>
-                            Gerenciador LDAP
+                            SEI LDAP Admin
                         </h1>
                         <p class="text-blue-100">Gerenciamento de Usuários e Unidades Organizacionais</p>
                     </div>
@@ -105,19 +105,19 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         Usuários
-                    </button>
+                     </button>
                      <button @click="activeTab = 'organizational-units'" :class="activeTab === 'organizational-units' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'" class="whitespace-nowrap px-6 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         Unidades
-                    </button>
+                     </button>
                      <button @click="activeTab = 'logs'" :class="activeTab === 'logs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'" class="whitespace-nowrap px-6 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         Logs
-                    </button>
+                     </button>
                  </nav>
              </div>
 
@@ -136,33 +136,33 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                                 Atualizar
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                             </button>
+                         </div>
+                     </div>
+                 </div>
 
-                <!-- Users Table -->
+                 <!-- Users Table -->
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Lista de Usuários (@{{ filteredUsers.length }})</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
+                     <div class="px-6 py-4 border-b border-gray-200">
+                         <h3 class="text-lg font-medium text-gray-900">Lista de Usuários (@{{ filteredUsers.length }})</h3>
+                     </div>
+                     <div class="overflow-x-auto">
+                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50 sticky top-0 z-10">
-                                <tr>
+                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UID</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidades</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matrícula</th>
                                     <th v-if="canManageUsers" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                                 </tr>
+                             </thead>
+                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="user in paginatedUsers" :key="user.uid" :class="[user.uid === 'root' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'hover:bg-gray-50 odd:bg-gray-50']">
                                     <td class="px-6 py-4 text-sm font-medium" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.uid }}</td>
                                     <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.fullName }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">
+                                     <td class="px-6 py-4 text-sm text-gray-900">
                                         <div v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" @click="setOuFilter(typeof unit==='string'?unit:unit.ou)" :class="['inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border cursor-pointer select-none', ((typeof unit==='string'?unit:unit.ou)===activeOuFilter) ? 'bg-blue-600 text-white border-blue-600' : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300/30 hover:brightness-90']">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -170,7 +170,7 @@
                                             @{{ unit.ou ?? unit }}
                                             <span v-if="(unit.role ?? 'user') === 'admin'" class="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">Admin</span>
                                         </div>
-                                    </td>
+                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         <div class="space-y-1">
                                             <div class="text-sm font-medium text-gray-900">@{{ user.mail }}</div>
@@ -195,117 +195,117 @@
                                                 Excluir
                                             </button>
                                         </template>
-                                    </td>
-                                </tr>
-                                <tr v-if="filteredUsers.length === 0">
-                                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-                                        <div v-if="users.length === 0">📭 Nenhum usuário encontrado</div>
-                                        <div v-else>🔍 Nenhum usuário corresponde à busca</div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                     </td>
+                                 </tr>
+                                 <tr v-if="filteredUsers.length === 0">
+                                     <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                         <div v-if="users.length === 0">📭 Nenhum usuário encontrado</div>
+                                         <div v-else>🔍 Nenhum usuário corresponde à busca</div>
+                                     </td>
+                                 </tr>
+                             </tbody>
+                         </table>
+                     </div>
                     <!-- Controles de paginação Usuários -->
                     <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalUsersPages > 1">
                         <button @click="prevPage('users')" :disabled="usersPage === 1" class="px-2 py-1 border rounded disabled:opacity-50">«</button>
                         <button v-for="n in pageNumbers(totalUsersPages)" :key="'u'+n" @click="setPage('users',n)" :class="['px-3 py-1 rounded-full', usersPage===n ? 'bg-blue-600 text-white' : 'border border-gray-300 bg-white hover:bg-gray-100']">@{{ n }}</button>
                         <button @click="nextPage('users')" :disabled="usersPage === totalUsersPages" class="px-2 py-1 border rounded disabled:opacity-50">»</button>
                     </div>
-                </div>
-            </div>
+                 </div>
+             </div>
 
-            <!-- Organizational Units Tab -->
-            <div v-if="activeTab === 'organizational-units'" class="space-y-6">
+             <!-- Organizational Units Tab -->
+             <div v-if="activeTab === 'organizational-units'" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais (@{{ organizationalUnits.length }})</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DN</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                     <div class="px-6 py-4 border-b border-gray-200">
+                         <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais (@{{ organizationalUnits.length }})</h3>
+                     </div>
+                     <div class="overflow-x-auto">
+                         <table class="min-w-full divide-y divide-gray-200">
+                             <thead class="bg-gray-50">
+                                 <tr>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DN</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                                 </tr>
+                             </thead>
+                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="ou in paginatedOus" :key="ou.dn" class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ ou.ou }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ ou.description || '-' }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-500 font-mono">@{{ ou.dn }}</td>
-                                    <td class="px-6 py-4 text-sm font-medium">
+                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ ou.ou }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ ou.description || '-' }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-500 font-mono">@{{ ou.dn }}</td>
+                                     <td class="px-6 py-4 text-sm font-medium">
                                         <button @click="editOu(ou)" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900 transition-colors">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                             Editar
                                         </button>
-                                    </td>
-                                </tr>
-                                <tr v-if="organizationalUnits.length === 0">
-                                    <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
-                                        📁 Nenhuma unidade organizacional encontrada
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                     </td>
+                                 </tr>
+                                 <tr v-if="organizationalUnits.length === 0">
+                                     <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                                         📁 Nenhuma unidade organizacional encontrada
+                                     </td>
+                                 </tr>
+                             </tbody>
+                         </table>
+                     </div>
                     <!-- Paginação OUs -->
                     <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalOusPages > 1">
                         <button @click="prevPage('ous')" :disabled="ousPage === 1" class="px-2 py-1 border rounded disabled:opacity-50">«</button>
                         <button v-for="n in pageNumbers(totalOusPages)" :key="'o'+n" @click="setPage('ous',n)" :class="['px-3 py-1 rounded-full', ousPage===n ? 'bg-blue-600 text-white' : 'border border-gray-300 bg-white hover:bg-gray-100']">@{{ n }}</button>
                         <button @click="nextPage('ous')" :disabled="ousPage === totalOusPages" class="px-2 py-1 border rounded disabled:opacity-50">»</button>
                     </div>
-                </div>
-            </div>
+                 </div>
+             </div>
 
-            <!-- Logs Tab -->
-            <div v-if="activeTab === 'logs'" class="space-y-6">
+             <!-- Logs Tab -->
+             <div v-if="activeTab === 'logs'" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Logs de Operações (@{{ logs.length }})</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operação</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade ID</th>
+                     <div class="px-6 py-4 border-b border-gray-200">
+                         <h3 class="text-lg font-medium text-gray-900">Logs de Operações (@{{ logs.length }})</h3>
+                     </div>
+                     <div class="overflow-x-auto">
+                         <table class="min-w-full divide-y divide-gray-200">
+                             <thead class="bg-gray-50">
+                                 <tr>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operação</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade ID</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">OU</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
+                                 </tr>
+                             </thead>
+                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ log.id }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.operation }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity_id }}</td>
+                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ log.id }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.operation }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity_id }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.ou || '-' }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.created_at).toLocaleString() }}</td>
-                                </tr>
-                                <tr v-if="logs.length === 0">
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.created_at).toLocaleString() }}</td>
+                                 </tr>
+                                 <tr v-if="logs.length === 0">
                                     <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log encontrado</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                 </tr>
+                             </tbody>
+                         </table>
+                     </div>
                     <!-- Paginação Logs -->
                     <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalLogPages > 1">
                         <button @click="prevPage('logs')" :disabled="logsPage === 1" class="px-2 py-1 border rounded disabled:opacity-50">«</button>
                         <button v-for="n in pageNumbers(totalLogPages)" :key="'l'+n" @click="setPage('logs',n)" :class="['px-3 py-1 rounded-full', logsPage===n ? 'bg-blue-600 text-white' : 'border border-gray-300 bg-white hover:bg-gray-100']">@{{ n }}</button>
                         <button @click="nextPage('logs')" :disabled="logsPage === totalLogPages" class="px-2 py-1 border rounded disabled:opacity-50">»</button>
                     </div>
-                </div>
-            </div>
-        </main>
+                 </div>
+             </div>
+         </main>
 
         <!-- Create User Modal -->
         <div v-if="showCreateUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
@@ -358,7 +358,7 @@
                                     required
                                 >
                             </div>
-                            <div>
+                        <div>
                                 <label for="mailForwardingAddress" class="block text-sm font-medium text-gray-700 mb-1">Email de Redirecionamento (Opcional)</label>
                                 <input 
                                     v-model="newUser.mailForwardingAddress" 
@@ -369,7 +369,7 @@
                                 >
                             </div>
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
                             <div class="space-y-2">
@@ -473,7 +473,7 @@
                             placeholder="exemplo@empresa.com"
                             required
                         >
-                    </div>
+                        </div>
                     <div>
                         <label for="edit-mailForwardingAddress" class="block text-sm font-medium text-gray-700 mb-1">Email de Redirecionamento (Opcional)</label>
                         <input 
@@ -635,7 +635,7 @@
                         }
 
                         if (!this.searchTerm) return list;
-
+                        
                         const term = this.searchTerm.toLowerCase();
                         return list.filter(user => 
                             user.uid.toLowerCase().includes(term) ||
@@ -847,7 +847,7 @@
                             this.showNotification('Erro ao criar unidade organizacional', 'error');
                         }
                     },
-
+                    
                     async logout() {
                         try {
                             await fetch('/logout', {

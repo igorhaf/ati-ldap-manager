@@ -28,12 +28,12 @@ Route::middleware(['web','auth'])->prefix('ldap')->group(function () {
 
     // Rotas de usuários (root e admin OU)
     Route::middleware(IsOUAdmin::class)->group(function () {
-        Route::get('/users', [LdapUserController::class, 'index']);
-        Route::post('/users', [LdapUserController::class, 'store']);
-        Route::put('/users/{uid}', [LdapUserController::class, 'update']);
-        Route::delete('/users/{uid}', [LdapUserController::class, 'destroy']);
+    Route::get('/users', [LdapUserController::class, 'index']);
+    Route::post('/users', [LdapUserController::class, 'store']);
+    Route::put('/users/{uid}', [LdapUserController::class, 'update']);
+    Route::delete('/users/{uid}', [LdapUserController::class, 'destroy']);
     });
-
+    
     // Rota para usuário comum acessar seu próprio perfil (ou root/admin OU também passam)
     Route::middleware(IsSelfAccess::class)->get('/users/{uid}', [LdapUserController::class, 'show']);
 
