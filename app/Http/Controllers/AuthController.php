@@ -17,12 +17,20 @@ class AuthController extends Controller
     /**
      * Extrai a OU do subdomínio da URL
      * Exemplo: contas.moreno.sei.pe.gov.br => moreno
+     * Para contasadmin.sei.pe.gov.br => admin (usuário root)
      */
     private function extractOuFromHost($host)
     {
+        // Caso especial para usuários root
+        if ($host === 'contasadmin.sei.pe.gov.br') {
+            return 'admin';
+        }
+        
+        // Para outras OUs: contas.moreno.sei.pe.gov.br => moreno
         if (preg_match('/contas\\.([a-z0-9-]+)\\.sei\\.pe\\.gov\\.br/i', $host, $matches)) {
             return $matches[1];
         }
+        
         return null;
     }
 
