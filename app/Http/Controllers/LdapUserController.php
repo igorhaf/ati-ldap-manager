@@ -513,15 +513,16 @@ class LdapUserController extends Controller
         
         try {
             $role = RoleResolver::resolve(auth()->user());
-            $ous = OrganizationalUnit::all();
-
-            // Se admin de OU, filtrar apenas sua própria OU
-            if ($role === RoleResolver::ROLE_OU_ADMIN) {
-                $adminOu = RoleResolver::getUserOu(auth()->user());
-                $ous = $ous->filter(function ($ou) use ($adminOu) {
-                    return strtolower($ou->getFirstAttribute('ou')) === strtolower($adminOu);
-                });
+            
+            // Apenas usuários root podem visualizar OUs
+            if ($role !== RoleResolver::ROLE_ROOT) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acesso negado: apenas usuários root podem visualizar unidades organizacionais'
+                ], 403);
             }
+
+            $ous = OrganizationalUnit::all();
 
             $formattedOus = $ous->map(function ($ou) {
                 return [
@@ -552,6 +553,16 @@ class LdapUserController extends Controller
         $this->checkRootAccess($request);
         
         try {
+            $role = RoleResolver::resolve(auth()->user());
+            
+            // Apenas usuários root podem criar OUs
+            if ($role !== RoleResolver::ROLE_ROOT) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acesso negado: apenas usuários root podem criar unidades organizacionais'
+                ], 403);
+            }
+
             $request->validate([
                 'ou' => 'required|string|max:255',
                 'description' => 'nullable|string|max:255',
@@ -613,6 +624,16 @@ class LdapUserController extends Controller
         $this->checkRootAccess($request);
         
         try {
+            $role = RoleResolver::resolve(auth()->user());
+            
+            // Apenas usuários root podem editar OUs
+            if ($role !== RoleResolver::ROLE_ROOT) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acesso negado: apenas usuários root podem editar unidades organizacionais'
+                ], 403);
+            }
+
             $request->validate([
                 'description' => 'nullable|string|max:255',
             ]);

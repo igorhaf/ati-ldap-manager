@@ -106,7 +106,7 @@
                         </svg>
                         Usuários
                      </button>
-                     <button @click="activeTab = 'organizational-units'" :class="activeTab === 'organizational-units' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'" class="whitespace-nowrap px-6 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center gap-2">
+                     <button v-if="isRoot" @click="activeTab = 'organizational-units'" :class="activeTab === 'organizational-units' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'" class="whitespace-nowrap px-6 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
@@ -216,7 +216,7 @@
              </div>
 
              <!-- Organizational Units Tab -->
-             <div v-if="activeTab === 'organizational-units'" class="space-y-6">
+             <div v-if="activeTab === 'organizational-units' && isRoot" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                      <div class="px-6 py-4 border-b border-gray-200">
                          <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais (@{{ organizationalUnits.length }})</h3>
@@ -695,7 +695,10 @@
                 mounted() {
                     console.log('✅ LDAP Manager montado com sucesso!');
                     this.loadUsers();
-                    this.loadOrganizationalUnits();
+                    // Só carregar OUs se for root
+                    if (this.isRoot) {
+                        this.loadOrganizationalUnits();
+                    }
                 },
                 watch: {
                     activeTab(newVal) {
@@ -765,6 +768,12 @@
                                 this.organizationalUnits = data.data;
                                 console.log('✅ Unidades Organizacionais carregadas:', data.data.length);
                             } else {
+                                // Se for erro 403 (acesso negado), não mostrar erro de conexão LDAP
+                                if (data.message && data.message.includes('Acesso negado')) {
+                                    console.log('ℹ️ Acesso negado para carregar OUs (usuário não é root)');
+                                    this.organizationalUnits = []; // Array vazio para não quebrar formulários
+                                    return;
+                                }
                                 console.log('⚠️ Erro na API Unidade Organizacional:', data.message);
                                 this.handleApiError('Erro de Conexão LDAP', data.message);
                             }
@@ -869,7 +878,10 @@
                                 this.showNotification('Unidade organizacional criada com sucesso', 'success');
                                 this.showCreateOuModal = false;
                                 this.resetNewOu();
-                                this.loadOrganizationalUnits();
+                                // Só recarregar OUs se for root
+                                if (this.isRoot) {
+                                    this.loadOrganizationalUnits();
+                                }
                             } else {
                                 this.showNotification(data.message, 'error');
                             }
@@ -1039,7 +1051,10 @@
                             if (data.success) {
                                 this.showNotification('Unidade organizacional atualizada com sucesso', 'success');
                                 this.showEditOuModal = false;
-                                this.loadOrganizationalUnits();
+                                // Só recarregar OUs se for root
+                                if (this.isRoot) {
+                                    this.loadOrganizationalUnits();
+                                }
                             } else {
                                 this.showNotification(data.message, 'error');
                             }
