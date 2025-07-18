@@ -152,7 +152,7 @@
                                  <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UID</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidades</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">@{{ isRoot ? 'Unidades' : 'Perfil' }}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matrícula</th>
                                     <th v-if="canManageUsers" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
@@ -163,11 +163,21 @@
                                     <td class="px-6 py-4 text-sm font-medium" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.uid }}</td>
                                     <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.fullName }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">
-                                        <div v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" @click="setOuFilter(typeof unit==='string'?unit:unit.ou)" :class="['inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border cursor-pointer select-none', ((typeof unit==='string'?unit:unit.ou)===activeOuFilter) ? 'bg-blue-600 text-white border-blue-600' : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300/30 hover:brightness-90']">
+                                        <!-- Para usuários root: mostrar todas as OUs -->
+                                        <div v-if="isRoot" v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" @click="setOuFilter(typeof unit==='string'?unit:unit.ou)" :class="['inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border cursor-pointer select-none', ((typeof unit==='string'?unit:unit.ou)===activeOuFilter) ? 'bg-blue-600 text-white border-blue-600' : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300/30 hover:brightness-90']">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                             </svg>
                                             @{{ unit.ou ?? unit }}
+                                            <span v-if="(unit.role ?? 'user') === 'admin'" class="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">Admin</span>
+                                        </div>
+                                        
+                                        <!-- Para admins de OU: mostrar apenas o perfil com badge -->
+                                        <div v-else v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit" @click="setRoleFilter(unit.role ?? 'user')" :class="['inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border cursor-pointer select-none', (unit.role ?? 'user') === activeRoleFilter ? 'bg-blue-600 text-white border-blue-600' : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300/30 hover:brightness-90']">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                            @{{ (unit.role ?? 'user') === 'admin' ? 'Admin' : 'Usuário' }}
                                             <span v-if="(unit.role ?? 'user') === 'admin'" class="ml-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">Admin</span>
                                         </div>
                                      </td>
@@ -616,6 +626,7 @@
                             type: 'success'
                         },
                         activeOuFilter: '',
+                        activeRoleFilter: '',
                         newUser: {
                             uid: '',
                             givenName: '',
@@ -654,12 +665,22 @@
                     filteredUsers() {
                         let list = this.users;
 
-                        // Aplica filtro de OU se selecionado
-                        if (this.activeOuFilter) {
+                        // Aplica filtro de OU se selecionado (apenas para root)
+                        if (this.activeOuFilter && this.isRoot) {
                             list = list.filter(u => {
                                 return (u.organizationalUnits || []).some(unit => {
                                     const ouName = typeof unit === 'string' ? unit : (unit.ou ?? unit);
                                     return ouName === this.activeOuFilter;
+                                });
+                            });
+                        }
+
+                        // Aplica filtro de role se selecionado (apenas para admin de OU)
+                        if (this.activeRoleFilter && !this.isRoot) {
+                            list = list.filter(u => {
+                                return (u.organizationalUnits || []).some(unit => {
+                                    const role = typeof unit === 'string' ? 'user' : (unit.role ?? 'user');
+                                    return role === this.activeRoleFilter;
                                 });
                             });
                         }
@@ -713,6 +734,14 @@
                             this.activeOuFilter='';
                         } else {
                             this.activeOuFilter=ou;
+                        }
+                        this.usersPage=1; // reset page
+                    },
+                    setRoleFilter(role){
+                        if(this.activeRoleFilter===role){
+                            this.activeRoleFilter='';
+                        } else {
+                            this.activeRoleFilter=role;
                         }
                         this.usersPage=1; // reset page
                     },
