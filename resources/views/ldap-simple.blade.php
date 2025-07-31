@@ -318,7 +318,7 @@
 
         <!-- Create User Modal -->
         <div v-if="showCreateUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
-            <div class="w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100">
+            <div class="w-11/12 md:w-3/4 lg:w-1/2 bg-white rounded-2xl shadow-2xl border border-gray-100">
                 <div class="p-8">
                     <div class="flex justify-between items-center mb-8">
                         <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -408,7 +408,7 @@
 
         <!-- Create UO Modal -->
         <div v-if="showCreateOuModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
-            <div class="w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100">
+            <div class="w-11/12 md:w-3/4 lg:w-1/2 bg-white rounded-2xl shadow-2xl border border-gray-100">
                 <div class="p-8">
                     <div class="flex justify-between items-center mb-8">
                         <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -451,7 +451,7 @@
 
         <!-- Modal edição usuário -->
         <div v-if="showEditUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
-            <div class="w-11/12 md:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100">
+            <div class="w-11/12 md:w-3/4 lg:w-1/2 bg-white rounded-2xl shadow-2xl border border-gray-100">
                 <div class="p-8">
                     <div class="flex justify-between items-center mb-8">
                         <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
