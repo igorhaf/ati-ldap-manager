@@ -34,6 +34,13 @@ Route::middleware(['web','auth'])->prefix('ldap')->group(function () {
     Route::delete('/users/{uid}', [LdapUserController::class, 'destroy']);
     });
     
+    // Rotas LDIF (apenas ROOT)
+    Route::middleware(IsRootUser::class)->group(function () {
+        Route::post('/users/generate-ldif', [LdapUserController::class, 'generateUserLdif']);
+        Route::post('/ldif/apply', [LdapUserController::class, 'applyLdif']);
+        Route::post('/ldif/upload', [LdapUserController::class, 'uploadLdif']);
+    });
+    
     // Rota para usuário comum acessar seu próprio perfil (ou root/admin OU também passam)
     Route::middleware(IsSelfAccess::class)->get('/users/{uid}', [LdapUserController::class, 'show']);
 

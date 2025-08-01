@@ -1,0 +1,58 @@
+# Exemplo LDIF para criação de usuário em múltiplas OUs
+# Este arquivo demonstra como criar o mesmo usuário em diferentes unidades organizacionais
+# Gerado automaticamente pelo sistema ATI LDAP Manager
+
+# Criação do usuário João Silva na OU TI com perfil de usuário
+dn: uid=joao.silva,ou=TI,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: joao.silva
+givenName: João
+sn: Silva
+cn: João Silva
+mail: joao.silva@empresa.com
+employeeNumber: 12345
+userPassword: {SSHA}hashedpassword123
+ou: TI
+employeeType: user
+
+# Criação do mesmo usuário na OU Financeiro com perfil de administrador
+dn: uid=joao.silva,ou=Financeiro,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: joao.silva
+givenName: João
+sn: Silva
+cn: João Silva
+mail: joao.silva@empresa.com
+employeeNumber: 12345
+userPassword: {SSHA}hashedpassword123
+ou: Financeiro
+employeeType: admin
+
+# Criação do mesmo usuário na OU RH com perfil de usuário
+dn: uid=joao.silva,ou=RH,dc=example,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+uid: joao.silva
+givenName: João
+sn: Silva
+cn: João Silva
+mail: joao.silva@empresa.com
+employeeNumber: 12345
+userPassword: {SSHA}hashedpassword123
+ou: RH
+employeeType: user
+
+# Exemplo de criação de nova OU (caso não exista)
+dn: ou=Desenvolvimento,dc=example,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Desenvolvimento
+description: Equipe de Desenvolvimento de Software 

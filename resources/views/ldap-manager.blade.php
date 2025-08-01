@@ -197,6 +197,202 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Seção LDIF -->
+            <div v-if="userRole === 'root'" class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Operações LDIF</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Abas para diferentes operações LDIF -->
+                        <ul class="nav nav-tabs mb-3" id="ldifTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="generate-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#generate" type="button" role="tab">
+                                    Gerar LDIF
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="apply-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#apply" type="button" role="tab">
+                                    Aplicar LDIF
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="upload-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#upload" type="button" role="tab">
+                                    Upload LDIF
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Conteúdo das abas -->
+                        <div class="tab-content" id="ldifTabContent">
+                            <!-- Aba Gerar LDIF -->
+                            <div class="tab-pane fade show active" id="generate" role="tabpanel">
+                                <h6>Gerar LDIF para Usuário em Múltiplas OUs</h6>
+                                <form @submit.prevent="generateLdif">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">UID</label>
+                                                <input type="text" class="form-control" v-model="ldifForm.uid" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Nome</label>
+                                                <input type="text" class="form-control" v-model="ldifForm.givenName" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Sobrenome</label>
+                                                <input type="text" class="form-control" v-model="ldifForm.sn" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Matrícula</label>
+                                                <input type="text" class="form-control" v-model="ldifForm.employeeNumber" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" v-model="ldifForm.mail" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Senha</label>
+                                                <input type="password" class="form-control" v-model="ldifForm.userPassword" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Unidades Organizacionais</label>
+                                        <div v-for="(ou, index) in ldifForm.organizationalUnits" :key="index" 
+                                             class="row mb-2 align-items-center">
+                                            <div class="col-md-5">
+                                                <select class="form-select" v-model="ou.ou" required>
+                                                    <option value="">Selecione uma OU</option>
+                                                    <option v-for="orgUnit in organizationalUnits" :key="orgUnit.ou" :value="orgUnit.ou">
+                                                        {{ orgUnit.ou }} - {{ orgUnit.description }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <select class="form-select" v-model="ou.role">
+                                                    <option value="user">Usuário</option>
+                                                    <option value="admin">Administrador</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="button" class="btn btn-danger btn-sm" 
+                                                        @click="removeLdifOu(index)" 
+                                                        :disabled="ldifForm.organizationalUnits.length <= 1">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-secondary btn-sm" @click="addLdifOu">
+                                            <i class="bi bi-plus"></i> Adicionar OU
+                                        </button>
+                                    </div>
+
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-code-square"></i> Gerar LDIF
+                                        </button>
+                                        <button type="button" class="btn btn-success" @click="generateAndDownloadLdif">
+                                            <i class="bi bi-download"></i> Gerar e Baixar
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Resultado do LDIF -->
+                                <div v-if="generatedLdif" class="mt-4">
+                                    <h6>LDIF Gerado:</h6>
+                                    <div class="position-relative">
+                                        <pre class="border p-3 bg-light" style="max-height: 400px; overflow-y: auto;"><code>{{ generatedLdif }}</code></pre>
+                                        <button class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" 
+                                                @click="copyToClipboard(generatedLdif)">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Aba Aplicar LDIF -->
+                            <div class="tab-pane fade" id="apply" role="tabpanel">
+                                <h6>Aplicar LDIF no Sistema</h6>
+                                <form @submit.prevent="applyLdif">
+                                    <div class="mb-3">
+                                        <label class="form-label">Conteúdo LDIF</label>
+                                        <textarea class="form-control" rows="15" v-model="ldifContent" 
+                                                  placeholder="Cole aqui o conteúdo LDIF..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="bi bi-play-circle"></i> Aplicar LDIF
+                                    </button>
+                                </form>
+
+                                <!-- Resultado da aplicação -->
+                                <div v-if="ldifResults" class="mt-4">
+                                    <h6>Resultados da Aplicação:</h6>
+                                    <div class="alert" :class="ldifResults.success ? 'alert-success' : 'alert-warning'">
+                                        {{ ldifResults.message }}
+                                    </div>
+                                    <div v-if="ldifResults.data && ldifResults.data.summary" class="mb-3">
+                                        <strong>Resumo:</strong> 
+                                        {{ ldifResults.data.summary.total }} entradas processadas, 
+                                        {{ ldifResults.data.summary.success }} sucessos, 
+                                        {{ ldifResults.data.summary.errors }} erros
+                                    </div>
+                                    <div v-if="ldifResults.data && ldifResults.data.results" style="max-height: 300px; overflow-y: auto;">
+                                        <div v-for="result in ldifResults.data.results" :key="result.dn" 
+                                             class="border p-2 mb-2" :class="result.success ? 'bg-light-success' : 'bg-light-danger'">
+                                            <strong>{{ result.dn }}</strong>: {{ result.message }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Aba Upload LDIF -->
+                            <div class="tab-pane fade" id="upload" role="tabpanel">
+                                <h6>Upload de Arquivo LDIF</h6>
+                                <form @submit.prevent="uploadLdif">
+                                    <div class="mb-3">
+                                        <label class="form-label">Arquivo LDIF</label>
+                                        <input type="file" class="form-control" ref="ldifFile" 
+                                               accept=".ldif,.txt" required>
+                                        <div class="form-text">Formatos aceitos: .ldif, .txt (máximo 2MB)</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-upload"></i> Upload e Aplicar
+                                    </button>
+                                </form>
+
+                                <!-- Resultado do upload -->
+                                <div v-if="uploadResults" class="mt-4">
+                                    <h6>Resultados do Upload:</h6>
+                                    <div class="alert" :class="uploadResults.success ? 'alert-success' : 'alert-warning'">
+                                        {{ uploadResults.message }}
+                                    </div>
+                                    <div v-if="uploadResults.data && uploadResults.data.summary" class="mb-3">
+                                        <strong>Arquivo:</strong> {{ uploadResults.data.filename }}<br>
+                                        <strong>Resumo:</strong> 
+                                        {{ uploadResults.data.summary.total }} entradas processadas, 
+                                        {{ uploadResults.data.summary.success }} sucessos, 
+                                        {{ uploadResults.data.summary.errors }} erros
+                                    </div>
+                                    <div v-if="uploadResults.data && uploadResults.data.results" style="max-height: 300px; overflow-y: auto;">
+                                        <div v-for="result in uploadResults.data.results" :key="result.dn" 
+                                             class="border p-2 mb-2" :class="result.success ? 'bg-light-success' : 'bg-light-danger'">
+                                            <strong>{{ result.dn }}</strong>: {{ result.message }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- Create User Modal -->
@@ -433,7 +629,22 @@
                                 show: false,
                                 message: '',
                                 type: 'success'
-                            }
+                            },
+                                                         // Novas variáveis para LDIF
+                             ldifForm: {
+                                 uid: '',
+                                 givenName: '',
+                                 sn: '',
+                                 employeeNumber: '',
+                                 mail: '',
+                                 userPassword: '',
+                                 organizationalUnits: [{ ou: '', role: 'user' }]
+                             },
+                            generatedLdif: '',
+                            ldifContent: '',
+                            ldifResults: null,
+                            uploadResults: null,
+                            userRole: 'user' // Adicionado para controlar a visibilidade das seções LDIF
                         }
                     },
                     computed: {
@@ -451,6 +662,7 @@
                     mounted() {
                         this.loadUsers();
                         this.loadOrganizationalUnits();
+                        this.checkUserRole(); // Adicionado para verificar o papel do usuário
                     },
                     methods: {
                         async loadUsers() {
@@ -713,6 +925,147 @@
                                     'Recarregue a página e tente novamente'
                                 ]
                             };
+                        },
+
+                                                 // Novos métodos para LDIF
+                         async generateLdif() {
+                             try {
+                                 const response = await fetch('/api/ldap/users/generate-ldif', {
+                                     method: 'POST',
+                                     headers: {
+                                         'Content-Type': 'application/json',
+                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                     },
+                                     body: JSON.stringify(this.ldifForm)
+                                 });
+                                 const data = await response.json();
+                                 if (data.success) {
+                                     this.generatedLdif = data.data.ldif;
+                                     this.showNotification('LDIF gerado com sucesso', 'success');
+                                 } else {
+                                     this.showNotification(data.message, 'error');
+                                 }
+                             } catch (error) {
+                                 this.showNotification('Erro ao gerar LDIF', 'error');
+                             }
+                         },
+
+                         async generateAndDownloadLdif() {
+                             try {
+                                 const formData = { ...this.ldifForm, download: true };
+                                 const response = await fetch('/api/ldap/users/generate-ldif', {
+                                     method: 'POST',
+                                     headers: {
+                                         'Content-Type': 'application/json',
+                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                     },
+                                     body: JSON.stringify(formData)
+                                 });
+                                 
+                                 if (response.headers.get('content-type')?.includes('text/plain')) {
+                                     // É um arquivo para download
+                                     const blob = await response.blob();
+                                     const url = window.URL.createObjectURL(blob);
+                                     const a = document.createElement('a');
+                                     a.href = url;
+                                     a.download = `usuario_${this.ldifForm.uid}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.ldif`;
+                                     document.body.appendChild(a);
+                                     a.click();
+                                     document.body.removeChild(a);
+                                     window.URL.revokeObjectURL(url);
+                                     this.showNotification('LDIF baixado com sucesso', 'success');
+                                 } else {
+                                     const data = await response.json();
+                                     this.showNotification(data.message, 'error');
+                                 }
+                             } catch (error) {
+                                 this.showNotification('Erro ao gerar e baixar LDIF', 'error');
+                             }
+                         },
+
+                                                 async applyLdif() {
+                             try {
+                                 const response = await fetch('/api/ldap/ldif/apply', {
+                                     method: 'POST',
+                                     headers: {
+                                         'Content-Type': 'application/json',
+                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                     },
+                                     body: JSON.stringify({ ldif_content: this.ldifContent })
+                                 });
+                                 const data = await response.json();
+                                 this.ldifResults = data;
+                                 if (data.success) {
+                                     this.showNotification('LDIF aplicado com sucesso', 'success');
+                                 } else {
+                                     this.showNotification(data.message, 'error');
+                                 }
+                             } catch (error) {
+                                 this.ldifResults = { success: false, message: 'Erro de rede ao aplicar LDIF' };
+                                 this.showNotification('Erro de rede ao aplicar LDIF', 'error');
+                             }
+                         },
+
+                         async uploadLdif() {
+                             const fileInput = this.$refs.ldifFile;
+                             if (!fileInput.files.length) {
+                                 this.showNotification('Por favor, selecione um arquivo LDIF para upload.', 'warning');
+                                 return;
+                             }
+
+                             const file = fileInput.files[0];
+                             if (file.size > 2 * 1024 * 1024) { // 2MB
+                                 this.showNotification('O arquivo selecionado é muito grande (máximo 2MB).', 'warning');
+                                 return;
+                             }
+
+                             try {
+                                 const formData = new FormData();
+                                 formData.append('ldif_file', file);
+
+                                 const response = await fetch('/api/ldap/ldif/upload', {
+                                     method: 'POST',
+                                     headers: {
+                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                     },
+                                     body: formData
+                                 });
+                                 const data = await response.json();
+                                 this.uploadResults = data;
+                                 if (data.success) {
+                                     this.showNotification('LDIF uploadado e aplicado com sucesso', 'success');
+                                 } else {
+                                     this.showNotification(data.message, 'error');
+                                 }
+                             } catch (error) {
+                                 this.uploadResults = { success: false, message: 'Erro de rede ao fazer upload LDIF' };
+                                 this.showNotification('Erro de rede ao fazer upload LDIF', 'error');
+                             }
+                         },
+
+                        removeLdifOu(index) {
+                            this.ldifForm.organizationalUnits.splice(index, 1);
+                        },
+
+                        addLdifOu() {
+                            this.ldifForm.organizationalUnits.push({ ou: '', role: 'user' });
+                        },
+
+                        copyToClipboard(text) {
+                            navigator.clipboard.writeText(text).then(() => {
+                                this.showNotification('LDIF copiado para a área de transferência!', 'success');
+                            }).catch(err => {
+                                console.error('Erro ao copiar para a área de transferência:', err);
+                                this.showNotification('Erro ao copiar LDIF para a área de transferência.', 'error');
+                            });
+                        },
+
+                        checkUserRole() {
+                            // Simplesmente define um papel para o usuário
+                            // Em um ambiente real, você precisaria de uma lógica mais robusta
+                            // para determinar o papel do usuário logado.
+                            // Por exemplo, pode-se fazer uma chamada para um endpoint de perfil.
+                            this.userRole = 'root'; // Define como 'root' para permitir acesso a todas as funcionalidades
                         }
                     }
                 });

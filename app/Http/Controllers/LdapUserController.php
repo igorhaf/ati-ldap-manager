@@ -2,21 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Ldap\LdapUserModel;
-use App\Ldap\OrganizationalUnit;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Models\OperationLog;
-use App\Traits\ChecksRootAccess;
-
-use LdapRecord\Connection;
-use LdapRecord\Container;
+use App\Ldap\LdapUserModel;
+use App\Ldap\OrganizationalUnit;
 use App\Services\RoleResolver;
+use App\Traits\ChecksRootAccess;
 use App\Utils\LdapUtils;
+use App\Models\OperationLog;
+use App\Services\LdifService;
+use Illuminate\Support\Facades\Response;
 
 class LdapUserController extends Controller
 {
     use ChecksRootAccess;
+
+    protected LdifService $ldifService;
+
+    public function __construct(LdifService $ldifService)
+    {
+        $this->ldifService = $ldifService;
+    }
 
     /**
      * Safely get an attribute that might not be supported by the LDAP schema
@@ -741,6 +747,163 @@ class LdapUserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao alterar senha: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Gera um LDIF para criação de usuário em múltiplas OUs
+     */
+    public function generateUserLdif(Request $request): JsonResponse|\Illuminate\Http\Response
+    {
+        $this->checkRootAccess($request);
+
+        try {
+            $request->validate([
+                'uid' => 'required|string|max:255',
+                'givenName' => 'required|string|max:255',
+                'sn' => 'required|string|max:255',
+                'employeeNumber' => 'required|string|max:255',
+                'mail' => 'required|email',
+                'userPassword' => 'required|string|min:6',
+                'organizationalUnits' => 'required|array|min:1',
+                'organizationalUnits.*' => 'required',
+                'download' => 'boolean',
+            ]);
+
+            $userData = [
+                'uid' => $request->uid,
+                'givenName' => $request->givenName,
+                'sn' => $request->sn,
+                'employeeNumber' => $request->employeeNumber,
+                'mail' => $request->mail,
+                'userPassword' => $request->userPassword,
+            ];
+
+            $organizationalUnits = collect($request->organizationalUnits)->map(function ($item) {
+                if (is_string($item)) {
+                    return ['ou' => $item, 'role' => 'user'];
+                }
+                return $item;
+            })->toArray();
+
+            $ldifContent = $this->ldifService->generateUserLdif($userData, $organizationalUnits);
+
+            // Se solicitado download, retornar arquivo
+            if ($request->get('download', false)) {
+                $filename = "usuario_{$request->uid}_" . now()->format('Y-m-d_H-i-s') . ".ldif";
+                
+                return Response::make($ldifContent, 200, [
+                    'Content-Type' => 'text/plain',
+                    'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                ]);
+            }
+
+            // Caso contrário, retornar JSON com o conteúdo
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'ldif' => $ldifContent,
+                    'filename' => "usuario_{$request->uid}_" . now()->format('Y-m-d_H-i-s') . ".ldif",
+                ],
+                'message' => 'LDIF gerado com sucesso'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao gerar LDIF: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Aplica um LDIF no sistema
+     */
+    public function applyLdif(Request $request): JsonResponse
+    {
+        $this->checkRootAccess($request);
+
+        try {
+            $request->validate([
+                'ldif_content' => 'required|string',
+            ]);
+
+            $results = $this->ldifService->applyLdif($request->ldif_content);
+
+            $successCount = collect($results)->where('success', true)->count();
+            $errorCount = collect($results)->where('success', false)->count();
+
+            return response()->json([
+                'success' => $errorCount === 0,
+                'data' => [
+                    'results' => $results,
+                    'summary' => [
+                        'total' => count($results),
+                        'success' => $successCount,
+                        'errors' => $errorCount,
+                    ]
+                ],
+                'message' => $errorCount === 0 
+                    ? "LDIF aplicado com sucesso ({$successCount} entradas processadas)"
+                    : "LDIF aplicado com {$errorCount} erro(s) de {$successCount} entradas"
+            ], $errorCount === 0 ? 200 : 207); // 207 Multi-Status para respostas parciais
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao aplicar LDIF: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload e aplicação de arquivo LDIF
+     */
+    public function uploadLdif(Request $request): JsonResponse
+    {
+        $this->checkRootAccess($request);
+
+        try {
+            $request->validate([
+                'ldif_file' => 'required|file|mimes:ldif,txt|max:2048', // Max 2MB
+            ]);
+
+            $file = $request->file('ldif_file');
+            $ldifContent = file_get_contents($file->getPathname());
+
+            if (empty($ldifContent)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Arquivo LDIF está vazio'
+                ], 422);
+            }
+
+            $results = $this->ldifService->applyLdif($ldifContent);
+
+            $successCount = collect($results)->where('success', true)->count();
+            $errorCount = collect($results)->where('success', false)->count();
+
+            return response()->json([
+                'success' => $errorCount === 0,
+                'data' => [
+                    'filename' => $file->getClientOriginalName(),
+                    'results' => $results,
+                    'summary' => [
+                        'total' => count($results),
+                        'success' => $successCount,
+                        'errors' => $errorCount,
+                    ]
+                ],
+                'message' => $errorCount === 0 
+                    ? "Arquivo LDIF processado com sucesso ({$successCount} entradas)"
+                    : "Arquivo LDIF processado com {$errorCount} erro(s) de {$successCount} entradas"
+            ], $errorCount === 0 ? 200 : 207);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao processar arquivo LDIF: ' . $e->getMessage()
             ], 500);
         }
     }
