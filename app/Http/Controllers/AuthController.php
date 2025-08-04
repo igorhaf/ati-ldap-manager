@@ -76,7 +76,6 @@ class AuthController extends Controller
      */
     private function extractOuFromHost($host)
     {
-        var_dump($host);
         // Log do host recebido para debug
         \Log::info('AuthController: Host recebido', ['host' => $host]);
         
@@ -105,7 +104,9 @@ class AuthController extends Controller
         ]);
 
         $host = $this->getOriginalHost($request);
+        var_dump($host);
         $ou = $this->extractOuFromHost($host);
+        var_dump($ou);
         if (!$ou) {
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
