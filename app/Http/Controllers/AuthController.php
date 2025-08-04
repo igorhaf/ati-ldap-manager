@@ -121,7 +121,8 @@ class AuthController extends Controller
                 ->where('ou', $ou)
                 ->first();
         }
-
+        var_dump($user);
+        var_dump($ou);
         if (!$user) {
             if ($ou === 'admin') {
                 return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');
