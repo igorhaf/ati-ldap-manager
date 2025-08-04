@@ -264,7 +264,47 @@ php artisan route:clear
 
 **Teste:** Execute `php artisan test:basic-app` primeiro.
 
-### **9. Problemas de Certificado SSL**
+### **9. Erro: "ldap_add(): Add: Invalid DN syntax"**
+```bash
+❌ Erro ao criar usuário: ldap_add(): Add: Invalid DN syntax
+```
+
+**Causa:** Distinguished Name (DN) construído com caracteres especiais não escapados.
+
+**Problemas Comuns:**
+- UID com vírgulas: `user,test`
+- OU com barras: `ti/desenvolvimento`
+- Espaços no início/fim: ` usuario `
+- Caracteres especiais: `user"test`, `admin=sistema`
+
+**Solução:** Usar classe utilitária `LdapDnUtils`:
+
+```php
+// ❌ PROBLEMÁTICO
+$entry->setDn("uid={$uid},ou={$ou},{$baseDn}");
+
+// ✅ CORRETO
+$safeDn = LdapDnUtils::buildUserDn($uid, $ou, $baseDn);
+$entry->setDn($safeDn);
+```
+
+**Validação de UID:**
+```php
+'uid' => 'required|string|max:255|regex:/^[a-zA-Z0-9._-]+$/'
+```
+
+**Teste:** 
+```bash
+# Testar construção de DN
+php artisan test:dn-construction "joao.silva" "ti"
+
+# Testar com caracteres problemáticos
+php artisan test:dn-construction "user,test" "ou/special"
+```
+
+**Documentação completa:** `CORRECAO_DN_SYNTAX.md`
+
+### **10. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```

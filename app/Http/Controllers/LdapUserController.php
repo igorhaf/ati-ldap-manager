@@ -9,6 +9,7 @@ use App\Ldap\OrganizationalUnit;
 use App\Services\RoleResolver;
 use App\Traits\ChecksRootAccess;
 use App\Utils\LdapUtils;
+use App\Utils\LdapDnUtils;
 use App\Models\OperationLog;
 use App\Services\LdifService;
 use Illuminate\Support\Facades\Response;
@@ -131,7 +132,7 @@ class LdapUserController extends Controller
         
         try {
             $request->validate([
-                'uid' => 'required|string|max:255',
+                'uid' => 'required|string|max:255|regex:/^[a-zA-Z0-9._-]+$/',
                 'givenName' => 'required|string|max:255',
                 'sn' => 'required|string|max:255',
                 'employeeNumber' => 'required|string|max:255',
@@ -141,6 +142,21 @@ class LdapUserController extends Controller
                 // Cada item pode ser string (OU) ou objeto {ou, role}
                 'organizationalUnits.*' => 'required',
             ]);
+
+            // Validação adicional para DN seguro
+            if (!LdapDnUtils::isValidDnValue($request->uid)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'UID contém caracteres inválidos para LDAP'
+                ], 422);
+            }
+
+            if (LdapDnUtils::hasProblematicChars($request->uid)) {
+                \Log::warning('UID contém caracteres problemáticos', [
+                    'uid' => $request->uid,
+                    'problematic_chars' => LdapDnUtils::getProblematicChars($request->uid)
+                ]);
+            }
 
             $role = RoleResolver::resolve(auth()->user());
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
@@ -209,6 +225,14 @@ class LdapUserController extends Controller
                 $ou = $unit['ou'];
                 $role = $unit['role'] ?? 'user';
 
+                // Validar OU
+                if (!LdapDnUtils::isValidDnValue($ou)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "OU '{$ou}' contém caracteres inválidos para LDAP"
+                    ], 422);
+                }
+
                 $entry = new LdapUserModel();           // já usa o alias correto
                 $entry->setFirstAttribute('uid', $request->uid);
                 $entry->setFirstAttribute('givenName',  $request->givenName);
@@ -228,7 +252,15 @@ class LdapUserController extends Controller
                     'inetOrgPerson',
                 ]);
 
-                $entry->setDn("uid={$request->uid},ou={$ou},{$baseDn}");
+                // Construir DN de forma segura
+                $safeDn = LdapDnUtils::buildUserDn($request->uid, $ou, $baseDn);
+                \Log::info('Criando usuário com DN', [
+                    'uid' => $request->uid,
+                    'ou' => $ou,
+                    'dn' => $safeDn
+                ]);
+                
+                $entry->setDn($safeDn);
                 $entry->save();
                 //var_dump($entry);             // 1ª operação: cria a entrada
             }
