@@ -32,17 +32,7 @@ class LdapUserController extends Controller
         return $user->getFirstAttribute($attribute);
     }
 
-    /**
-     * Garantir que a entrada possua o objectClass necessário para gravar
-     * atributos de roteamento de email (ex.: mailForwardingAddress).
-     */
-    private function ensureInetLocalMailRecipient($model): void
-    {
-        $classes = array_map('strtolower', $model->getAttribute('objectClass') ?? []);
-        if (!in_array('inetlocalmailrecipient', $classes)) {
-            $model->addAttribute('objectClass', 'inetLocalMailRecipient');
-        }
-    }
+
 
     /**
      * Extrai o nome da OU a partir do atributo 'ou' ou, em fallback,

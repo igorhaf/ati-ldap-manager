@@ -21,7 +21,6 @@ O sistema gerencia os seguintes atributos de usuário:
 - **cn**: Nome completo (gerado automaticamente)
 - **mail**: Múltiplos emails (obrigatório pelo menos um)
 - **employeeNumber**: Matrícula (obrigatório)
-- **emailForwardAddress**: Emails de redirecionamento (opcional)
 - **userPassword**: Senha (obrigatório)
 - **organizationalUnits**: Múltiplas unidades organizacionais (opcional)
 
@@ -110,8 +109,7 @@ Acesse a URL: `http://localhost:8000/ldap-manager`
     "employeeNumber": "12345",
     "mail": ["joao.silva@empresa.com", "joao@outro.com"],
     "userPassword": "senha123",
-    "organizationalUnits": ["TI", "Desenvolvimento"],
-    "emailForwardAddress": ["joao.forward@empresa.com"]
+    "organizationalUnits": ["TI", "Desenvolvimento"]
 }
 ```
 

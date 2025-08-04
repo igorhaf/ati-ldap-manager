@@ -181,12 +181,7 @@
                                         </div>
                                      </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <div class="space-y-1">
-                                            <div class="text-sm font-medium text-gray-900">@{{ user.mail }}</div>
-                                            <div v-if="user.mailForwardingAddress" class="text-xs text-gray-500">
-                                                ➤ @{{ user.mailForwardingAddress }}
-                                            </div>
-                                        </div>
+                                        <div class="text-sm font-medium text-gray-900">@{{ user.mail }}</div>
                                     </td>
                                     <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.employeeNumber }}</td>
                                     <td v-if="canManageUsers" class="px-6 py-4 text-sm font-medium">
@@ -367,16 +362,6 @@
                                     required
                                 >
                             </div>
-                        <div>
-                                <label for="mailForwardingAddress" class="block text-sm font-medium text-gray-700 mb-1">Email de Redirecionamento (Opcional)</label>
-                                <input 
-                                    v-model="newUser.mailForwardingAddress" 
-                                    type="email" 
-                                    id="mailForwardingAddress"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="redirecionamento@exemplo.com"
-                                >
-                            </div>
                         </div>
 
                         <div>
@@ -497,16 +482,6 @@
                                     id="edit-mail"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="exemplo@empresa.com"
-                                >
-                            </div>
-                            <div>
-                                <label for="edit-mailForwardingAddress" class="block text-sm font-medium text-gray-700 mb-1">Email de Redirecionamento (Opcional)</label>
-                                <input 
-                                    v-model="editUser.mailForwardingAddress" 
-                                    type="email" 
-                                    id="edit-mailForwardingAddress"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="redirecionamento@exemplo.com"
                                 >
                             </div>
                         </div>
@@ -632,7 +607,6 @@
                             sn: '',
                             employeeNumber: '',
                             mail: '',
-                            mailForwardingAddress: '',
                             userPassword: '',
                             organizationalUnits: [{ou: '', role: 'user'}]
                         },
@@ -646,7 +620,6 @@
                             sn: '',
                             employeeNumber: '',
                             mail: '',
-                            mailForwardingAddress: '',
                             userPassword: '',
                             organizationalUnits: [{ou: '', role: 'user'}]
                         },
@@ -823,7 +796,6 @@
                         this.editUser.sn = user.sn;
                         this.editUser.employeeNumber = user.employeeNumber;
                         this.editUser.mail = user.mail;
-                        this.editUser.mailForwardingAddress = user.mailForwardingAddress;
                         this.editUser.userPassword = '';
                         
                         // Garantir que organizationalUnits seja um array de objetos
@@ -940,7 +912,6 @@
                             sn: '',
                             employeeNumber: '',
                             mail: '',
-                            mailForwardingAddress: '',
                             userPassword: '',
                             organizationalUnits: [{ou: '', role: 'user'}]
                         };

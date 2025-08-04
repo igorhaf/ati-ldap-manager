@@ -17,7 +17,6 @@
   - cn (nome completo - gerado automaticamente)
   - mail (múltiplos emails)
   - employeeNumber (matrícula - obrigatório)
-  - emailForwardAddress (emails de redirecionamento)
   - userPassword (senha)
   - organizationalUnits (múltiplas unidades organizacionais)
 

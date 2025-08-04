@@ -37,7 +37,6 @@ curl -X GET http://localhost:8000/api/ldap/users
             "fullName": "João Silva",
             "mail": ["joao.silva@empresa.com"],
             "employeeNumber": "12345",
-            "emailForwardAddress": [],
             "organizationalUnits": ["TI"]
         }
     ],
@@ -64,8 +63,7 @@ curl -X POST http://localhost:8000/api/ldap/users \
     "employeeNumber": "67890",
     "mail": ["maria.santos@empresa.com", "maria@outro.com"],
     "userPassword": "senha123",
-    "organizationalUnits": ["RH", "Administração"],
-    "emailForwardAddress": ["maria.forward@empresa.com"]
+    "organizationalUnits": ["RH", "Administração"]
   }'
 ```
 
@@ -79,7 +77,6 @@ curl -X POST http://localhost:8000/api/ldap/users \
 
 **Dados opcionais**:
 - `organizationalUnits`: Array com unidades organizacionais
-- `emailForwardAddress`: Array com emails de redirecionamento
 
 ---
 
@@ -106,7 +103,6 @@ curl -X GET http://localhost:8000/api/ldap/users/joao.silva
         "fullName": "João Silva",
         "mail": ["joao.silva@empresa.com"],
         "employeeNumber": "12345",
-        "emailForwardAddress": [],
         "organizationalUnits": ["TI"]
     },
     "message": "Usuário encontrado com sucesso"
@@ -138,7 +134,6 @@ curl -X PUT http://localhost:8000/api/ldap/users/joao.silva \
 - `mail`: Array de emails
 - `userPassword`: Nova senha
 - `organizationalUnits`: Array de unidades organizacionais
-- `emailForwardAddress`: Array de emails de redirecionamento
 
 ---
 
