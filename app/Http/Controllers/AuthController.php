@@ -115,6 +115,7 @@ class AuthController extends Controller
             $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
         } else {
             // Para outros usuários: buscar pelo uid e OU específica
+            dd($credentials['uid']);
             $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])
                 ->where('ou', $ou)
                 ->first();
