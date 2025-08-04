@@ -6,6 +6,12 @@ Falha ao conectar no LDAP em produção com erro "❌ Falha na conexão LDAP".
 
 ## 🧪 **Comandos de Diagnóstico**
 
+### **0. Teste da Aplicação Básica (PRIMEIRO)**
+```bash
+# Verificar se Laravel e configurações estão funcionando
+php artisan test:basic-app
+```
+
 ### **1. Teste Rápido**
 ```bash
 # Teste básico de conectividade
@@ -205,7 +211,60 @@ $count = is_array($results) ? count($results) : $results->count();
 
 **Teste:** Execute `php artisan test:simple-structure` para verificar se foi corrigido.
 
-### **7. Problemas de Certificado SSL**
+### **7. Erro: "Target class [ensure-ldap-record] does not exist"**
+```bash
+❌ Target class [ensure-ldap-record] does not exist
+```
+
+**Causa:** Middleware não registrado corretamente ou conflito de versão Laravel.
+
+**Solução:** Middleware foi removido e substituído por inicialização automática no `AppServiceProvider`.
+
+**Verificação:**
+```bash
+# Verificar se foi removido
+grep -r "ensure-ldap-record" app/ routes/
+
+# Limpar cache
+php artisan config:clear
+php artisan route:clear
+```
+
+**Teste:** Execute `php artisan test:basic-app` para verificar.
+
+### **8. Erro: "SyntaxError: Unexpected token '<', "<!DOCTYPE ""**
+```bash
+❌ SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+```
+
+**Causa:** Aplicação retornando HTML (página de erro) ao invés de JSON.
+
+**Possíveis Causas:**
+- Erro 500 interno
+- Middleware falhando
+- Rota não encontrada
+- Problema de autenticação
+
+**Soluções:**
+1. **Verificar logs:**
+   ```bash
+   tail -f storage/logs/laravel.log
+   ```
+
+2. **Testar API diretamente:**
+   ```bash
+   curl -H "Accept: application/json" http://localhost/api/ldap/users
+   ```
+
+3. **Limpar cache:**
+   ```bash
+   php artisan config:clear
+   php artisan cache:clear
+   ```
+
+**Teste:** Execute `php artisan test:basic-app` primeiro.
+
+### **9. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```
