@@ -53,7 +53,9 @@ class DebugLdapStructure extends Command
                 if (!$connection) {
                     $this->line('🔄 Tentando inicializar conexão...');
                     // Forçar inicialização da conexão
-                    Container::addConnection(config('ldap.connections.default'), 'default');
+                    $config = config('ldap.connections.default');
+                    $newConnection = new Connection($config);
+                    Container::addConnection($newConnection, 'default');
                     $connection = Container::getDefaultConnection();
                 }
                 
@@ -76,12 +78,14 @@ class DebugLdapStructure extends Command
                 // Configuração manual como fallback
                 try {
                     $config = config('ldap.connections.default');
-                    $connection = new Connection($config);
-                    Container::addConnection($connection, 'default');
-                    $connection->connect();
+                    $manualConnection = new Connection($config);
+                    Container::addConnection($manualConnection, 'default');
+                    Container::setDefaultConnection('default');
+                    $manualConnection->connect();
                     
-                    if ($connection->isConnected()) {
+                    if ($manualConnection->isConnected()) {
                         $this->info('✅ Conectado via configuração manual');
+                        $connection = $manualConnection; // Usar a conexão manual
                     } else {
                         $this->error('❌ Falha na conexão manual');
                         return 1;

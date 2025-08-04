@@ -12,16 +12,28 @@ Falha ao conectar no LDAP em produção com erro "❌ Falha na conexão LDAP".
 php artisan quick:ldap-test
 ```
 
-### **2. Teste Completo**
+### **2. Teste da Correção do Container**
+```bash
+# Verificar se a correção do LdapRecord Container funcionou
+php artisan test:container-fix
+```
+
+### **3. Teste Completo**
 ```bash
 # Diagnóstico detalhado
 php artisan test:ldap-connection --detailed
 ```
 
-### **3. Debug da Estrutura**
+### **4. Debug da Estrutura**
 ```bash
 # Verificar estrutura após conexão
 php artisan debug:ldap-structure
+```
+
+### **5. Teste LdapRecord Específico**
+```bash
+# Testar especificamente LdapRecord/Laravel
+php artisan test:ldap-record
 ```
 
 ## ⚙️ **Configurações de Produção**
@@ -150,7 +162,26 @@ ldapsearch -H ldap://10.238.124.3:389 \
 3. **Protocolo LDAP:**
    - Força protocolo versão 3 (já configurado automaticamente)
 
-### **5. Problemas de Certificado SSL**
+### **5. Erro: "Argument #1 ($connection) must be of type LdapRecord\Connection, array given"**
+```bash
+❌ ConnectionManager::addConnection(): Argument #1 ($connection) must be of type LdapRecord\Connection, array given
+```
+
+**Causa:** Tentativa de passar array de configuração diretamente para `Container::addConnection()`.
+
+**Solução:** Criar objeto `Connection` primeiro:
+```php
+// ❌ ERRADO
+Container::addConnection($config, 'default');
+
+// ✅ CORRETO
+$connection = new Connection($config);
+Container::addConnection($connection, 'default');
+```
+
+**Teste:** Execute `php artisan test:container-fix` para verificar se foi corrigido.
+
+### **6. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```

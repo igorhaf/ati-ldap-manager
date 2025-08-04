@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use LdapRecord\Container;
+use LdapRecord\Connection;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureLdapRecord
@@ -35,7 +36,8 @@ class EnsureLdapRecord
                 
                 $config = config('ldap.connections.default');
                 if ($config && !empty($config['hosts'][0])) {
-                    Container::addConnection($config, 'default');
+                    $connection = new Connection($config);
+                    Container::addConnection($connection, 'default');
                     Container::setDefaultConnection('default');
                     
                     \Log::info('EnsureLdapRecord: LdapRecord Container inicializado', [

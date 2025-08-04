@@ -170,7 +170,8 @@ class AuthController extends Controller
                 \Log::info('AuthController: Inicializando LdapRecord Container');
                 
                 $config = config('ldap.connections.default');
-                \LdapRecord\Container::addConnection($config, 'default');
+                $connection = new \LdapRecord\Connection($config);
+                \LdapRecord\Container::addConnection($connection, 'default');
                 \LdapRecord\Container::setDefaultConnection('default');
                 
                 \Log::info('AuthController: LdapRecord Container inicializado');

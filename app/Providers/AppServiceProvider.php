@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use LdapRecord\Container;
+use LdapRecord\Connection;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,8 +38,9 @@ class AppServiceProvider extends ServiceProvider
                 // Limpar conexões existentes
                 Container::flush();
                 
-                // Adicionar conexão padrão
-                Container::addConnection($ldapConfig, 'default');
+                // Criar objeto Connection e adicionar ao Container
+                $connection = new Connection($ldapConfig);
+                Container::addConnection($connection, 'default');
                 Container::setDefaultConnection('default');
                 
                 // Log para debug

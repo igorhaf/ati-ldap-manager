@@ -46,7 +46,8 @@ class TestLdapRecord extends Command
             Container::flush();
             
             // Adicionar conexão
-            Container::addConnection($config, 'default');
+            $connection = new Connection($config);
+            Container::addConnection($connection, 'default');
             Container::setDefaultConnection('default');
             
             $connection = Container::getDefaultConnection();
