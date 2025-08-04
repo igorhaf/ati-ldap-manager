@@ -1,0 +1,161 @@
+# ========================================
+# COMANDOS SSH DIRETOS - COPIE E COLE
+# ========================================
+
+# 1. CONECTAR NO SERVIDOR
+ssh -p 7654 igor.franca@10.238.124.200
+# Senha: 30102024@Real
+
+# 2. ENCONTRAR O PROJETO (execute um dos comandos abaixo)
+find /home -name "composer.json" -path "*ati-ldap-manager*" 2>/dev/null
+find /var/www -name "composer.json" -path "*ati-ldap-manager*" 2>/dev/null  
+find /opt -name "composer.json" -path "*ati-ldap-manager*" 2>/dev/null
+
+# 3. NAVEGAR PARA O DIRETÓRIO (substitua pelo caminho encontrado)
+cd /caminho/completo/do/projeto
+
+# 4. CRIAR SCRIPT DE VERIFICAÇÃO RÁPIDA
+cat > quick-check.sh << 'EOF'
+#!/bin/bash
+echo "🔍 VERIFICAÇÃO RÁPIDA - $(date)"
+echo "================================"
+echo "📁 PWD: $(pwd)"
+echo "📂 Arquivos:"
+ls -la composer.json .env docker-compose.yml vendor/bin/sail 2>/dev/null || echo "❌ Arquivos principais não encontrados"
+echo ""
+echo "🐳 Docker:"
+if sudo docker ps &> /dev/null; then
+    echo "✅ Docker OK"
+    sudo docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | head -10
+else
+    echo "❌ Docker com problemas"
+    sudo systemctl status docker --no-pager | head -5
+fi
+echo ""
+echo "📄 .env:"
+if [ -f ".env" ]; then
+    echo "✅ .env existe"
+    echo "APP_ENV: $(grep '^APP_ENV=' .env | cut -d'=' -f2)"
+    echo "APP_DEBUG: $(grep '^APP_DEBUG=' .env | cut -d'=' -f2)"
+    echo "APP_KEY: $(grep '^APP_KEY=' .env | cut -d'=' -f2 | cut -c1-20)..."
+else
+    echo "❌ .env NÃO EXISTE"
+fi
+echo ""
+echo "🌐 Teste HTTP:"
+curl -s -o /dev/null -w "Status: %{http_code} | Tempo: %{time_total}s\n" http://localhost 2>/dev/null || echo "❌ Falha na conexão"
+curl -s -o /dev/null -w "Status: %{http_code} | Tempo: %{time_total}s\n" http://10.238.124.200 2>/dev/null || echo "❌ Falha no IP externo"
+echo ""
+echo "📊 Recursos:"
+echo "Espaço: $(df -h / | tail -1 | awk '{print $4}') livre"
+echo "RAM: $(free -h | grep '^Mem' | awk '{print $7}') livre"
+EOF
+
+# 5. DAR PERMISSÃO E EXECUTAR VERIFICAÇÃO
+chmod +x quick-check.sh
+./quick-check.sh
+
+# 6. SE HOUVER PROBLEMAS, CRIAR SCRIPT DE CORREÇÃO
+cat > fix-production.sh << 'EOF'
+#!/bin/bash
+echo "🔧 CORREÇÃO PRODUÇÃO - $(date)"
+echo "=============================="
+
+# Parar tudo
+echo "1️⃣ Parando containers..."
+sudo ./vendor/bin/sail down 2>/dev/null
+sudo docker stop $(sudo docker ps -q) 2>/dev/null
+
+# Limpar Docker
+echo "2️⃣ Limpando Docker..."
+sudo docker system prune -f
+sudo docker volume prune -f
+
+# Verificar .env
+echo "3️⃣ Verificando .env..."
+if [ ! -f ".env" ]; then
+    sudo cp .env.example .env
+    echo "✅ .env criado"
+fi
+
+# Corrigir permissões
+echo "4️⃣ Corrigindo permissões..."
+sudo mkdir -p storage/{app,framework,logs} bootstrap/cache
+sudo chmod -R 775 storage bootstrap/cache
+sudo chown -R www-data:www-data storage bootstrap/cache 2>/dev/null
+
+# Instalar dependências se necessário
+echo "5️⃣ Verificando dependências..."
+if [ ! -d "vendor" ]; then
+    echo "Instalando composer..."
+    sudo composer install --no-dev --optimize-autoloader
+fi
+
+# Iniciar containers
+echo "6️⃣ Iniciando containers..."
+sudo ./vendor/bin/sail up -d
+echo "Aguardando containers subirem..."
+sleep 20
+
+# Configurar aplicação
+echo "7️⃣ Configurando aplicação..."
+sudo ./vendor/bin/sail artisan key:generate --force
+sudo ./vendor/bin/sail artisan config:clear
+sudo ./vendor/bin/sail artisan cache:clear
+sudo ./vendor/bin/sail artisan migrate --force
+
+# Testar
+echo "8️⃣ Testando..."
+sleep 5
+status=$(sudo ./vendor/bin/sail exec laravel.test curl -s -o /dev/null -w "%{http_code}" http://localhost 2>/dev/null)
+echo "Status HTTP: $status"
+
+if [ "$status" = "200" ]; then
+    echo "🎉 SUCESSO! Aplicação funcionando!"
+    echo "🌐 Acesse: http://10.238.124.200"
+else
+    echo "⚠️  Ainda com problemas. Logs:"
+    sudo ./vendor/bin/sail logs --tail=20
+fi
+
+echo ""
+echo "📊 Status final:"
+sudo ./vendor/bin/sail ps
+EOF
+
+# 7. EXECUTAR CORREÇÃO
+chmod +x fix-production.sh
+./fix-production.sh
+
+# 8. SE AINDA NÃO FUNCIONAR, COMANDOS DE DEBUG:
+
+# Ver logs em tempo real
+sudo ./vendor/bin/sail logs -f
+
+# Ver status detalhado
+sudo ./vendor/bin/sail ps
+
+# Verificar .env
+cat .env | grep -E "^(APP_|DB_|LDAP_)"
+
+# Testar conexão direta
+sudo ./vendor/bin/sail exec laravel.test curl -I http://localhost
+
+# Ver processos dentro do container
+sudo ./vendor/bin/sail exec laravel.test ps aux
+
+# Verificar banco de dados
+sudo ./vendor/bin/sail artisan migrate:status
+
+# COMANDOS DE EMERGÊNCIA (use com cuidado):
+
+# Reset completo (apaga dados dos containers)
+sudo ./vendor/bin/sail down -v
+sudo docker system prune -af
+sudo ./vendor/bin/sail up -d
+./fix-production.sh
+
+# Reinstalar tudo
+sudo rm -rf vendor/
+sudo composer install --no-dev --optimize-autoloader
+./fix-production.sh 
