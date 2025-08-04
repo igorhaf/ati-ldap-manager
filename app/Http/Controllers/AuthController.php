@@ -15,22 +15,84 @@ class AuthController extends Controller
     }
 
     /**
+     * Obtém o host original, considerando proxies e HTTPS
+     */
+    private function getOriginalHost($request)
+    {
+        // Tentar várias formas de obter o host original
+        $possibleHosts = [
+            $request->header('X-Forwarded-Host'),      // Nginx, Apache
+            $request->header('X-Original-Host'),       // Alguns proxies
+            $request->header('X-Host'),                // Alguns load balancers
+            $request->header('CF-Connecting-IP') ? $request->header('Host') : null, // Cloudflare
+            $request->getHost(),                       // Padrão Laravel
+        ];
+
+        foreach ($possibleHosts as $host) {
+            if ($host && $this->isValidHost($host)) {
+                \Log::info('AuthController: Host encontrado', [
+                    'host' => $host,
+                    'method' => $this->getHostMethod($request, $host)
+                ]);
+                return strtolower(trim($host));
+            }
+        }
+
+        // Fallback: usar o host padrão
+        $defaultHost = $request->getHost();
+        \Log::warning('AuthController: Usando host padrão como fallback', ['host' => $defaultHost]);
+        return strtolower(trim($defaultHost));
+    }
+
+    /**
+     * Verifica se o host é válido para o domínio esperado
+     */
+    private function isValidHost($host)
+    {
+        if (!$host || !is_string($host)) {
+            return false;
+        }
+
+        // Verificar se é um dos domínios esperados
+        return preg_match('/^(contasadmin|contas\.[a-z0-9-]+)\.sei\.pe\.gov\.br$/i', trim($host));
+    }
+
+    /**
+     * Identifica qual método foi usado para obter o host (para debug)
+     */
+    private function getHostMethod($request, $host)
+    {
+        if ($request->header('X-Forwarded-Host') === $host) return 'X-Forwarded-Host';
+        if ($request->header('X-Original-Host') === $host) return 'X-Original-Host';
+        if ($request->header('X-Host') === $host) return 'X-Host';
+        if ($request->getHost() === $host) return 'getHost()';
+        return 'unknown';
+    }
+
+    /**
      * Extrai a OU do subdomínio da URL
      * Exemplo: contas.moreno.sei.pe.gov.br => moreno
      * Para contasadmin.sei.pe.gov.br => admin (usuário root)
      */
     private function extractOuFromHost($host)
     {
+        // Log do host recebido para debug
+        \Log::info('AuthController: Host recebido', ['host' => $host]);
+        
         // Caso especial para usuários root
         if ($host === 'contasadmin.sei.pe.gov.br') {
+            \Log::info('AuthController: Detectado usuário root');
             return 'admin';
         }
         
         // Para outras OUs: contas.moreno.sei.pe.gov.br => moreno
         if (preg_match('/contas\\.([a-z0-9-]+)\\.sei\\.pe\\.gov\\.br/i', $host, $matches)) {
-            return $matches[1];
+            $ou = $matches[1];
+            \Log::info('AuthController: OU extraída', ['ou' => $ou, 'host' => $host]);
+            return $ou;
         }
         
+        \Log::warning('AuthController: Não foi possível extrair OU do host', ['host' => $host]);
         return null;
     }
 
@@ -41,14 +103,14 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $host = $request->getHost();
+        $host = $this->getOriginalHost($request);
         $ou = $this->extractOuFromHost($host);
         if (!$ou) {
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
 
         // Buscar usuário - lógica diferente para root vs outros usuários
-        if ($host === 'contasadmin.sei.pe.gov.br') {
+        if ($ou === 'admin') {
             // Para usuários root: buscar apenas pelo uid (estão na raiz do LDAP)
             $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
         } else {
@@ -59,10 +121,10 @@ class AuthController extends Controller
         }
 
         if (!$user) {
-            if ($host === 'contasadmin.sei.pe.gov.br') {
+            if ($ou === 'admin') {
                 return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');
             } else {
-                return back()->withErrors(['uid' => 'Usuário não encontrado para esta OU.'])->onlyInput('uid');
+                return back()->withErrors(['uid' => "Usuário não encontrado para a OU '{$ou}'."])->onlyInput('uid');
             }
         }
 
@@ -81,7 +143,7 @@ class AuthController extends Controller
 
         // Permissão root (mantém regra antiga)
         if ($role === 'root') {
-            if ($host !== 'contasadmin.sei.pe.gov.br') {
+            if ($ou !== 'admin') {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
@@ -119,7 +181,7 @@ class AuthController extends Controller
         $role = RoleResolver::resolve($user);
 
         if ($role === RoleResolver::ROLE_ROOT) {
-            $host = $request->getHost();
+            $host = $this->getOriginalHost($request);
             
             if ($host !== 'contasadmin.sei.pe.gov.br') {
                 if ($request->expectsJson()) {
