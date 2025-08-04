@@ -145,9 +145,27 @@ class LdapUserController extends Controller
             $role = RoleResolver::resolve(auth()->user());
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
-                $request->merge([
-                    'organizationalUnits' => [$adminOu],
-            ]);
+                
+                // Validar se alguma OU especificada não é a do admin
+                $requestedOus = collect($request->organizationalUnits)->map(function($i) {
+                    return is_string($i) ? $i : ($i['ou'] ?? null);
+                })->filter();
+                
+                foreach ($requestedOus as $requestedOu) {
+                    if (strtolower($requestedOu) !== strtolower($adminOu)) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Acesso negado: você só pode criar usuários na OU '{$adminOu}'"
+                        ], 403);
+                    }
+                }
+                
+                // Se não informou nenhuma OU ou informou OU inválida, usar a OU do admin com role user
+                if ($requestedOus->isEmpty()) {
+                    $request->merge([
+                        'organizationalUnits' => [['ou' => $adminOu, 'role' => 'user']],
+                    ]);
+                }
             }
 
             // Verificar se já existem entradas com UID e mesma OU
@@ -315,6 +333,22 @@ class LdapUserController extends Controller
                         'success' => false,
                         'message' => 'Acesso negado: usuário fora da sua OU'
                     ], 403);
+                }
+                
+                // Validar se alguma OU especificada na atualização não é a do admin
+                if ($request->has('organizationalUnits')) {
+                    $requestedOus = collect($request->organizationalUnits)->map(function($i) {
+                        return is_string($i) ? $i : ($i['ou'] ?? null);
+                    })->filter();
+                    
+                    foreach ($requestedOus as $requestedOu) {
+                        if (strtolower($requestedOu) !== strtolower($adminOu)) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Acesso negado: você só pode editar usuários na OU '{$adminOu}'"
+                            ], 403);
+                        }
+                    }
                 }
             }
 

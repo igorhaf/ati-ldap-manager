@@ -21,6 +21,7 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
         window.USER_ROLE = "{{ $userRole ?? 'user' }}";
+        window.USER_UID = "{{ auth()->user()->getFirstAttribute('uid') ?? '' }}";
     </script>
 </head>
 <body class="bg-gradient-to-br from-indigo-50 to-blue-50 min-h-screen">
@@ -364,7 +365,8 @@
                             </div>
                         </div>
 
-                        <div>
+                        <!-- Interface para ROOT: múltiplas OUs -->
+                        <div v-if="isRoot">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in newUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
@@ -379,6 +381,21 @@
                                     <button v-if="index > 0" @click="newUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                                 </div>
                                 <button @click="newUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
+                            </div>
+                        </div>
+
+                        <!-- Interface para Admin OU: apenas sua OU -->
+                        <div v-if="isOuAdmin">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidade Organizacional</label>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" v-model="adminOu" class="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                                    <select v-model="newUserRole" class="border border-gray-300 rounded-md px-3 py-2">
+                                        <option value="user">Usuário Comum</option>
+                                        <option value="admin">Administrador</option>
+                                    </select>
+                                </div>
+                                <p class="text-sm text-gray-500">O usuário será criado na sua OU com o papel selecionado</p>
                             </div>
                         </div>
 
@@ -486,7 +503,8 @@
                             </div>
                         </div>
 
-                        <div>
+                        <!-- Interface para ROOT: múltiplas OUs -->
+                        <div v-if="isRoot">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in editUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
@@ -501,6 +519,21 @@
                                     <button v-if="index > 0" @click="editUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                                 </div>
                                 <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
+                            </div>
+                        </div>
+
+                        <!-- Interface para Admin OU: apenas sua OU -->
+                        <div v-if="isOuAdmin">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidade Organizacional</label>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" v-model="adminOu" class="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                                    <select v-model="editUserRole" class="border border-gray-300 rounded-md px-3 py-2">
+                                        <option value="user">Usuário Comum</option>
+                                        <option value="admin">Administrador</option>
+                                    </select>
+                                </div>
+                                <p class="text-sm text-gray-500">Papel do usuário na sua OU</p>
                             </div>
                         </div>
 
@@ -601,6 +634,9 @@
                         },
                         activeOuFilter: '',
                         activeRoleFilter: '',
+                        adminOu: '',
+                        newUserRole: 'user',
+                        editUserRole: 'user',
                         newUser: {
                             uid: '',
                             givenName: '',
@@ -692,6 +728,10 @@
                     if (this.isRoot) {
                         this.loadOrganizationalUnits();
                     }
+                    // Se for admin de OU, obter a OU do usuário
+                    if (this.isOuAdmin) {
+                        this.getAdminOu();
+                    }
                 },
                 watch: {
                     activeTab(newVal) {
@@ -749,6 +789,11 @@
                                 });
                                 this.systemStatus = null;
                                 console.log('✅ Usuários carregados:', data.data.length);
+                                
+                                // Se for admin de OU e ainda não obteve a OU, obter agora
+                                if (this.isOuAdmin && !this.adminOu) {
+                                    this.getAdminOu();
+                                }
                             } else {
                                 console.log('⚠️ Erro na API:', data.message);
                                 this.handleApiError('Erro de Conexão LDAP', data.message);
@@ -809,18 +854,35 @@
                             this.editUser.organizationalUnits = [{ ou: '', role: 'user' }];
                         }
                         
+                        // Para admin de OU, definir o papel atual do usuário na OU do admin
+                        if (this.isOuAdmin) {
+                            const adminOuEntry = user.organizationalUnits.find(unit => 
+                                (typeof unit === 'string' ? unit : unit.ou) === this.adminOu
+                            );
+                            this.editUserRole = adminOuEntry ? 
+                                (typeof adminOuEntry === 'string' ? 'user' : adminOuEntry.role) : 'user';
+                        }
+                        
                         this.showEditUserModal = true;
                     },
                     
                     async updateUser() {
                         try {
+                            // Preparar dados baseado no tipo de usuário
+                            let userData = { ...this.editUser };
+                            
+                            if (this.isOuAdmin) {
+                                // Para admin de OU: usar apenas sua OU com o papel selecionado
+                                userData.organizationalUnits = [{ ou: this.adminOu, role: this.editUserRole }];
+                            }
+                            
                             const response = await fetch(`/api/ldap/users/${this.editUser.uid}`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                 },
-                                body: JSON.stringify(this.editUser)
+                                body: JSON.stringify(userData)
                             });
                             const data = await response.json();
                             if (data.success) {
@@ -837,13 +899,21 @@
                     
                     async createUser() {
                         try {
+                            // Preparar dados baseado no tipo de usuário
+                            let userData = { ...this.newUser };
+                            
+                            if (this.isOuAdmin) {
+                                // Para admin de OU: usar apenas sua OU com o papel selecionado
+                                userData.organizationalUnits = [{ ou: this.adminOu, role: this.newUserRole }];
+                            }
+                            
                             const response = await fetch('/api/ldap/users', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                                 },
-                                body: JSON.stringify(this.newUser)
+                                body: JSON.stringify(userData)
                             });
                             
                             const data = await response.json();
@@ -915,6 +985,7 @@
                             userPassword: '',
                             organizationalUnits: [{ou: '', role: 'user'}]
                         };
+                        this.newUserRole = 'user';
                     },
                     
                     resetNewOu() {
@@ -1059,6 +1130,33 @@
                             }
                         } catch (error) {
                             this.showNotification('Erro ao atualizar unidade organizacional', 'error');
+                        }
+                    },
+
+                    /**
+                     * Obtém a OU do administrador logado
+                     */
+                    async getAdminOu() {
+                        try {
+                            // Obtém a OU do admin a partir dos usuários carregados
+                            // Assumindo que o próprio usuário está na lista de usuários
+                            const currentUser = this.users.find(u => u.uid === window.USER_UID);
+                            if (currentUser && currentUser.organizationalUnits && currentUser.organizationalUnits.length > 0) {
+                                const adminOuEntry = currentUser.organizationalUnits.find(unit => 
+                                    (typeof unit === 'string' ? 'user' : unit.role) === 'admin' ||
+                                    (typeof unit === 'string' ? false : unit.role === 'admin')
+                                );
+                                if (adminOuEntry) {
+                                    this.adminOu = typeof adminOuEntry === 'string' ? adminOuEntry : adminOuEntry.ou;
+                                } else if (currentUser.organizationalUnits.length > 0) {
+                                    // Fallback para a primeira OU se não encontrar admin
+                                    const firstOu = currentUser.organizationalUnits[0];
+                                    this.adminOu = typeof firstOu === 'string' ? firstOu : firstOu.ou;
+                                }
+                            }
+                            console.log('🏢 OU do Admin:', this.adminOu);
+                        } catch (error) {
+                            console.log('❌ Erro ao obter OU do admin:', error);
                         }
                     },
 
