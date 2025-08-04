@@ -304,7 +304,49 @@ php artisan test:dn-construction "user,test" "ou/special"
 
 **Documentação completa:** `CORRECAO_DN_SYNTAX.md`
 
-### **10. Problemas de Certificado SSL**
+### **10. Erro: "OU '' contém caracteres inválidos para LDAP"**
+```bash
+❌ OU '' contém caracteres inválidos para LDAP
+```
+
+**Causa:** Para administradores de OU, o campo OU estava chegando vazio na criação de usuários.
+
+**Problemas:**
+- Campo OU vazio ou com espaços
+- Interface não preenchendo automaticamente a OU do admin
+- Dados enviados com `ou: ''`
+
+**Solução:** Interface automática para admin de OU:
+
+```javascript
+// ✅ CORRIGIDO: Validação antes de abrir modal
+openCreateUserModal() {
+    if (this.isOuAdmin && !this.adminOu) {
+        // Recarrega dados e valida OU
+    }
+}
+```
+
+**Interface Melhorada:**
+- Campo OU agora é visual (não editável)
+- Preenchimento automático da OU do admin
+- Validação antes de enviar dados
+
+**Teste:**
+1. Faça login como admin de OU
+2. Clique "Novo Usuário"
+3. Verifique se OU aparece automaticamente preenchida
+4. Campo deve estar azul e não editável
+
+**Debug (F12 Console):**
+```
+🏢 Abrindo modal para admin OU. AdminOU atual: ti
+📤 Enviando dados: {organizationalUnits: [{ou: "ti", role: "user"}]}
+```
+
+**Documentação completa:** `CORRECAO_OU_ADMIN_VAZIA.md`
+
+### **11. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```

@@ -39,7 +39,7 @@
                         <p class="text-blue-100">Gerenciamento de Usuários e Unidades Organizacionais</p>
                     </div>
                     <div class="flex space-x-3">
-                        <button v-if="canManageUsers" @click="showCreateUserModal = true" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center gap-2">
+                                                    <button v-if="canManageUsers" @click="openCreateUserModal" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
@@ -389,13 +389,23 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Unidade Organizacional</label>
                             <div class="space-y-2">
                                 <div class="flex items-center space-x-2">
-                                    <input type="text" v-model="adminOu" class="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
-                                    <select v-model="newUserRole" class="border border-gray-300 rounded-md px-3 py-2">
+                                    <div class="flex-1 flex items-center px-3 py-2 border border-gray-300 rounded-md bg-blue-50">
+                                        <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H7m2 0v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4" />
+                                        </svg>
+                                        <span class="text-blue-800 font-medium">@{{ adminOu || 'Carregando...' }}</span>
+                                    </div>
+                                    <select v-model="newUserRole" class="border border-gray-300 rounded-md px-3 py-2 min-w-[140px]">
                                         <option value="user">Usuário Comum</option>
                                         <option value="admin">Administrador</option>
                                     </select>
                                 </div>
-                                <p class="text-sm text-gray-500">O usuário será criado na sua OU com o papel selecionado</p>
+                                <p class="text-sm text-blue-600 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    O usuário será criado automaticamente na sua OU com o papel selecionado
+                                </p>
                             </div>
                         </div>
 
@@ -903,9 +913,34 @@
                             let userData = { ...this.newUser };
                             
                             if (this.isOuAdmin) {
+                                // Validar se adminOu está preenchida
+                                if (!this.adminOu || this.adminOu.trim() === '') {
+                                    this.showNotification('Erro: OU do administrador não definida. Recarregue a página.', 'error');
+                                    console.error('❌ adminOu vazia:', this.adminOu);
+                                    return;
+                                }
+                                
                                 // Para admin de OU: usar apenas sua OU com o papel selecionado
-                                userData.organizationalUnits = [{ ou: this.adminOu, role: this.newUserRole }];
+                                userData.organizationalUnits = [{ 
+                                    ou: this.adminOu.trim(), 
+                                    role: this.newUserRole || 'user' 
+                                }];
+                                
+                                console.log('🏢 Dados para admin OU:', {
+                                    adminOu: this.adminOu,
+                                    newUserRole: this.newUserRole,
+                                    organizationalUnits: userData.organizationalUnits
+                                });
+                            } else {
+                                // Para ROOT: validar se pelo menos uma OU foi selecionada
+                                if (!userData.organizationalUnits || userData.organizationalUnits.length === 0 || 
+                                    !userData.organizationalUnits[0].ou || userData.organizationalUnits[0].ou.trim() === '') {
+                                    this.showNotification('Por favor, selecione pelo menos uma OU', 'error');
+                                    return;
+                                }
                             }
+                            
+                            console.log('📤 Enviando dados:', userData);
                             
                             const response = await fetch('/api/ldap/users', {
                                 method: 'POST',
@@ -927,6 +962,7 @@
                                 this.showNotification(data.message, 'error');
                             }
                         } catch (error) {
+                            console.error('❌ Erro ao criar usuário:', error);
                             this.showNotification('Erro ao criar usuário', 'error');
                         }
                     },
@@ -975,6 +1011,32 @@
                         }
                     },
                     
+                    openCreateUserModal() {
+                        this.resetNewUser();
+                        
+                        // Para admin de OU, verificar se adminOu está preenchida
+                        if (this.isOuAdmin) {
+                            console.log('🏢 Abrindo modal para admin OU. AdminOU atual:', this.adminOu);
+                            
+                            if (!this.adminOu || this.adminOu.trim() === '') {
+                                console.warn('⚠️  adminOu vazia, tentando recarregar...');
+                                this.loadCurrentUser().then(() => {
+                                    console.log('🔄 Após recarregar, adminOu:', this.adminOu);
+                                    if (!this.adminOu) {
+                                        this.showNotification('Erro: Não foi possível determinar sua OU. Recarregue a página.', 'error');
+                                        return;
+                                    }
+                                    this.showCreateUserModal = true;
+                                });
+                            } else {
+                                this.showCreateUserModal = true;
+                            }
+                        } else {
+                            // Para ROOT, abrir direto
+                            this.showCreateUserModal = true;
+                        }
+                    },
+                    
                     resetNewUser() {
                         this.newUser = {
                             uid: '',
@@ -985,7 +1047,11 @@
                             userPassword: '',
                             organizationalUnits: [{ou: '', role: 'user'}]
                         };
-                        this.newUserRole = 'user';
+                        
+                        // Para admin de OU, resetar também o papel selecionado
+                        if (this.isOuAdmin) {
+                            this.newUserRole = 'user';
+                        }
                     },
                     
                     resetNewOu() {
