@@ -70,6 +70,92 @@ class AuthController extends Controller
     }
 
     /**
+     * Busca robusta de usuário por OU
+     * Tenta diferentes métodos para encontrar o usuário na OU especificada
+     */
+    private function findUserInOu($uid, $ou)
+    {
+        \Log::info('AuthController: Iniciando busca robusta de usuário', [
+            'uid' => $uid,
+            'ou' => $ou
+        ]);
+
+        $baseDn = config('ldap.connections.default.base_dn');
+
+        // Método 1: Busca tradicional por atributo 'ou' (compatibilidade)
+        try {
+            $user = \App\Ldap\LdapUserModel::where('uid', $uid)
+                ->where('ou', $ou)
+                ->first();
+            
+            if ($user) {
+                \Log::info('AuthController: Usuário encontrado via método 1 (atributo ou)', [
+                    'dn' => $user->getDn()
+                ]);
+                return $user;
+            }
+        } catch (\Exception $e) {
+            \Log::warning('AuthController: Método 1 falhou', ['error' => $e->getMessage()]);
+        }
+
+        // Método 2: Busca direta por DN construído
+        try {
+            $expectedDn = "uid={$uid},ou={$ou},{$baseDn}";
+            $user = \App\Ldap\LdapUserModel::find($expectedDn);
+            
+            if ($user) {
+                \Log::info('AuthController: Usuário encontrado via método 2 (DN direto)', [
+                    'dn' => $user->getDn()
+                ]);
+                return $user;
+            }
+        } catch (\Exception $e) {
+            \Log::warning('AuthController: Método 2 falhou', ['error' => $e->getMessage()]);
+        }
+
+        // Método 3: Busca em base específica da OU
+        try {
+            $user = \App\Ldap\LdapUserModel::in("ou={$ou},{$baseDn}")
+                ->where('uid', $uid)
+                ->first();
+            
+            if ($user) {
+                \Log::info('AuthController: Usuário encontrado via método 3 (base específica)', [
+                    'dn' => $user->getDn()
+                ]);
+                return $user;
+            }
+        } catch (\Exception $e) {
+            \Log::warning('AuthController: Método 3 falhou', ['error' => $e->getMessage()]);
+        }
+
+        // Método 4: Busca geral e filtragem por DN
+        try {
+            $users = \App\Ldap\LdapUserModel::where('uid', $uid)->get();
+            
+            foreach ($users as $user) {
+                $dn = $user->getDn();
+                // Verificar se o DN contém a OU especificada
+                if (stripos($dn, "ou={$ou},") !== false) {
+                    \Log::info('AuthController: Usuário encontrado via método 4 (filtragem DN)', [
+                        'dn' => $dn
+                    ]);
+                    return $user;
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('AuthController: Método 4 falhou', ['error' => $e->getMessage()]);
+        }
+
+        \Log::warning('AuthController: Usuário não encontrado em nenhum método', [
+            'uid' => $uid,
+            'ou' => $ou
+        ]);
+        
+        return null;
+    }
+
+    /**
      * Extrai a OU do subdomínio da URL
      * Exemplo: contas.moreno.sei.pe.gov.br => moreno
      * Para contasadmin.sei.pe.gov.br => admin (usuário root)
@@ -114,14 +200,10 @@ class AuthController extends Controller
             // Para usuários root: buscar apenas pelo uid (estão na raiz do LDAP)
             $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
         } else {
-            // Para outros usuários: buscar pelo uid e OU específica
-            dd($credentials['uid']);
-            $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])
-                ->where('ou', $ou)
-                ->first();
+            // Para outros usuários: usar busca robusta por OU
+            $user = $this->findUserInOu($credentials['uid'], $ou);
         }
-        //dd($user);
-        dd($ou);
+
         if (!$user) {
             if ($ou === 'admin') {
                 return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');

@@ -5,9 +5,10 @@
 Em produção com HTTPS, o sistema não conseguia detectar corretamente o subdomínio para determinar a OU do usuário, resultando no erro "usuário não pertence a aquela OU".
 
 ### **Causa Raiz**
-- `$request->getHost()` não funciona corretamente com proxies reversos
-- Headers de proxy não estavam sendo considerados
-- HTTPS com load balancer/cloudflare não passava o host original
+1. **Headers de Proxy**: `$request->getHost()` não funciona corretamente com proxies reversos
+2. **Estrutura LDAP**: Diferença entre local (`dc=example,dc=com`) e produção (`dc=sei,dc=pe,dc=gov,dc=br`)
+3. **Busca de Usuários**: Método original só funcionava com atributo `ou`, mas usuários podem estar organizados em containers OU
+4. **HTTPS**: Load balancer/cloudflare não passava o host original
 
 ## ✅ **Solução Implementada**
 
@@ -47,7 +48,30 @@ private function isValidHost($host)
 }
 ```
 
-### **3. Logs de Debug**
+### **3. Busca Robusta de Usuários**
+
+Implementado `findUserInOu()` que tenta múltiplos métodos para encontrar usuários:
+
+```php
+private function findUserInOu($uid, $ou)
+{
+    // Método 1: Busca por atributo 'ou' (compatibilidade)
+    $user = LdapUserModel::where('uid', $uid)->where('ou', $ou)->first();
+    
+    // Método 2: Busca direta por DN construído
+    $expectedDn = "uid={$uid},ou={$ou},{$baseDn}";
+    $user = LdapUserModel::find($expectedDn);
+    
+    // Método 3: Busca em base específica da OU
+    $user = LdapUserModel::in("ou={$ou},{$baseDn}")->where('uid', $uid)->first();
+    
+    // Método 4: Busca geral + filtragem por DN
+    $users = LdapUserModel::where('uid', $uid)->get();
+    // Filtrar por DN que contém a OU
+}
+```
+
+### **4. Logs de Debug**
 
 Implementado logging detalhado para troubleshooting:
 
@@ -86,13 +110,29 @@ php artisan test:host-detection https://contas.moreno.sei.pe.gov.br
 php artisan test:host-detection https://contasadmin.sei.pe.gov.br
 ```
 
-### **2. Verificar Logs em Produção**
+### **2. Debug da Estrutura LDAP**
+```bash
+# Verificar estrutura LDAP e métodos de busca
+php artisan debug:ldap-structure joao --ou=ti
+
+# Listar apenas as OUs disponíveis
+php artisan debug:ldap-structure
+```
+
+### **3. Teste Completo de Login**
+```bash
+# Simular processo completo de login
+php artisan test:login-debug joao senha123 contas.ti.sei.pe.gov.br
+php artisan test:login-debug admin senharoot contasadmin.sei.pe.gov.br
+```
+
+### **4. Verificar Logs em Produção**
 ```bash
 # Acompanhar logs durante tentativa de login
 tail -f storage/logs/laravel.log | grep "AuthController"
 ```
 
-### **3. Debug de Headers**
+### **5. Debug de Headers**
 Adicione temporariamente no `AuthController::login()`:
 ```php
 \Log::info('Headers de debug', [
@@ -195,19 +235,31 @@ graph TD
 
 1. **🔒 Compatibilidade HTTPS**: Funciona com proxies e HTTPS
 2. **🌐 Multi-proxy**: Suporta diferentes tipos de proxy
-3. **📝 Debug**: Logs detalhados para troubleshooting
-4. **🛡️ Validação**: Apenas hosts válidos são aceitos
-5. **⚡ Fallback**: Sistema gracioso de fallback
+3. **🏗️ Busca Robusta**: 4 métodos diferentes para encontrar usuários no LDAP
+4. **📝 Debug**: Logs detalhados para troubleshooting
+5. **🛡️ Validação**: Apenas hosts válidos são aceitos
+6. **⚡ Fallback**: Sistema gracioso de fallback
+7. **🔧 Compatibilidade**: Funciona com diferentes estruturas LDAP
 
 ## 📋 **Checklist de Verificação**
 
+### **Host e Proxy**
 - [ ] Login funciona com HTTP
 - [ ] Login funciona com HTTPS  
 - [ ] Logs mostram host correto
+- [ ] Headers de proxy são detectados
 - [ ] OU é extraída corretamente
+
+### **Busca de Usuários**
+- [ ] Usuários encontrados por atributo `ou`
+- [ ] Usuários encontrados por DN direto
+- [ ] Usuários encontrados em base específica
+- [ ] Busca funciona com estrutura local e produção
+
+### **Controle de Acesso**
 - [ ] Usuários root acessam apenas contasadmin
 - [ ] Admins OU acessam apenas sua OU
-- [ ] Headers de proxy são detectados
+- [ ] Logs de debug funcionam corretamente
 
 ---
 
