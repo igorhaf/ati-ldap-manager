@@ -844,17 +844,12 @@
                     },
                     
                     openEditUserModal(user) {
-                        console.log('🔍 Debug openEditUserModal - Dados recebidos:', user);
-                        console.log('🔍 employeeNumber recebido:', user.employeeNumber);
-                        
                         this.editUser.uid = user.uid;
                         this.editUser.givenName = user.givenName;
                         this.editUser.sn = user.sn;
                         this.editUser.employeeNumber = user.employeeNumber;
                         this.editUser.mail = user.mail;
                         this.editUser.userPassword = '';
-                        
-                        console.log('🔍 editUser após definição:', this.editUser);
                         
                         // Garantir que organizationalUnits seja um array de objetos
                         if (Array.isArray(user.organizationalUnits)) {

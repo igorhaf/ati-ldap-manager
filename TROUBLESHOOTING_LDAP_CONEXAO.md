@@ -463,37 +463,7 @@ sudo ./vendor/bin/sail artisan test:ou-field-removal alberto.viegas
 
 **Documentação completa:** `CORRECAO_CAMPO_OU_REMOVIDO.md`
 
-### **14. Employee Number não aparece no Modal de Edição**
-```bash
-❌ Campo de matrícula aparece vazio no modal de edição
-```
-
-**Causa:** Campo `employeeNumber` não está sendo preenchido corretamente.
-
-**Solução:** Debug implementado com logs e comandos:
-
-```bash
-# Debug LDAP
-sudo ./vendor/bin/sail artisan debug:employee-number renata.strobel
-
-# Debug API  
-sudo ./vendor/bin/sail artisan test:employee-number-api renata.strobel
-```
-
-**Logs de debug adicionados no frontend:**
-```javascript
-console.log('🔍 employeeNumber recebido:', user.employeeNumber);
-```
-
-**Possíveis causas:**
-- ❌ Atributo não existe no LDAP
-- ❌ API não retorna o campo
-- ❌ Frontend não processa corretamente
-- ❌ Cache do navegador
-
-**Documentação completa:** `CORRECAO_EMPLOYEE_NUMBER.md`
-
-### **15. Problemas de Certificado SSL**
+### **14. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```
