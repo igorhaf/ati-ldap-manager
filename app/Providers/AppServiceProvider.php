@@ -37,7 +37,13 @@ class AppServiceProvider extends ServiceProvider
         // Configurar proxies confiáveis se definidos
         if (env('TRUSTED_PROXIES')) {
             $proxies = explode(',', env('TRUSTED_PROXIES'));
-            request()->setTrustedProxies($proxies, \Illuminate\Http\Request::HEADER_X_FORWARDED_ALL);
+            request()->setTrustedProxies($proxies, 
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_PREFIX
+            );
         }
     }
     
