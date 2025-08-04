@@ -400,28 +400,16 @@
                             </div>
                         </div>
 
-                        <!-- Interface para Admin OU: apenas sua OU -->
+                        <!-- Interface para Admin OU: apenas dropdown de papel -->
                         <div v-if="isOuAdmin">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidade Organizacional</label>
                             <div class="space-y-2">
                                 <div class="flex items-center space-x-2">
-                                    <div class="flex-1 flex items-center px-3 py-2 border border-gray-300 rounded-md bg-blue-50">
-                                        <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H7m2 0v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4" />
-                                        </svg>
-                                        <span class="text-blue-800 font-medium">@{{ adminOu || 'Carregando...' }}</span>
-                                    </div>
                                     <select v-model="newUserRole" class="border border-gray-300 rounded-md px-3 py-2 min-w-[140px]">
                                         <option value="user">Usuário Comum</option>
                                         <option value="admin">Administrador</option>
                                     </select>
                                 </div>
-                                <p class="text-sm text-blue-600 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    O usuário será criado automaticamente na sua OU com o papel selecionado
-                                </p>
+                                <p class="text-sm text-gray-500">Papel do usuário na sua OU</p>
                             </div>
                         </div>
 
@@ -548,27 +536,16 @@
                             </div>
                         </div>
 
-                        <!-- Interface para Admin OU: apenas sua OU -->
+                        <!-- Interface para Admin OU: apenas dropdown de papel -->
                         <div v-if="isOuAdmin">
                             <div class="space-y-2">
                                 <div class="flex items-center space-x-2">
-                                    <div class="flex-1 flex items-center px-3 py-2 border border-gray-300 rounded-md bg-blue-50">
-                                        <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H7m2 0v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4" />
-                                        </svg>
-                                        <span class="text-blue-800 font-medium">@{{ adminOu || 'Carregando...' }}</span>
-                                    </div>
                                     <select v-model="editUserRole" class="border border-gray-300 rounded-md px-3 py-2">
                                         <option value="user">Usuário Comum</option>
                                         <option value="admin">Administrador</option>
                                     </select>
                                 </div>
-                                <p class="text-sm text-blue-600 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Papel do usuário na sua OU
-                                </p>
+                                <p class="text-sm text-gray-500">Papel do usuário na sua OU</p>
                             </div>
                         </div>
 

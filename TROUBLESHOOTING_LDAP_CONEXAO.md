@@ -429,29 +429,31 @@ sudo ./vendor/bin/sail artisan test:naming-violation alberto.viegas
 
 **Documentação completa:** `CORRECAO_NAMING_VIOLATION.md`
 
-### **13. Campo de Texto da OU na Interface**
+### **13. Campo da OU na Interface**
 ```bash
-❌ Campo de texto da OU aparece na interface (não deve aparecer)
+❌ Campo da OU aparece na interface (deve ser completamente removido)
 ```
 
-**Causa:** Campo de input para OU estava sendo exibido no modal de edição.
+**Causa:** Campo de input/display para OU estava sendo exibido nos modais.
 
-**Solução:** Removido campo de texto, mantido apenas display visual:
+**Solução:** Removido completamente, mantido apenas dropdown de papel:
 
 ```html
-<!-- ❌ ANTES: Campo de input -->
+<!-- ❌ ANTES: Campo de input/display -->
 <input type="text" v-model="adminOu" readonly>
+<div class="bg-blue-50">@{{ adminOu }}</div>
 
-<!-- ✅ DEPOIS: Display visual -->
-<div class="bg-blue-50">
-    <span>@{{ adminOu }}</span>
-</div>
+<!-- ✅ DEPOIS: Apenas dropdown -->
+<select v-model="editUserRole">
+    <option value="user">Usuário Comum</option>
+    <option value="admin">Administrador</option>
+</select>
 ```
 
 **Benefícios:**
+- ✅ **Simplicidade**: Interface limpa sem campos desnecessários
 - ✅ **Segurança**: Impossível editar OU via interface
-- ✅ **UX**: Visual claro que não é editável
-- ✅ **Consistência**: Mesmo estilo do modal de criação
+- ✅ **Consistência**: Mesmo comportamento entre criação e edição
 
 **Teste:**
 ```bash

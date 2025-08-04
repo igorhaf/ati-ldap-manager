@@ -69,7 +69,7 @@ class TestOuFieldRemoval extends Command
             $this->info("\n4️⃣ Simulando interface de Admin OU...");
             $this->line("Interface para Admin OU:");
             $this->line("  - Campo de texto da OU: ❌ REMOVIDO");
-            $this->line("  - Display visual da OU: ✅ MANTIDO");
+            $this->line("  - Display visual da OU: ❌ REMOVIDO");
             $this->line("  - Dropdown de papel: ✅ MANTIDO");
             $this->line("  - Texto explicativo: ✅ MANTIDO");
 
@@ -79,24 +79,24 @@ class TestOuFieldRemoval extends Command
             $this->line("Campos de texto encontrados:");
             $this->line("  - UID: ✅ (desabilitado)");
             $this->line("  - Employee Number: ✅ (desabilitado)");
-            $this->line("  - OU: ❌ REMOVIDO (era um input, agora é display)");
+            $this->line("  - OU: ❌ REMOVIDO (campo completamente removido)");
 
             // 6. Teste de criação de usuário
             $this->info("\n6️⃣ Simulando criação de usuário...");
             $this->line("Para Admin OU criando novo usuário:");
             $this->line("  - OU será automaticamente: {$ou}");
             $this->line("  - Papel será definido pelo dropdown");
-            $this->line("  - Nenhum campo de texto para OU");
+            $this->line("  - Apenas dropdown de papel visível");
 
             // 7. Teste de edição de usuário
             $this->info("\n7️⃣ Simulando edição de usuário...");
             $this->line("Para Admin OU editando usuário:");
-            $this->line("  - OU será exibida como: {$ou}");
+            $this->line("  - OU será automaticamente: {$ou}");
             $this->line("  - Papel pode ser alterado via dropdown");
-            $this->line("  - Nenhum campo de texto para OU");
+            $this->line("  - Apenas dropdown de papel visível");
 
             $this->info("\n✅ Teste concluído com sucesso!");
-            $this->line("O campo de texto da OU foi removido corretamente.");
+            $this->line("O campo da OU foi completamente removido, mantendo apenas o dropdown de papel.");
 
         } catch (\Exception $e) {
             $this->error("❌ Erro durante teste: " . $e->getMessage());
