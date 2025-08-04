@@ -353,7 +353,43 @@ openCreateUserModal() {
 
 **Documentação completa:** `CORRECAO_OU_ADMIN_VAZIA.md`
 
-### **11. Problemas de Certificado SSL**
+### **11. Erro: "The user password field is required" na Edição**
+```bash
+❌ Erro ao atualizar usuário: The user password field is required.
+```
+
+**Causa:** Backend validava senha como obrigatória mesmo na edição de usuário.
+
+**Problema:** 
+- Interface mostrava "Senha (deixe em branco para manter)"
+- Backend rejeitava campo vazio com validação `required`
+- Lógica processava senha mesmo quando vazia
+
+**Solução:** Senha opcional na edição:
+
+```php
+// ✅ CORRIGIDO: Validação
+'userPassword' => 'sometimes|nullable|string|min:6',
+
+// ✅ CORRIGIDO: Processamento
+if ($request->has('userPassword') && !empty($request->userPassword)) {
+    $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
+}
+```
+
+**Comportamento correto:**
+- **Criação**: Senha obrigatória
+- **Edição**: Senha opcional (vazio = manter atual)
+
+**Teste:**
+1. Edite um usuário
+2. Deixe campo senha em branco
+3. Salve alterações
+4. Deve funcionar sem erro
+
+**Documentação completa:** `CORRECAO_SENHA_OPCIONAL_EDICAO.md`
+
+### **12. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```

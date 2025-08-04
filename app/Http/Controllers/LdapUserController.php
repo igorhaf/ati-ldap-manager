@@ -346,7 +346,7 @@ class LdapUserController extends Controller
                 'givenName' => 'sometimes|required|string|max:255',
                 'sn' => 'sometimes|required|string|max:255',
                 'mail' => 'sometimes|required|email',
-                'userPassword' => 'sometimes|required|string|min:6',
+                'userPassword' => 'sometimes|nullable|string|min:6',
                 'organizationalUnits' => 'sometimes|array',
                 // aceitar string ou objeto {ou, role}
                 'organizationalUnits.*' => 'required',
@@ -418,7 +418,7 @@ class LdapUserController extends Controller
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
                     
-                    if ($request->has('userPassword')) {
+                    if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     }
 
@@ -463,7 +463,7 @@ class LdapUserController extends Controller
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
                     
-                    if ($request->has('userPassword')) {
+                    if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     }
 
