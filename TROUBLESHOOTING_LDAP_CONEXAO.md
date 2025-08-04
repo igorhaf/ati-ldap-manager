@@ -341,7 +341,14 @@ openCreateUserModal() {
 **Debug (F12 Console):**
 ```
 🏢 Abrindo modal para admin OU. AdminOU atual: ti
+🔄 Após recarregar, adminOu: ti
 📤 Enviando dados: {organizationalUnits: [{ou: "ti", role: "user"}]}
+```
+
+**Erro JavaScript corrigido:**
+```
+❌ ANTES: Uncaught TypeError: this.loadCurrentUser is not a function
+✅ DEPOIS: Usa loadUsers() + getAdminOu()
 ```
 
 **Documentação completa:** `CORRECAO_OU_ADMIN_VAZIA.md`

@@ -1020,13 +1020,20 @@
                             
                             if (!this.adminOu || this.adminOu.trim() === '') {
                                 console.warn('⚠️  adminOu vazia, tentando recarregar...');
-                                this.loadCurrentUser().then(() => {
+                                
+                                // Recarregar usuários e obter OU do admin
+                                this.loadUsers().then(async () => {
+                                    await this.getAdminOu();
                                     console.log('🔄 Após recarregar, adminOu:', this.adminOu);
-                                    if (!this.adminOu) {
+                                    
+                                    if (!this.adminOu || this.adminOu.trim() === '') {
                                         this.showNotification('Erro: Não foi possível determinar sua OU. Recarregue a página.', 'error');
                                         return;
                                     }
                                     this.showCreateUserModal = true;
+                                }).catch(error => {
+                                    console.error('❌ Erro ao recarregar dados:', error);
+                                    this.showNotification('Erro ao carregar dados. Recarregue a página.', 'error');
                                 });
                             } else {
                                 this.showCreateUserModal = true;

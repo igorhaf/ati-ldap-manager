@@ -4,11 +4,14 @@
 
 Erro ao criar usuário: `OU '' contém caracteres inválidos para LDAP`
 
+**Update**: Também corrigido erro JavaScript: `this.loadCurrentUser is not a function`
+
 ### **Causa Raiz**
 Para administradores de OU, o campo OU estava aparecendo **vazio** na interface, causando:
 - Campo de texto em branco para OU
 - Dados enviados com `ou: ''` (string vazia)
 - Validação falhando no backend
+- **Erro JavaScript** ao tentar chamar método inexistente
 
 ## ✅ **Solução Implementada**
 
@@ -24,14 +27,38 @@ Substituído o clique direto por método que **valida e prepara dados**:
 @click="openCreateUserModal"
 ```
 
-#### **Funcionamento:**
+#### **Funcionamento Corrigido:**
 1. **Reseta dados** do formulário
 2. **Para Admin OU**: Verifica se `adminOu` está preenchida
-3. **Se vazia**: Recarrega dados do usuário atual
+3. **Se vazia**: Recarrega `loadUsers()` → `getAdminOu()`
 4. **Se não conseguir**: Exibe erro e não abre modal
 5. **Se OK**: Abre modal com dados corretos
 
-### **2. Validação Robusta no `createUser()`**
+### **2. Correção do Erro JavaScript**
+
+**❌ Problema:** `this.loadCurrentUser is not a function`
+
+**✅ Solução:** Usar métodos existentes do Vue component:
+
+```javascript
+// ❌ ANTES: Método inexistente
+this.loadCurrentUser().then(() => {
+    // ...
+});
+
+// ✅ DEPOIS: Métodos corretos
+this.loadUsers().then(async () => {
+    await this.getAdminOu();
+    // ...
+});
+```
+
+**Sequência Correta:**
+1. `loadUsers()` - Carrega todos os usuários (inclui usuário atual)
+2. `getAdminOu()` - Extrai OU do admin baseado nos usuários
+3. Validação e abertura do modal
+
+### **3. Validação Robusta no `createUser()`**
 
 Adicionadas validações antes do envio:
 
@@ -51,7 +78,7 @@ if (this.isOuAdmin) {
 }
 ```
 
-### **3. Interface Visual Melhorada**
+### **4. Interface Visual Melhorada**
 
 Campo OU agora é **visual e informativo**:
 
@@ -72,7 +99,7 @@ Campo OU agora é **visual e informativo**:
 - ✅ **Feedback** se não carregou (`"Carregando..."`)
 - ✅ **Ícone** para identificação rápida
 
-### **4. Debug e Logs Melhorados**
+### **5. Debug e Logs Melhorados**
 
 Adicionados logs para facilitar troubleshooting:
 
@@ -96,6 +123,7 @@ console.log('📤 Enviando dados:', userData);
 Abrir **DevTools** (F12) e verificar:
 ```
 🏢 Abrindo modal para admin OU. AdminOU atual: ti
+🔄 Após recarregar, adminOu: ti
 📤 Enviando dados: {organizationalUnits: [{ou: "ti", role: "user"}]}
 ```
 
@@ -114,30 +142,35 @@ Se OU não carregar, deve aparecer:
 | **Erro** | `OU '' inválida` | Modal não abre se OU vazia |
 | **UX** | Confuso (campo editável) | Claro (automático) |
 | **Debug** | Sem logs | Logs detalhados |
+| **JavaScript** | ❌ `loadCurrentUser is not a function` | ✅ Métodos corretos |
 
-## 🚨 **Casos de Erro Possíveis**
+## 🚨 **Casos de Erro Corrigidos**
 
-### **1. AdminOu não carregada**
+### **1. JavaScript Error**
+```
+❌ ANTES: Uncaught TypeError: this.loadCurrentUser is not a function
+✅ DEPOIS: Usa loadUsers() + getAdminOu()
+```
+
+### **2. AdminOu não carregada**
 ```
 ⚠️ adminOu vazia, tentando recarregar...
-❌ Erro: OU do administrador não definida. Recarregue a página.
+🔄 Após recarregar, adminOu: ti
+✅ Modal aberto com OU correta
 ```
 
-**Solução:** Recarregar página ou verificar autenticação
-
-### **2. Problema de Autenticação**
+### **3. Problema de Autenticação**
 ```
-❌ Erro ao obter OU do admin: [erro]
+❌ Erro ao carregar dados. Recarregue a página.
 ```
 
 **Solução:** Fazer logout/login novamente
 
-### **3. OU com Espaços/Caracteres**
+### **4. OU com Espaços/Caracteres**
 ```
 ❌ OU ' ti ' contém caracteres inválidos para LDAP
+✅ Automaticamente removido com .trim()
 ```
-
-**Solução:** Automaticamente removido com `.trim()`
 
 ## 🎯 **Fluxo Correto Agora**
 
@@ -145,10 +178,11 @@ Se OU não carregar, deve aparecer:
 1. 🔄 **Carrega** OU do usuário logado
 2. 🎯 **Clique** no botão "Novo Usuário"
 3. ✅ **Valida** se OU está preenchida
-4. 📝 **Abre** modal com OU automática
-5. 👤 **Usuário** preenche dados pessoais
-6. ⚙️ **Usuário** seleciona papel (user/admin)
-7. 📤 **Envia** dados com OU correta
+4. 🔄 **Se vazia**: Recarrega `loadUsers()` → `getAdminOu()`
+5. 📝 **Abre** modal com OU automática
+6. 👤 **Usuário** preenche dados pessoais
+7. ⚙️ **Usuário** seleciona papel (user/admin)
+8. 📤 **Envia** dados com OU correta
 
 ### **Para ROOT:**
 1. 🎯 **Clique** no botão "Novo Usuário"  
@@ -170,24 +204,28 @@ Se OU não carregar, deve aparecer:
 - ✅ Recarregamento automático se dados vazios
 - ✅ Trim automático de espaços
 - ✅ Fallbacks para valores undefined
+- ✅ **Error handling** para métodos JavaScript
 
 ### **3. Debug:**
 - ✅ Logs detalhados no console
 - ✅ Mensagens de erro específicas
 - ✅ Rastreamento do fluxo completo
+- ✅ **Tratamento de exceções** async/await
 
 ## 🎉 **Resultado Final**
 
-O erro **`OU '' contém caracteres inválidos`** não deve mais ocorrer porque:
+Os erros **não devem mais ocorrer** porque:
 
 1. **OU nunca mais será vazia** para admin de OU
 2. **Validação** impede envio com dados inválidos  
 3. **Interface clara** mostra exatamente qual OU será usada
 4. **Fallbacks** garantem que dados estejam sempre corretos
+5. **❌ Error JavaScript corrigido** - métodos corretos utilizados
 
 ---
 
-**Status**: ✅ **OU automática implementada**  
+**Status**: ✅ **OU automática implementada + Error JS corrigido**  
 **Para**: Administradores de OU  
 **Compatível**: ROOT continua funcionando normalmente  
-**UX**: Interface melhorada com feedback visual 
+**UX**: Interface melhorada com feedback visual  
+**Estável**: Sem mais erros JavaScript 
