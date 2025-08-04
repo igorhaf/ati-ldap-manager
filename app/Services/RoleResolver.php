@@ -59,7 +59,17 @@ class RoleResolver
                 foreach ($entries as $entry) {
                     $entryRoles = collect((array) ($entry->getAttribute('employeeType') ?? []))->map(fn ($v) => strtolower($v));
                     if ($entryRoles->contains('admin')) {
-                        return $entry->getFirstAttribute('ou');
+                        // Tentar primeiro pelo atributo 'ou'
+                        $ou = $entry->getFirstAttribute('ou');
+                        if ($ou) {
+                            return $ou;
+                        }
+                        
+                        // Se atributo 'ou' estiver vazio, extrair do DN
+                        $entryDn = $entry->getDn();
+                        if ($entryDn && preg_match('/ou=([^,]+)/i', $entryDn, $matches)) {
+                            return $matches[1];
+                        }
                     }
                 }
             }

@@ -190,7 +190,7 @@ class LdapUserController extends Controller
             $unitsInput = collect($request->organizationalUnits)->map(function($i){return is_string($i)? $i : ($i['ou'] ?? null);})->filter();
 
             foreach ($existingEntries as $entry){
-                $existingOu = strtolower($entry->getFirstAttribute('ou'));
+                $existingOu = strtolower($this->extractOu($entry) ?? '');
                 if ($unitsInput->contains(fn($ou)=> strtolower($ou) === $existingOu)){
                 return response()->json([
                     'success' => false,
@@ -358,7 +358,7 @@ class LdapUserController extends Controller
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
                 $belongs = $users->every(function($u) use ($adminOu){
-                    return strtolower($u->getFirstAttribute('ou')) === strtolower($adminOu);
+                    return strtolower($this->extractOu($u) ?? '') === strtolower($adminOu);
                 });
                 if (!$belongs) {
                     return response()->json([
@@ -392,7 +392,7 @@ class LdapUserController extends Controller
             }
 
             // Mapear entradas existentes por OU (lowercase)
-            $existingByOu = $users->keyBy(fn($u) => strtolower($u->getFirstAttribute('ou')));
+            $existingByOu = $users->keyBy(fn($u) => strtolower($this->extractOu($u) ?? ''));
 
             $baseDn = config('ldap.connections.default.base_dn');
 
@@ -478,13 +478,13 @@ class LdapUserController extends Controller
                 'operation' => 'update_user',
                 'entity' => 'User',
                 'entity_id' => $uid,
-                'ou' => ($units->isEmpty() ? $users->map(fn($u)=>$u->getFirstAttribute('ou'))->unique()->join(',') : $units->pluck('ou')->unique()->join(',')),
+                'ou' => ($units->isEmpty() ? $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(',') : $units->pluck('ou')->unique()->join(',')),
                 'description' => 'Usuário ' . $uid . ' atualizado',
             ]);
 
             // Retornar primeira entrada consolidada
             $first = $users->first();
-            $ous = $users->map(fn ($e) => $e->getFirstAttribute('ou'))->filter()->unique()->values();
+            $ous = $users->map(fn ($e) => $this->extractOu($e))->filter()->unique()->values();
 
             return response()->json([
                 'success' => true,
@@ -524,7 +524,7 @@ class LdapUserController extends Controller
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
                 $belongs = $users->every(function($u) use ($adminOu){
-                    return strtolower($u->getFirstAttribute('ou')) === strtolower($adminOu);
+                    return strtolower($this->extractOu($u) ?? '') === strtolower($adminOu);
                 });
                 if (!$belongs) {
                     return response()->json([
@@ -549,7 +549,7 @@ class LdapUserController extends Controller
                 'operation' => 'delete_user',
                 'entity' => 'User',
                 'entity_id' => $uid,
-                'ou' => $users->map(fn($u)=>$u->getFirstAttribute('ou'))->unique()->join(','),
+                'ou' => $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(','),
                 'description' => 'Usuário ' . $uid . ' excluído',
             ]);
 
@@ -801,7 +801,7 @@ class LdapUserController extends Controller
                 'operation' => 'update_password',
                 'entity' => 'User',
                 'entity_id' => $uid,
-                'ou' => $users->map(fn($u)=>$u->getFirstAttribute('ou'))->unique()->join(','),
+                'ou' => $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(','),
                 'description' => 'Senha do usuário ' . $uid . ' alterada',
             ]);
 

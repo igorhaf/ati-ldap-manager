@@ -119,6 +119,15 @@ class DebugUserOu extends Command
             $ouAttr = $user->getFirstAttribute('ou');
             $employeeTypes = $user->getAttribute('employeeType') ?: [];
             
+            // Se não tem atributo 'ou', extrair do DN
+            if (!$ouAttr) {
+                $dn = $user->getDn();
+                if ($dn && preg_match('/ou=([^,]+)/i', $dn, $matches)) {
+                    $ouAttr = $matches[1];
+                    $this->line("🔧 OU extraída do DN: {$ouAttr}");
+                }
+            }
+            
             if (is_array($ouAttr)) {
                 foreach ($ouAttr as $index => $ou) {
                     $role = isset($employeeTypes[$index]) ? $employeeTypes[$index] : 'user';
