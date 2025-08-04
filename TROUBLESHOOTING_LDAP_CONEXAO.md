@@ -429,7 +429,38 @@ sudo ./vendor/bin/sail artisan test:naming-violation alberto.viegas
 
 **Documentação completa:** `CORRECAO_NAMING_VIOLATION.md`
 
-### **13. Problemas de Certificado SSL**
+### **13. Campo de Texto da OU na Interface**
+```bash
+❌ Campo de texto da OU aparece na interface (não deve aparecer)
+```
+
+**Causa:** Campo de input para OU estava sendo exibido no modal de edição.
+
+**Solução:** Removido campo de texto, mantido apenas display visual:
+
+```html
+<!-- ❌ ANTES: Campo de input -->
+<input type="text" v-model="adminOu" readonly>
+
+<!-- ✅ DEPOIS: Display visual -->
+<div class="bg-blue-50">
+    <span>@{{ adminOu }}</span>
+</div>
+```
+
+**Benefícios:**
+- ✅ **Segurança**: Impossível editar OU via interface
+- ✅ **UX**: Visual claro que não é editável
+- ✅ **Consistência**: Mesmo estilo do modal de criação
+
+**Teste:**
+```bash
+sudo ./vendor/bin/sail artisan test:ou-field-removal alberto.viegas
+```
+
+**Documentação completa:** `CORRECAO_CAMPO_OU_REMOVIDO.md`
+
+### **14. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```
