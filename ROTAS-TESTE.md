@@ -71,7 +71,7 @@ curl -X POST http://localhost:8000/api/ldap/users \
 - `uid`: Login do usuário (único)
 - `givenName`: Nome
 - `sn`: Sobrenome
-- `employeeNumber`: Matrícula (única)
+- `employeeNumber`: CPF (único)
 - `mail`: Array com pelo menos um email
 - `userPassword`: Senha (mínimo 6 caracteres)
 

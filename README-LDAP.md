@@ -20,7 +20,7 @@ O sistema gerencia os seguintes atributos de usuário:
 - **sn**: Sobrenome (obrigatório)
 - **cn**: Nome completo (gerado automaticamente)
 - **mail**: Múltiplos emails (obrigatório pelo menos um)
-- **employeeNumber**: Matrícula (obrigatório)
+- **employeeNumber**: CPF (obrigatório)
 - **userPassword**: Senha (obrigatório)
 - **organizationalUnits**: Múltiplas unidades organizacionais (opcional)
 
@@ -164,7 +164,7 @@ php artisan test
 
 - Todas as operações LDAP são validadas
 - Senhas são criptografadas no LDAP
-- Validação de UID e matrícula únicos
+- Validação de UID e CPF únicos
 - Proteção CSRF em todas as operações
 
 ## Troubleshooting

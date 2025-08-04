@@ -145,7 +145,7 @@
                      <div class="flex flex-col sm:flex-row gap-4">
                          <div class="flex-1">
                              <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar Usuários</label>
-                             <input v-model="searchTerm" type="text" id="search" placeholder="Buscar por nome, UID ou matrícula..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                             <input v-model="searchTerm" type="text" id="search" placeholder="Buscar por nome, UID ou CPF..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                          </div>
                          <div class="flex items-end">
                              <button @click="loadUsers" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg flex items-center gap-2">
@@ -171,7 +171,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">@{{ isRoot ? 'Unidades' : 'Perfil' }}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matrícula</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
                                     <th v-if="canManageUsers" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                                  </tr>
                              </thead>
@@ -353,7 +353,7 @@
                                 <input v-model="newUser.uid" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Matrícula</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
                                 <input v-model="newUser.employeeNumber" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
@@ -488,7 +488,7 @@
                                 <input type="text" v-model="editUser.uid" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100" disabled />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Matrícula (não editável)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CPF (não editável)</label>
                                 <input type="text" v-model="editUser.employeeNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100" disabled />
                             </div>
                             <div>

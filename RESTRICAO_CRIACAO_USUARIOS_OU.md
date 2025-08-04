@@ -107,7 +107,7 @@ async createUser() {
 │ Nome: [______________]                  │
 │ Sobrenome: [_________]                  │
 │ Email: [_____________]                  │
-│ Matrícula: [_________]                  │
+│ CPF: [_________]                        │
 │ Senha: [_____________]                  │
 │                                         │
 │ 🏢 Unidade Organizacional               │
@@ -131,7 +131,7 @@ async createUser() {
 1. ✅ **OU Restrita**: Admin só pode usar sua própria OU
 2. ✅ **Papel Válido**: Apenas "user" ou "admin" permitidos
 3. ✅ **UID Único**: Por OU (mantida validação existente)
-4. ✅ **Matrícula Única**: Globalmente (mantida validação existente)
+4. ✅ **CPF Único**: Globalmente (mantida validação existente)
 
 ### **Validações Frontend**
 1. ✅ **Campo OU Readonly**: Impede alteração manual

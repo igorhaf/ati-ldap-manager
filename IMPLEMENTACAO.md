@@ -16,7 +16,7 @@
   - sn (sobrenome)
   - cn (nome completo - gerado automaticamente)
   - mail (múltiplos emails)
-  - employeeNumber (matrícula - obrigatório)
+  - employeeNumber (CPF - obrigatório)
   - userPassword (senha)
   - organizationalUnits (múltiplas unidades organizacionais)
 
@@ -72,7 +72,7 @@
 - ✅ Listagem com busca e filtros
 - ✅ Edição de dados do usuário
 - ✅ Exclusão de usuários
-- ✅ Validação de UID e matrícula únicos
+- ✅ Validação de UID e CPF únicos
 - ✅ Suporte a múltiplos emails
 - ✅ Suporte a múltiplas unidades organizacionais
 

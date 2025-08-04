@@ -20,7 +20,7 @@ Implementação de funcionalidade LDIF para permitir a criação do mesmo usuár
 
 ### 3. **Validações**
 - UID único por OU
-- Matrícula única globalmente
+- CPF único globalmente
 - Validação de OUs existentes
 - Verificação de sintaxe LDIF
 
@@ -219,7 +219,7 @@ Consulte logs em:
 ### Validações Implementadas
 
 1. **UID único por OU**: Evita duplicatas na mesma OU
-2. **Matrícula única**: Uma matrícula por todo o sistema
+2. **CPF único**: Um CPF por todo o sistema
 3. **Formato LDIF**: Validação de sintaxe
 4. **OUs existentes**: Verifica se as OUs existem
 
@@ -228,7 +228,7 @@ Consulte logs em:
 | Erro | Causa | Solução |
 |------|-------|---------|
 | "Usuário já existe na OU" | UID duplicado na OU | Use UID diferente ou OU diferente |
-| "Matrícula já cadastrada" | employeeNumber duplicado | Use matrícula única |
+| "CPF já cadastrado" | employeeNumber duplicado | Use CPF único |
 | "OU não encontrada" | OU não existe | Crie a OU primeiro |
 | "LDIF inválido" | Sintaxe incorreta | Verifique formato do arquivo |
 
@@ -247,7 +247,7 @@ Consulte logs em:
 - Edição manual de LDIFs
 
 ### 2. **Consistência**
-- Mesma matrícula em todas as OUs
+- Mesmo CPF em todas as OUs
 - Dados pessoais sincronizados
 - Senhas unificadas
 

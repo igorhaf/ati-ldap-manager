@@ -235,12 +235,12 @@ class LdapUserController extends Controller
                 }
             }
 
-            // Verificar se a matrícula já existe
+            // Verificar se o CPF já existe
             $existingEmployee = LdapUserModel::where('employeeNumber', $request->employeeNumber)->first();
             if ($existingEmployee) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Matrícula já cadastrada'
+                    'message' => 'CPF já cadastrado'
                 ], 422);
             }
 

@@ -98,7 +98,7 @@ curl -X POST /api/ldap/ldif/upload \
 - Fácil migração e backup de dados
 
 ### 4. Consistência
-- Mesma matrícula (`employeeNumber`) em todas as OUs
+- Mesmo CPF (`employeeNumber`) em todas as OUs
 - Dados pessoais consistentes
 - Senhas sincronizadas
 
@@ -107,7 +107,7 @@ curl -X POST /api/ldap/ldif/upload \
 O sistema realiza as seguintes validações:
 
 1. **UID único por OU**: O mesmo UID não pode existir duas vezes na mesma OU
-2. **Matrícula única global**: A matrícula deve ser única em todo o sistema
+2. **CPF único global**: O CPF deve ser único em todo o sistema
 3. **OUs existentes**: As OUs devem existir antes da criação do usuário
 4. **Formato LDIF**: Validação da sintaxe do arquivo LDIF
 
@@ -201,8 +201,8 @@ Todas as operações LDIF são registradas nos logs do sistema:
 - Verifique se o UID já não está cadastrado na OU específica
 - Use a interface de usuários para verificar existência
 
-### Erro: "Matrícula já cadastrada"
-- A matrícula deve ser única globalmente
+### Erro: "CPF já cadastrado"
+- O CPF deve ser único globalmente
 - Consulte os usuários existentes antes de criar novos
 
 ### Erro: "OU não encontrada"

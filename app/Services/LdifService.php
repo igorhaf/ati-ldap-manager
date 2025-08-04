@@ -205,14 +205,14 @@ class LdifService
             ];
         }
 
-        // Verificar se a matrícula já existe (se informada)
+        // Verificar se o CPF já existe (se informado)
         if (isset($entry['employeeNumber'][0])) {
             $existingEmployee = LdapUserModel::where('employeeNumber', $entry['employeeNumber'][0])->first();
             if ($existingEmployee) {
                 return [
                     'success' => false,
                     'dn' => $entry['dn'],
-                    'message' => 'Matrícula já cadastrada'
+                    'message' => 'CPF já cadastrado'
                 ];
             }
         }
