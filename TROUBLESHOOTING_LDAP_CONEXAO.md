@@ -18,21 +18,27 @@ php artisan quick:ldap-test
 php artisan test:container-fix
 ```
 
-### **3. Teste Completo**
+### **3. Teste Simples da Estrutura**
+```bash
+# Teste robusto e simplificado (recomendado)
+php artisan test:simple-structure
+```
+
+### **4. Teste Completo**
 ```bash
 # Diagnóstico detalhado
 php artisan test:ldap-connection --detailed
 ```
 
-### **4. Debug da Estrutura**
+### **5. Debug da Estrutura**
 ```bash
-# Verificar estrutura após conexão
+# Verificar estrutura após conexão (avançado)
 php artisan debug:ldap-structure
 ```
 
-### **5. Teste LdapRecord Específico**
+### **6. Teste LdapRecord Específico**
 ```bash
-# Testar especificamente LdapRecord/Laravel
+# Testar especificamente LdapRecord/Laravel (avançado)
 php artisan test:ldap-record
 ```
 
@@ -181,7 +187,25 @@ Container::addConnection($connection, 'default');
 
 **Teste:** Execute `php artisan test:container-fix` para verificar se foi corrigido.
 
-### **6. Problemas de Certificado SSL**
+### **6. Erro: "Call to a member function count() on array"**
+```bash
+❌ Call to a member function count() on array
+```
+
+**Causa:** Alguns métodos LDAP retornam arrays ao invés de Collections.
+
+**Solução:** Usar verificação de tipo:
+```php
+// ❌ ERRADO
+$count = $results->count();
+
+// ✅ CORRETO
+$count = is_array($results) ? count($results) : $results->count();
+```
+
+**Teste:** Execute `php artisan test:simple-structure` para verificar se foi corrigido.
+
+### **7. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```

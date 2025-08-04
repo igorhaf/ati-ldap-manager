@@ -118,7 +118,8 @@ class DebugLdapStructure extends Command
                 // Busca simples (método atual)
                 $this->line("🔍 Busca simples por UID...");
                 $users = LdapUserModel::where('uid', $uid)->get();
-                $this->info("📊 Encontrados: " . $users->count() . " usuários");
+                $userCount = is_array($users) ? count($users) : $users->count();
+                $this->info("📊 Encontrados: " . $userCount . " usuários");
                 
                 foreach ($users as $user) {
                     $this->displayUserInfo($user, "Busca por UID");
@@ -130,7 +131,8 @@ class DebugLdapStructure extends Command
                     $usersWithOu = LdapUserModel::where('uid', $uid)
                         ->where('ou', $ou)
                         ->get();
-                    $this->info("📊 Encontrados: " . $usersWithOu->count() . " usuários");
+                    $userWithOuCount = is_array($usersWithOu) ? count($usersWithOu) : $usersWithOu->count();
+                    $this->info("📊 Encontrados: " . $userWithOuCount . " usuários");
                     
                     foreach ($usersWithOu as $user) {
                         $this->displayUserInfo($user, "Busca por UID + OU");
@@ -210,12 +212,15 @@ class DebugLdapStructure extends Command
             try {
                 $this->line("🧪 {$name}");
                 $result = $method();
-                $this->info("   📊 Resultado: " . $result->count() . " usuário(s)");
+                $resultCount = is_array($result) ? count($result) : $result->count();
+                $this->info("   📊 Resultado: " . $resultCount . " usuário(s)");
                 
-                if ($result->count() > 0) {
-                    $user = $result->first();
-                    $this->line("   ✅ DN encontrado: " . $user->getDn());
-                    $this->line("   📝 OU (atributo): " . ($user->getFirstAttribute('ou') ?? 'não definido'));
+                if ($resultCount > 0) {
+                    $user = is_array($result) ? $result[0] : $result->first();
+                    $dn = is_object($user) && method_exists($user, 'getDn') ? $user->getDn() : 'DN não disponível';
+                    $ou = is_object($user) && method_exists($user, 'getFirstAttribute') ? ($user->getFirstAttribute('ou') ?? 'não definido') : 'não disponível';
+                    $this->line("   ✅ DN encontrado: " . $dn);
+                    $this->line("   📝 OU (atributo): " . $ou);
                 } else {
                     $this->line("   ❌ Nenhum usuário encontrado");
                 }

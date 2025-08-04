@@ -79,13 +79,16 @@ class TestLdapRecord extends Command
             
             try {
                 $users = LdapUserModel::limit(1)->get();
-                $this->info("✅ LdapUserModel funcionando ({$users->count()} resultados)");
+                $userCount = is_array($users) ? count($users) : $users->count();
+                $this->info("✅ LdapUserModel funcionando ({$userCount} resultados)");
                 
-                if ($users->count() > 0) {
-                    $user = $users->first();
+                if ($userCount > 0) {
+                    $user = is_array($users) ? $users[0] : $users->first();
                     $this->line("   📋 Primeiro usuário:");
-                    $this->line("      DN: " . $user->getDn());
-                    $this->line("      UID: " . ($user->getFirstAttribute('uid') ?? 'não definido'));
+                    $dn = is_object($user) && method_exists($user, 'getDn') ? $user->getDn() : 'DN não disponível';
+                    $uid = is_object($user) && method_exists($user, 'getFirstAttribute') ? ($user->getFirstAttribute('uid') ?? 'não definido') : 'não disponível';
+                    $this->line("      DN: " . $dn);
+                    $this->line("      UID: " . $uid);
                 }
             } catch (\Exception $e) {
                 $this->error("❌ Erro no LdapUserModel: " . $e->getMessage());
@@ -96,11 +99,13 @@ class TestLdapRecord extends Command
             
             try {
                 $ous = OrganizationalUnit::limit(3)->get();
-                $this->info("✅ OrganizationalUnit funcionando ({$ous->count()} resultados)");
+                $ouCount = is_array($ous) ? count($ous) : $ous->count();
+                $this->info("✅ OrganizationalUnit funcionando ({$ouCount} resultados)");
                 
                 foreach ($ous as $ou) {
-                    $ouName = $ou->getFirstAttribute('ou');
-                    $this->line("   📁 OU: {$ouName} | DN: " . $ou->getDn());
+                    $ouName = is_object($ou) && method_exists($ou, 'getFirstAttribute') ? $ou->getFirstAttribute('ou') : 'não disponível';
+                    $dn = is_object($ou) && method_exists($ou, 'getDn') ? $ou->getDn() : 'DN não disponível';
+                    $this->line("   📁 OU: {$ouName} | DN: " . $dn);
                 }
             } catch (\Exception $e) {
                 $this->error("❌ Erro no OrganizationalUnit: " . $e->getMessage());
@@ -116,10 +121,12 @@ class TestLdapRecord extends Command
                     ->limit(3)
                     ->get();
                 
-                $this->info("✅ Busca raw funcionando ({$results->count()} resultados)");
+                $count = is_array($results) ? count($results) : $results->count();
+                $this->info("✅ Busca raw funcionando ({$count} resultados)");
                 
                 foreach ($results as $result) {
-                    $this->line("   📄 " . $result->getDn());
+                    $dn = is_object($result) && method_exists($result, 'getDn') ? $result->getDn() : (string)$result;
+                    $this->line("   📄 " . $dn);
                 }
             } catch (\Exception $e) {
                 $this->error("❌ Erro na busca raw: " . $e->getMessage());
