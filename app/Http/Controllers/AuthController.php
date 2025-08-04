@@ -15,36 +15,27 @@ class AuthController extends Controller
     }
 
     /**
-     * Extrai a OU do subdomínio da URL de forma dinâmica
-     * Exemplos: 
-     * - moreno.exemplo.com => moreno
-     * - admin.sistema.br => admin  
-     * - teste.localhost => teste
+     * Extrai a OU do subdomínio da URL
+     * Exemplo: contas.moreno.sei.pe.gov.br => moreno
+     * Para contasadmin.sei.pe.gov.br => admin (usuário root)
+     * Funciona com HTTP e HTTPS (remove porta se presente)
      */
     private function extractOuFromHost($host)
     {
-        \Log::info('AuthController - Host: ' . $host);
+        // Remover porta se presente (ex: contas.moreno.sei.pe.gov.br:443)
+        $host = preg_replace('/:\d+$/', '', $host);
         
-        // Pegar apenas o primeiro subdomínio (antes do primeiro ponto)
-        $parts = explode('.', $host);
-        
-        if (count($parts) >= 2) {
-            $ou = strtolower($parts[0]);
-            \Log::info('AuthController - OU extraída: ' . $ou);
-            return $ou;
+        // Caso especial para usuários root
+        if ($host === 'contasadmin.sei.pe.gov.br') {
+            return 'admin';
         }
         
-        \Log::error('AuthController - Host inválido (sem subdomínio): ' . $host);
+        // Para outras OUs: contas.moreno.sei.pe.gov.br => moreno
+        if (preg_match('/contas\\.([a-z0-9-]+)\\.sei\\.pe\\.gov\\.br/i', $host, $matches)) {
+            return $matches[1];
+        }
+        
         return null;
-    }
-
-    /**
-     * Obter o host da requisição
-     */
-    private function getRealHost(Request $request)
-    {
-        $host = $request->getHttpHost();
-        return explode(':', $host)[0]; // Remove porta se houver
     }
 
     public function login(Request $request)
@@ -54,14 +45,16 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $host = $this->getRealHost($request);
+        $host = $request->getHost();
+        // Remover porta se presente para comparações
+        $cleanHost = preg_replace('/:\d+$/', '', $host);
         $ou = $this->extractOuFromHost($host);
         if (!$ou) {
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
 
-        // Buscar usuário - se OU for "admin", busca root, senão busca por OU
-        if ($ou === 'admin') {
+        // Buscar usuário - lógica diferente para root vs outros usuários
+        if ($cleanHost === 'contasadmin.sei.pe.gov.br') {
             // Para usuários root: buscar apenas pelo uid (estão na raiz do LDAP)
             $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
         } else {
@@ -72,7 +65,7 @@ class AuthController extends Controller
         }
 
         if (!$user) {
-            if ($ou === 'admin') {
+            if ($cleanHost === 'contasadmin.sei.pe.gov.br') {
                 return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');
             } else {
                 return back()->withErrors(['uid' => 'Usuário não encontrado para esta OU.'])->onlyInput('uid');
@@ -94,7 +87,7 @@ class AuthController extends Controller
 
         // Permissão root (mantém regra antiga)
         if ($role === 'root') {
-            if ($host !== 'contasadmin.sei.pe.gov.br') {
+            if ($cleanHost !== 'contasadmin.sei.pe.gov.br') {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
@@ -133,8 +126,9 @@ class AuthController extends Controller
 
         if ($role === RoleResolver::ROLE_ROOT) {
             $host = $request->getHost();
+            $cleanHost = preg_replace('/:\d+$/', '', $host);
             
-            if ($host !== 'contasadmin.sei.pe.gov.br') {
+            if ($cleanHost !== 'contasadmin.sei.pe.gov.br') {
                 if ($request->expectsJson()) {
                     abort(403, 'Usuários root só podem acessar via contasadmin.sei.pe.gov.br');
                 }
