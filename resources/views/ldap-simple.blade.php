@@ -22,6 +22,22 @@
     <script>
         window.USER_ROLE = "{{ $userRole ?? 'user' }}";
         window.USER_UID = "{{ auth()->user()->getFirstAttribute('uid') ?? '' }}";
+        window.USER_CN = "{{ auth()->user()->getCommonName() ?? '' }}";
+        window.USER_MAIL = "{{ auth()->user()->getFirstAttribute('mail') ?? '' }}";
+        
+        // Debug do usuário autenticado
+        console.log('🔐 Usuário autenticado:', {
+            role: window.USER_ROLE,
+            uid: window.USER_UID,
+            cn: window.USER_CN,
+            mail: window.USER_MAIL
+        });
+        
+        // Verificar se UID está vazio
+        if (!window.USER_UID || window.USER_UID.trim() === '') {
+            console.error('❌ CRITICAL: window.USER_UID está vazio!');
+            console.error('🔍 Verifique se o usuário está autenticado e tem UID no LDAP');
+        }
     </script>
 </head>
 <body class="bg-gradient-to-br from-indigo-50 to-blue-50 min-h-screen">
@@ -1211,25 +1227,108 @@
                      */
                     async getAdminOu() {
                         try {
+                            console.log('🔍 Iniciando getAdminOu...');
+                            console.log('📋 Total de usuários carregados:', this.users.length);
+                            console.log('🔑 USER_UID atual:', window.USER_UID);
+                            
+                            // Resetar adminOu no início
+                            this.adminOu = '';
+                            
+                            // Verificar se USER_UID está definido
+                            if (!window.USER_UID) {
+                                console.error('❌ window.USER_UID não está definido!');
+                                return;
+                            }
+                            
                             // Obtém a OU do admin a partir dos usuários carregados
-                            // Assumindo que o próprio usuário está na lista de usuários
                             const currentUser = this.users.find(u => u.uid === window.USER_UID);
-                            if (currentUser && currentUser.organizationalUnits && currentUser.organizationalUnits.length > 0) {
-                                const adminOuEntry = currentUser.organizationalUnits.find(unit => 
-                                    (typeof unit === 'string' ? 'user' : unit.role) === 'admin' ||
-                                    (typeof unit === 'string' ? false : unit.role === 'admin')
-                                );
-                                if (adminOuEntry) {
-                                    this.adminOu = typeof adminOuEntry === 'string' ? adminOuEntry : adminOuEntry.ou;
-                                } else if (currentUser.organizationalUnits.length > 0) {
-                                    // Fallback para a primeira OU se não encontrar admin
-                                    const firstOu = currentUser.organizationalUnits[0];
-                                    this.adminOu = typeof firstOu === 'string' ? firstOu : firstOu.ou;
+                            console.log('👤 Usuário atual encontrado:', currentUser ? 'Sim' : 'Não');
+                            
+                            if (!currentUser) {
+                                console.warn('⚠️  Usuário atual não encontrado na lista. Tentando buscar direto na API...');
+                                await this.loadCurrentUserFromApi();
+                                return;
+                            }
+                            
+                            console.log('🏢 OUs do usuário:', currentUser.organizationalUnits);
+                            
+                            if (!currentUser.organizationalUnits || currentUser.organizationalUnits.length === 0) {
+                                console.error('❌ Usuário não tem OUs definidas!');
+                                return;
+                            }
+                            
+                            // Buscar OU com role admin
+                            const adminOuEntry = currentUser.organizationalUnits.find(unit => {
+                                const role = typeof unit === 'string' ? 'user' : (unit.role || 'user');
+                                console.log(`  📍 Verificando OU: ${typeof unit === 'string' ? unit : unit.ou}, Role: ${role}`);
+                                return role === 'admin';
+                            });
+                            
+                            if (adminOuEntry) {
+                                this.adminOu = typeof adminOuEntry === 'string' ? adminOuEntry : adminOuEntry.ou;
+                                console.log('✅ OU Admin encontrada:', this.adminOu);
+                            } else {
+                                // Fallback para a primeira OU
+                                console.warn('⚠️  Não encontrou OU admin, usando primeira OU disponível...');
+                                const firstOu = currentUser.organizationalUnits[0];
+                                this.adminOu = typeof firstOu === 'string' ? firstOu : firstOu.ou;
+                                console.log('🔄 Usando primeira OU como fallback:', this.adminOu);
+                            }
+                            
+                            // Validação final
+                            if (!this.adminOu || this.adminOu.trim() === '') {
+                                console.error('❌ adminOu continua vazia após processamento!');
+                            } else {
+                                console.log('✅ OU do Admin definida com sucesso:', this.adminOu);
+                            }
+                            
+                        } catch (error) {
+                            console.error('❌ Erro ao obter OU do admin:', error);
+                        }
+                    },
+                    
+                    /**
+                     * Busca dados do usuário atual diretamente da API
+                     */
+                    async loadCurrentUserFromApi() {
+                        try {
+                            console.log('🌐 Buscando usuário atual na API...');
+                            
+                            const response = await fetch('/api/ldap/users', {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                }
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}`);
+                            }
+                            
+                            const data = await response.json();
+                            console.log('📥 Dados recebidos da API:', data);
+                            
+                            if (data.success && data.users) {
+                                const currentUser = data.users.find(u => u.uid === window.USER_UID);
+                                if (currentUser && currentUser.organizationalUnits && currentUser.organizationalUnits.length > 0) {
+                                    const adminOuEntry = currentUser.organizationalUnits.find(unit => {
+                                        const role = typeof unit === 'string' ? 'user' : (unit.role || 'user');
+                                        return role === 'admin';
+                                    });
+                                    
+                                    if (adminOuEntry) {
+                                        this.adminOu = typeof adminOuEntry === 'string' ? adminOuEntry : adminOuEntry.ou;
+                                        console.log('✅ OU Admin obtida da API:', this.adminOu);
+                                    } else if (currentUser.organizationalUnits.length > 0) {
+                                        const firstOu = currentUser.organizationalUnits[0];
+                                        this.adminOu = typeof firstOu === 'string' ? firstOu : firstOu.ou;
+                                        console.log('🔄 Primeira OU obtida da API:', this.adminOu);
+                                    }
                                 }
                             }
-                            console.log('🏢 OU do Admin:', this.adminOu);
                         } catch (error) {
-                            console.log('❌ Erro ao obter OU do admin:', error);
+                            console.error('❌ Erro ao buscar usuário atual na API:', error);
                         }
                     },
 

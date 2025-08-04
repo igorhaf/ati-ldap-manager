@@ -4,7 +4,10 @@
 
 Erro ao criar usuário: `OU '' contém caracteres inválidos para LDAP`
 
-**Update**: Também corrigido erro JavaScript: `this.loadCurrentUser is not a function`
+**Updates**: 
+- ✅ Corrigido erro JavaScript: `this.loadCurrentUser is not a function`
+- ✅ Adicionado debug detalhado para troubleshooting
+- ✅ Criado comando `debug:user-ou` para análise específica
 
 ### **Causa Raiz**
 Para administradores de OU, o campo OU estava aparecendo **vazio** na interface, causando:
@@ -12,6 +15,7 @@ Para administradores de OU, o campo OU estava aparecendo **vazio** na interface,
 - Dados enviados com `ou: ''` (string vazia)
 - Validação falhando no backend
 - **Erro JavaScript** ao tentar chamar método inexistente
+- **Usuário atual não encontrado** na lista carregada
 
 ## ✅ **Solução Implementada**
 
@@ -31,10 +35,80 @@ Substituído o clique direto por método que **valida e prepara dados**:
 1. **Reseta dados** do formulário
 2. **Para Admin OU**: Verifica se `adminOu` está preenchida
 3. **Se vazia**: Recarrega `loadUsers()` → `getAdminOu()`
-4. **Se não conseguir**: Exibe erro e não abre modal
-5. **Se OK**: Abre modal com dados corretos
+4. **Se ainda vazia**: Tenta buscar direto na API via `loadCurrentUserFromApi()`
+5. **Se não conseguir**: Exibe erro e não abre modal
+6. **Se OK**: Abre modal com dados corretos
 
-### **2. Correção do Erro JavaScript**
+### **2. Debug Detalhado Implementado**
+
+**a) Debug Global (window variables):**
+```javascript
+// Agora mostra no console ao carregar página
+🔐 Usuário autenticado: {
+    role: "admin",
+    uid: "usuario.admin",
+    cn: "Usuário Admin",
+    mail: "admin@empresa.com"
+}
+```
+
+**b) Debug da função `getAdminOu()`:**
+```javascript
+🔍 Iniciando getAdminOu...
+📋 Total de usuários carregados: 15
+🔑 USER_UID atual: usuario.admin
+👤 Usuário atual encontrado: Sim
+🏢 OUs do usuário: [{ou: "ti", role: "admin"}]
+📍 Verificando OU: ti, Role: admin
+✅ OU Admin encontrada: ti
+✅ OU do Admin definida com sucesso: ti
+```
+
+**c) Fallback para API se usuário não encontrado:**
+```javascript
+⚠️ Usuário atual não encontrado na lista. Tentando buscar direto na API...
+🌐 Buscando usuário atual na API...
+📥 Dados recebidos da API: {...}
+✅ OU Admin obtida da API: ti
+```
+
+### **3. Novo Comando Debug: `debug:user-ou`**
+
+Criado comando especializado para troubleshooting:
+
+```bash
+# Debug específico para um usuário
+sudo ./vendor/bin/sail artisan debug:user-ou usuario.admin
+
+# Ou modo interativo
+sudo ./vendor/bin/sail artisan debug:user-ou
+```
+
+**Saída esperada:**
+```
+🔍 Debug de OU do Usuário
+========================
+UID: usuario.admin
+
+1️⃣ Buscando usuário no LDAP...
+✅ Usuário encontrado: Usuário Admin
+
+2️⃣ Verificando OUs do usuário...
+📍 OU (string): ti
+
+3️⃣ Verificando role via RoleResolver...
+🎭 Role resolvida: admin
+🏢 OU do admin (via RoleResolver): ti
+
+4️⃣ Simulando estrutura para frontend...
+📋 Estrutura organizationalUnits simulada:
+   - OU: ti, Role: admin
+
+5️⃣ Encontrando OU admin...
+✅ OU Admin encontrada: ti
+```
+
+### **4. Correção do Erro JavaScript**
 
 **❌ Problema:** `this.loadCurrentUser is not a function`
 
@@ -56,9 +130,10 @@ this.loadUsers().then(async () => {
 **Sequência Correta:**
 1. `loadUsers()` - Carrega todos os usuários (inclui usuário atual)
 2. `getAdminOu()` - Extrai OU do admin baseado nos usuários
-3. Validação e abertura do modal
+3. `loadCurrentUserFromApi()` - Fallback se usuário não encontrado
+4. Validação e abertura do modal
 
-### **3. Validação Robusta no `createUser()`**
+### **5. Validação Robusta no `createUser()`**
 
 Adicionadas validações antes do envio:
 
@@ -78,7 +153,7 @@ if (this.isOuAdmin) {
 }
 ```
 
-### **4. Interface Visual Melhorada**
+### **6. Interface Visual Melhorada**
 
 Campo OU agora é **visual e informativo**:
 
@@ -99,38 +174,51 @@ Campo OU agora é **visual e informativo**:
 - ✅ **Feedback** se não carregou (`"Carregando..."`)
 - ✅ **Ícone** para identificação rápida
 
-### **5. Debug e Logs Melhorados**
-
-Adicionados logs para facilitar troubleshooting:
-
-```javascript
-console.log('🏢 Abrindo modal para admin OU. AdminOU atual:', this.adminOu);
-console.log('🔄 Após recarregar, adminOu:', this.adminOu);
-console.log('📤 Enviando dados:', userData);
-```
-
 ## 🧪 **Como Testar a Correção**
 
-### **1. Teste com Admin de OU:**
+### **1. Debug via Console (F12):**
+1. **Abra** a aplicação no navegador
+2. **Pressione F12** para abrir DevTools
+3. **Verifique** se aparecem os logs:
+```
+🔐 Usuário autenticado: { role: "admin", uid: "seu.usuario", ... }
+```
+
+### **2. Debug via Comando:**
+```bash
+# Substitua "seu.usuario" pelo UID real
+sudo ./vendor/bin/sail artisan debug:user-ou seu.usuario
+```
+
+### **3. Teste com Admin de OU:**
 1. **Login** como administrador de uma OU
 2. **Clique** em "➕ Novo Usuário"
-3. **Verificar** se OU aparece preenchida automaticamente
-4. **Preencher** dados do usuário
-5. **Selecionar** papel (Usuário/Admin)
-6. **Criar** usuário
+3. **Observe logs** no console (F12):
+```
+🔍 Iniciando getAdminOu...
+📋 Total de usuários carregados: X
+🔑 USER_UID atual: seu.usuario
+👤 Usuário atual encontrado: Sim/Não
+```
+4. **Verificar** se OU aparece preenchida automaticamente
 
-### **2. Validação via Console:**
-Abrir **DevTools** (F12) e verificar:
+### **4. Teste de Cenários de Erro:**
+
+**a) Se UID não está definido:**
 ```
-🏢 Abrindo modal para admin OU. AdminOU atual: ti
-🔄 Após recarregar, adminOu: ti
-📤 Enviando dados: {organizationalUnits: [{ou: "ti", role: "user"}]}
+❌ CRITICAL: window.USER_UID está vazio!
+🔍 Verifique se o usuário está autenticado e tem UID no LDAP
 ```
 
-### **3. Teste de Erro:**
-Se OU não carregar, deve aparecer:
+**b) Se usuário não encontrado na lista:**
 ```
-❌ Erro: OU do administrador não definida. Recarregue a página.
+⚠️ Usuário atual não encontrado na lista. Tentando buscar direto na API...
+🌐 Buscando usuário atual na API...
+```
+
+**c) Se OU não pode ser determinada:**
+```
+❌ Erro: Não foi possível determinar sua OU. Recarregue a página.
 ```
 
 ## 📊 **Antes vs Depois**
@@ -143,46 +231,46 @@ Se OU não carregar, deve aparecer:
 | **UX** | Confuso (campo editável) | Claro (automático) |
 | **Debug** | Sem logs | Logs detalhados |
 | **JavaScript** | ❌ `loadCurrentUser is not a function` | ✅ Métodos corretos |
+| **Troubleshooting** | Difícil diagnóstico | ✅ Debug command + logs |
 
-## 🚨 **Casos de Erro Corrigidos**
+## 🚨 **Troubleshooting Guide**
 
-### **1. JavaScript Error**
-```
-❌ ANTES: Uncaught TypeError: this.loadCurrentUser is not a function
-✅ DEPOIS: Usa loadUsers() + getAdminOu()
-```
+### **1. Erro: "window.USER_UID está vazio"**
+**Causa:** Usuário não tem UID no LDAP ou não está autenticado
+**Solução:** 
+- Verificar se usuário existe no LDAP
+- Fazer logout/login
+- Usar comando `debug:user-ou`
 
-### **2. AdminOu não carregada**
-```
-⚠️ adminOu vazia, tentando recarregar...
-🔄 Após recarregar, adminOu: ti
-✅ Modal aberto com OU correta
-```
+### **2. Erro: "Usuário atual não encontrado na lista"**
+**Causa:** Lista de usuários não inclui o usuário logado
+**Solução:** 
+- Sistema tenta automaticamente buscar na API
+- Se persistir, recarregar página
 
-### **3. Problema de Autenticação**
-```
-❌ Erro ao carregar dados. Recarregue a página.
-```
+### **3. Erro: "Não foi possível determinar sua OU"**
+**Causa:** Usuário não tem OU ou não tem role admin
+**Solução:**
+- Usar comando `debug:user-ou` para verificar estrutura
+- Verificar se usuário tem employeeType="admin"
+- Verificar se usuário está na OU correta
 
-**Solução:** Fazer logout/login novamente
-
-### **4. OU com Espaços/Caracteres**
-```
-❌ OU ' ti ' contém caracteres inválidos para LDAP
-✅ Automaticamente removido com .trim()
-```
+### **4. JavaScript Error: "loadCurrentUser is not a function"**
+**Causa:** ❌ **CORRIGIDO** - era método inexistente
+**Status:** ✅ Resolvido com novos métodos
 
 ## 🎯 **Fluxo Correto Agora**
 
 ### **Para Admin de OU:**
-1. 🔄 **Carrega** OU do usuário logado
+1. 🔄 **Carrega** página com debug global
 2. 🎯 **Clique** no botão "Novo Usuário"
 3. ✅ **Valida** se OU está preenchida
 4. 🔄 **Se vazia**: Recarrega `loadUsers()` → `getAdminOu()`
-5. 📝 **Abre** modal com OU automática
-6. 👤 **Usuário** preenche dados pessoais
-7. ⚙️ **Usuário** seleciona papel (user/admin)
-8. 📤 **Envia** dados com OU correta
+5. 🌐 **Se ainda vazia**: Busca na API via `loadCurrentUserFromApi()`
+6. 📝 **Abre** modal com OU automática
+7. 👤 **Usuário** preenche dados pessoais
+8. ⚙️ **Usuário** seleciona papel (user/admin)
+9. 📤 **Envia** dados com OU correta
 
 ### **Para ROOT:**
 1. 🎯 **Clique** no botão "Novo Usuário"  
@@ -202,12 +290,15 @@ Se OU não carregar, deve aparecer:
 ### **2. Robustez:**
 - ✅ Validação antes de abrir modal
 - ✅ Recarregamento automático se dados vazios
+- ✅ Fallback para API se usuário não encontrado
 - ✅ Trim automático de espaços
 - ✅ Fallbacks para valores undefined
 - ✅ **Error handling** para métodos JavaScript
 
-### **3. Debug:**
-- ✅ Logs detalhados no console
+### **3. Debug/Troubleshooting:**
+- ✅ Logs detalhados no console do navegador
+- ✅ Debug global das variáveis de autenticação
+- ✅ Comando especializado `debug:user-ou`
 - ✅ Mensagens de erro específicas
 - ✅ Rastreamento do fluxo completo
 - ✅ **Tratamento de exceções** async/await
@@ -221,11 +312,14 @@ Os erros **não devem mais ocorrer** porque:
 3. **Interface clara** mostra exatamente qual OU será usada
 4. **Fallbacks** garantem que dados estejam sempre corretos
 5. **❌ Error JavaScript corrigido** - métodos corretos utilizados
+6. **🔍 Debug detalhado** facilita troubleshooting
+7. **🛠️ Comando específico** para análise de problemas
 
 ---
 
-**Status**: ✅ **OU automática implementada + Error JS corrigido**  
+**Status**: ✅ **OU automática implementada + Error JS corrigido + Debug completo**  
 **Para**: Administradores de OU  
 **Compatível**: ROOT continua funcionando normalmente  
 **UX**: Interface melhorada com feedback visual  
-**Estável**: Sem mais erros JavaScript 
+**Estável**: Sem mais erros JavaScript  
+**Debug**: Comando `debug:user-ou` + logs detalhados 
