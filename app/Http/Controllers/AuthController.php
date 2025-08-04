@@ -104,9 +104,7 @@ class AuthController extends Controller
         ]);
 
         $host = $this->getOriginalHost($request);
-        var_dump($host);
         $ou = $this->extractOuFromHost($host);
-        var_dump($ou);
         if (!$ou) {
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
@@ -121,8 +119,8 @@ class AuthController extends Controller
                 ->where('ou', $ou)
                 ->first();
         }
-        var_dump($user);
-        var_dump($ou);
+        dd($user);
+        dd($ou);
         if (!$user) {
             if ($ou === 'admin') {
                 return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');
