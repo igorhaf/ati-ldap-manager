@@ -119,7 +119,7 @@ class AuthController extends Controller
                 ->where('ou', $ou)
                 ->first();
         }
-        dd($user);
+        //dd($user);
         dd($ou);
         if (!$user) {
             if ($ou === 'admin') {
