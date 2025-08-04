@@ -76,6 +76,7 @@ class AuthController extends Controller
      */
     private function extractOuFromHost($host)
     {
+        var_dump($host);
         // Log do host recebido para debug
         \Log::info('AuthController: Host recebido', ['host' => $host]);
         
