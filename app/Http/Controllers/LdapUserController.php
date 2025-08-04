@@ -680,7 +680,18 @@ class LdapUserController extends Controller
         $this->checkRootAccess(request());
         
         try {
-            $logs = OperationLog::orderBy('created_at', 'desc')->get();
+            $role = RoleResolver::resolve(auth()->user());
+            
+            // Se for ROOT, vê todos os logs
+            if ($role === RoleResolver::ROLE_ROOT) {
+                $logs = OperationLog::orderBy('created_at', 'desc')->get();
+            } else {
+                // Se for admin de OU, vê apenas logs da sua OU
+                $adminOu = RoleResolver::getUserOu(auth()->user());
+                $logs = OperationLog::where('ou', $adminOu)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+            }
 
             return response()->json([
                 'success' => true,

@@ -19,9 +19,10 @@ Route::middleware(['web','auth'])->prefix('ldap')->group(function () {
         // Unidades organizacionais
         Route::post('/organizational-units', [LdapUserController::class, 'createOrganizationalUnit']);
         Route::put('/organizational-units/{ou}', [LdapUserController::class, 'updateOrganizationalUnit']);
-        // Logs
-        Route::get('/logs', [LdapUserController::class, 'getOperationLogs']);
     });
+
+    // Logs (acessível para ROOT e Admin OU)
+    Route::middleware(IsOUAdmin::class)->get('/logs', [LdapUserController::class, 'getOperationLogs']);
 
     // Rotas de leitura de OUs (root ou admin OU)
     Route::middleware(IsOUAdmin::class)->get('/organizational-units', [LdapUserController::class, 'getOrganizationalUnits']);
