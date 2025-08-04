@@ -42,6 +42,22 @@ Route::get('/debug', function () {
     return view('debug');
 })->name('debug');
 
+// Rota para testar detecção de host (apenas para debug)
+Route::get('/debug-host', function (Illuminate\Http\Request $request) {
+    $host = $request->getHttpHost();
+    $host = explode(':', $host)[0]; // Remove porta
+    
+    $parts = explode('.', $host);
+    $ou = count($parts) >= 2 ? strtolower($parts[0]) : null;
+    
+    return response()->json([
+        'url' => $request->url(),
+        'host' => $host,
+        'ou' => $ou,
+        'partes' => $parts
+    ]);
+})->name('debug.host');
+
 // Rota para versão original (debug)
 Route::get('/ldap-original', function () {
     return view('ldap-manager');

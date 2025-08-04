@@ -15,23 +15,36 @@ class AuthController extends Controller
     }
 
     /**
-     * Extrai a OU do subdomínio da URL
-     * Exemplo: contas.moreno.sei.pe.gov.br => moreno
-     * Para contasadmin.sei.pe.gov.br => admin (usuário root)
+     * Extrai a OU do subdomínio da URL de forma dinâmica
+     * Exemplos: 
+     * - moreno.exemplo.com => moreno
+     * - admin.sistema.br => admin  
+     * - teste.localhost => teste
      */
     private function extractOuFromHost($host)
     {
-        // Caso especial para usuários root
-        if ($host === 'contasadmin.sei.pe.gov.br') {
-            return 'admin';
+        \Log::info('AuthController - Host: ' . $host);
+        
+        // Pegar apenas o primeiro subdomínio (antes do primeiro ponto)
+        $parts = explode('.', $host);
+        
+        if (count($parts) >= 2) {
+            $ou = strtolower($parts[0]);
+            \Log::info('AuthController - OU extraída: ' . $ou);
+            return $ou;
         }
         
-        // Para outras OUs: contas.moreno.sei.pe.gov.br => moreno
-        if (preg_match('/contas\\.([a-z0-9-]+)\\.sei\\.pe\\.gov\\.br/i', $host, $matches)) {
-            return $matches[1];
-        }
-        
+        \Log::error('AuthController - Host inválido (sem subdomínio): ' . $host);
         return null;
+    }
+
+    /**
+     * Obter o host da requisição
+     */
+    private function getRealHost(Request $request)
+    {
+        $host = $request->getHttpHost();
+        return explode(':', $host)[0]; // Remove porta se houver
     }
 
     public function login(Request $request)
@@ -41,14 +54,14 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $host = $request->getHost();
+        $host = $this->getRealHost($request);
         $ou = $this->extractOuFromHost($host);
         if (!$ou) {
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
 
-        // Buscar usuário - lógica diferente para root vs outros usuários
-        if ($host === 'contasadmin.sei.pe.gov.br') {
+        // Buscar usuário - se OU for "admin", busca root, senão busca por OU
+        if ($ou === 'admin') {
             // Para usuários root: buscar apenas pelo uid (estão na raiz do LDAP)
             $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
         } else {
@@ -59,7 +72,7 @@ class AuthController extends Controller
         }
 
         if (!$user) {
-            if ($host === 'contasadmin.sei.pe.gov.br') {
+            if ($ou === 'admin') {
                 return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');
             } else {
                 return back()->withErrors(['uid' => 'Usuário não encontrado para esta OU.'])->onlyInput('uid');
