@@ -52,6 +52,42 @@ class LdapUserController extends Controller
     }
 
     /**
+     * Verifica se um atributo é parte do RDN (Relative Distinguished Name)
+     * e não pode ser modificado diretamente
+     */
+    private function isAttributeInRdn($entry, $attributeName): bool
+    {
+        $dn = $entry->getDn();
+        if (!$dn) {
+            return false;
+        }
+
+        // Extrair o RDN (primeira parte do DN)
+        $rdnPart = explode(',', $dn)[0];
+        
+        // Verificar se o atributo está no RDN
+        return preg_match("/^{$attributeName}=/i", trim($rdnPart));
+    }
+
+    /**
+     * Define um atributo de forma segura, evitando modificar atributos do RDN
+     */
+    private function setSafeAttribute($entry, $attributeName, $value): bool
+    {
+        if ($this->isAttributeInRdn($entry, $attributeName)) {
+            \Log::warning("Tentativa de modificar atributo do RDN ignorada", [
+                'dn' => $entry->getDn(),
+                'attribute' => $attributeName,
+                'value' => $value
+            ]);
+            return false;
+        }
+
+        $entry->setFirstAttribute($attributeName, $value);
+        return true;
+    }
+
+    /**
      * Display a listing of users
      */
     public function index(): JsonResponse
@@ -422,8 +458,9 @@ class LdapUserController extends Controller
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     }
 
-                    // Nome completo
-                    $user->setFirstAttribute('cn', trim(($request->givenName ?? $user->getFirstAttribute('givenName')) . ' ' . ($request->sn ?? $user->getFirstAttribute('sn'))));
+                    // Nome completo (só atualiza se cn não faz parte do RDN)
+                    $newCn = trim(($request->givenName ?? $user->getFirstAttribute('givenName')) . ' ' . ($request->sn ?? $user->getFirstAttribute('sn')));
+                    $this->setSafeAttribute($user, 'cn', $newCn);
 
                     // Papel
                     $user->setAttribute('employeeType', [$role]);
@@ -468,8 +505,9 @@ class LdapUserController extends Controller
                     }
 
                     if ($request->has('givenName') || $request->has('sn')) {
-                        $user->setFirstAttribute('cn', trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')));
-            }
+                        $newCn = trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? ''));
+                        $this->setSafeAttribute($user, 'cn', $newCn);
+                    }
             $user->save();
                 }
             }

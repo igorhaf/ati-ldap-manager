@@ -389,7 +389,47 @@ if ($request->has('userPassword') && !empty($request->userPassword)) {
 
 **Documentação completa:** `CORRECAO_SENHA_OPCIONAL_EDICAO.md`
 
-### **12. Problemas de Certificado SSL**
+### **12. Erro: "ldap_modify_batch(): Batch Modify: Naming violation"**
+```bash
+❌ Erro ao atualizar usuário: ldap_modify_batch(): Batch Modify: Naming violation
+```
+
+**Causa:** Tentativa de modificar atributo que faz parte do RDN (Relative Distinguished Name).
+
+**Exemplo problemático:**
+- DN: `cn=alberto.viegas,ou=gravata,dc=sei,dc=pe,dc=gov,dc=br`
+- RDN: `cn=alberto.viegas` (primeira parte)
+- Problema: Código tentava modificar atributo `cn`
+
+**Solução:** Detecção automática e bloqueio seguro:
+
+```php
+// ✅ CORRIGIDO: Verifica se atributo está no RDN
+private function setSafeAttribute($entry, $attributeName, $value): bool
+{
+    if ($this->isAttributeInRdn($entry, $attributeName)) {
+        \Log::warning("Tentativa de modificar atributo do RDN ignorada");
+        return false;
+    }
+    $entry->setFirstAttribute($attributeName, $value);
+    return true;
+}
+```
+
+**Comportamento correto:**
+- **Atributos no RDN**: Ignorados (com log)
+- **Atributos normais**: Modificados normalmente
+
+**Teste:**
+```bash
+sudo ./vendor/bin/sail artisan test:naming-violation alberto.viegas
+```
+
+**Resultado esperado:** CN será ignorado, outros atributos atualizados.
+
+**Documentação completa:** `CORRECAO_NAMING_VIOLATION.md`
+
+### **13. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```
