@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use LdapRecord\Container;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,41 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Inicializar LdapRecord Container corretamente
+        $this->initializeLdapRecord();
+    }
+
+    /**
+     * Inicializa o LdapRecord Container com a configuração correta
+     */
+    private function initializeLdapRecord(): void
+    {
+        try {
+            // Obter configuração LDAP
+            $ldapConfig = config('ldap.connections.default');
+            
+            if ($ldapConfig && !empty($ldapConfig['hosts'][0])) {
+                // Limpar conexões existentes
+                Container::flush();
+                
+                // Adicionar conexão padrão
+                Container::addConnection($ldapConfig, 'default');
+                Container::setDefaultConnection('default');
+                
+                // Log para debug
+                if (config('ldap.logging.enabled', false)) {
+                    \Log::info('LdapRecord Container inicializado', [
+                        'host' => $ldapConfig['hosts'][0],
+                        'base_dn' => $ldapConfig['base_dn']
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            // Log do erro mas não falha a aplicação
+            \Log::error('Erro ao inicializar LdapRecord Container', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 }

@@ -45,12 +45,51 @@ class DebugLdapStructure extends Command
         try {
             // 1. Verificar conexão LDAP
             $this->info('1️⃣ Verificando conexão...');
-            $connection = app(Connection::class);
-            if ($connection->isConnected()) {
-                $this->info('✅ Conectado ao LDAP');
-            } else {
-                $this->error('❌ Falha na conexão LDAP');
-                return 1;
+            
+            try {
+                // Tentar diferentes formas de obter a conexão
+                $connection = Container::getDefaultConnection();
+                
+                if (!$connection) {
+                    $this->line('🔄 Tentando inicializar conexão...');
+                    // Forçar inicialização da conexão
+                    Container::addConnection(config('ldap.connections.default'), 'default');
+                    $connection = Container::getDefaultConnection();
+                }
+                
+                // Tentar conectar explicitamente
+                if (!$connection->isConnected()) {
+                    $this->line('🔗 Estabelecendo conexão...');
+                    $connection->connect();
+                }
+                
+                if ($connection->isConnected()) {
+                    $this->info('✅ Conectado ao LDAP');
+                } else {
+                    $this->warn('⚠️  Conexão não estabelecida, tentando operações...');
+                }
+                
+            } catch (\Exception $e) {
+                $this->error('❌ Erro na conexão: ' . $e->getMessage());
+                $this->line('🔧 Tentando configuração manual...');
+                
+                // Configuração manual como fallback
+                try {
+                    $config = config('ldap.connections.default');
+                    $connection = new Connection($config);
+                    Container::addConnection($connection, 'default');
+                    $connection->connect();
+                    
+                    if ($connection->isConnected()) {
+                        $this->info('✅ Conectado via configuração manual');
+                    } else {
+                        $this->error('❌ Falha na conexão manual');
+                        return 1;
+                    }
+                } catch (\Exception $e2) {
+                    $this->error('❌ Falha total na conexão: ' . $e2->getMessage());
+                    return 1;
+                }
             }
 
             // 2. Listar OUs disponíveis

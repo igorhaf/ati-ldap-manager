@@ -80,6 +80,9 @@ class AuthController extends Controller
             'ou' => $ou
         ]);
 
+        // Garantir que LdapRecord está inicializado
+        $this->ensureLdapRecordInitialized();
+
         $baseDn = config('ldap.connections.default.base_dn');
 
         // Método 1: Busca tradicional por atributo 'ou' (compatibilidade)
@@ -153,6 +156,30 @@ class AuthController extends Controller
         ]);
         
         return null;
+    }
+
+    /**
+     * Garante que o LdapRecord Container está inicializado
+     */
+    private function ensureLdapRecordInitialized()
+    {
+        try {
+            $connection = \LdapRecord\Container::getDefaultConnection();
+            
+            if (!$connection) {
+                \Log::info('AuthController: Inicializando LdapRecord Container');
+                
+                $config = config('ldap.connections.default');
+                \LdapRecord\Container::addConnection($config, 'default');
+                \LdapRecord\Container::setDefaultConnection('default');
+                
+                \Log::info('AuthController: LdapRecord Container inicializado');
+            }
+        } catch (\Exception $e) {
+            \Log::warning('AuthController: Erro ao inicializar LdapRecord', [
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**

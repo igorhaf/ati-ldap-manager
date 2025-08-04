@@ -63,6 +63,7 @@ class Kernel extends HttpKernel
         'ou.admin' => \App\Http\Middleware\IsOUAdmin::class,
         'self.access' => \App\Http\Middleware\IsSelfAccess::class,
         'restrict.root' => \App\Http\Middleware\RestrictRootAccess::class,
+        'ensure-ldap-record' => \App\Http\Middleware\EnsureLdapRecord::class,
     ];
 
     /**
@@ -84,5 +85,6 @@ class Kernel extends HttpKernel
         'ou.admin' => \App\Http\Middleware\IsOUAdmin::class,
         'self.access' => \App\Http\Middleware\IsSelfAccess::class,
         'restrict.root' => \App\Http\Middleware\RestrictRootAccess::class,
+        'ensure-ldap-record' => \App\Http\Middleware\EnsureLdapRecord::class,
     ];
 } 

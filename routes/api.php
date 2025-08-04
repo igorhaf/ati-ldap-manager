@@ -12,7 +12,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Rotas para o gerenciador de usuários LDAP
-Route::middleware(['web','auth'])->prefix('ldap')->group(function () {
+Route::middleware(['web','auth', 'ensure-ldap-record'])->prefix('ldap')->group(function () {
 
     // Rotas acessíveis apenas ao ROOT
     Route::middleware(IsRootUser::class)->group(function () {
