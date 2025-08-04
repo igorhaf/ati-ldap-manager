@@ -18,13 +18,9 @@ class AuthController extends Controller
      * Extrai a OU do subdomínio da URL
      * Exemplo: contas.moreno.sei.pe.gov.br => moreno
      * Para contasadmin.sei.pe.gov.br => admin (usuário root)
-     * Funciona com HTTP e HTTPS (remove porta se presente)
      */
     private function extractOuFromHost($host)
     {
-        // Remover porta se presente (ex: contas.moreno.sei.pe.gov.br:443)
-        $host = preg_replace('/:\d+$/', '', $host);
-        
         // Caso especial para usuários root
         if ($host === 'contasadmin.sei.pe.gov.br') {
             return 'admin';
@@ -46,15 +42,13 @@ class AuthController extends Controller
         ]);
 
         $host = $request->getHost();
-        // Remover porta se presente para comparações
-        $cleanHost = preg_replace('/:\d+$/', '', $host);
         $ou = $this->extractOuFromHost($host);
         if (!$ou) {
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
 
         // Buscar usuário - lógica diferente para root vs outros usuários
-        if ($cleanHost === 'contasadmin.sei.pe.gov.br') {
+        if ($host === 'contasadmin.sei.pe.gov.br') {
             // Para usuários root: buscar apenas pelo uid (estão na raiz do LDAP)
             $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
         } else {
@@ -65,7 +59,7 @@ class AuthController extends Controller
         }
 
         if (!$user) {
-            if ($cleanHost === 'contasadmin.sei.pe.gov.br') {
+            if ($host === 'contasadmin.sei.pe.gov.br') {
                 return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');
             } else {
                 return back()->withErrors(['uid' => 'Usuário não encontrado para esta OU.'])->onlyInput('uid');
@@ -87,7 +81,7 @@ class AuthController extends Controller
 
         // Permissão root (mantém regra antiga)
         if ($role === 'root') {
-            if ($cleanHost !== 'contasadmin.sei.pe.gov.br') {
+            if ($host !== 'contasadmin.sei.pe.gov.br') {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
@@ -126,9 +120,8 @@ class AuthController extends Controller
 
         if ($role === RoleResolver::ROLE_ROOT) {
             $host = $request->getHost();
-            $cleanHost = preg_replace('/:\d+$/', '', $host);
             
-            if ($cleanHost !== 'contasadmin.sei.pe.gov.br') {
+            if ($host !== 'contasadmin.sei.pe.gov.br') {
                 if ($request->expectsJson()) {
                     abort(403, 'Usuários root só podem acessar via contasadmin.sei.pe.gov.br');
                 }
