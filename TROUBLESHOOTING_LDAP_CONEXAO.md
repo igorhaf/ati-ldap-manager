@@ -436,24 +436,25 @@ sudo ./vendor/bin/sail artisan test:naming-violation alberto.viegas
 
 **Causa:** Campo de input/display para OU estava sendo exibido nos modais.
 
-**Solução:** Removido completamente, mantido apenas dropdown de papel:
+**Solução:** Removido completamente, mantido dropdown com padrão do formulário:
 
 ```html
 <!-- ❌ ANTES: Campo de input/display -->
 <input type="text" v-model="adminOu" readonly>
 <div class="bg-blue-50">@{{ adminOu }}</div>
 
-<!-- ✅ DEPOIS: Apenas dropdown -->
-<select v-model="editUserRole">
+<!-- ✅ DEPOIS: Dropdown com label padrão -->
+<label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua OU</label>
+<select v-model="editUserRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
     <option value="user">Usuário Comum</option>
     <option value="admin">Administrador</option>
 </select>
 ```
 
 **Benefícios:**
-- ✅ **Simplicidade**: Interface limpa sem campos desnecessários
+- ✅ **Consistência**: Mesmo padrão visual dos outros campos
 - ✅ **Segurança**: Impossível editar OU via interface
-- ✅ **Consistência**: Mesmo comportamento entre criação e edição
+- ✅ **Profissionalismo**: Interface limpa e uniforme
 
 **Teste:**
 ```bash

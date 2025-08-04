@@ -70,8 +70,8 @@ class TestOuFieldRemoval extends Command
             $this->line("Interface para Admin OU:");
             $this->line("  - Campo de texto da OU: ❌ REMOVIDO");
             $this->line("  - Display visual da OU: ❌ REMOVIDO");
-            $this->line("  - Dropdown de papel: ✅ MANTIDO");
-            $this->line("  - Texto explicativo: ✅ MANTIDO");
+            $this->line("  - Dropdown de papel: ✅ MANTIDO (padrão do formulário)");
+            $this->line("  - Label padrão: ✅ MANTIDO");
 
             // 5. Verificar se há campos de input para OU
             $this->info("\n5️⃣ Verificando campos de input para OU...");
@@ -86,17 +86,17 @@ class TestOuFieldRemoval extends Command
             $this->line("Para Admin OU criando novo usuário:");
             $this->line("  - OU será automaticamente: {$ou}");
             $this->line("  - Papel será definido pelo dropdown");
-            $this->line("  - Apenas dropdown de papel visível");
+            $this->line("  - Dropdown de papel com label padrão visível");
 
             // 7. Teste de edição de usuário
             $this->info("\n7️⃣ Simulando edição de usuário...");
             $this->line("Para Admin OU editando usuário:");
             $this->line("  - OU será automaticamente: {$ou}");
             $this->line("  - Papel pode ser alterado via dropdown");
-            $this->line("  - Apenas dropdown de papel visível");
+            $this->line("  - Dropdown de papel com label padrão visível");
 
             $this->info("\n✅ Teste concluído com sucesso!");
-            $this->line("O campo da OU foi completamente removido, mantendo apenas o dropdown de papel.");
+            $this->line("O campo da OU foi completamente removido, mantendo apenas o dropdown de papel com label padrão.");
 
         } catch (\Exception $e) {
             $this->error("❌ Erro durante teste: " . $e->getMessage());
