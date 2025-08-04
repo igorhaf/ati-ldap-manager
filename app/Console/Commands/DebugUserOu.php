@@ -46,21 +46,36 @@ class DebugUserOu extends Command
                 return;
             }
             
-            $this->info("✅ Usuário encontrado: {$user->getCommonName()}");
+            // Obter nome comum de forma segura
+            $cn = $user->getFirstAttribute('cn') ?: $user->getFirstAttribute('displayName') ?: 'N/A';
+            $this->info("✅ Usuário encontrado: {$cn}");
+            
+            // Debug de todos os atributos básicos
+            $this->line("📋 Atributos básicos:");
+            $this->line("   - DN: " . $user->getDn());
+            $this->line("   - UID: " . ($user->getFirstAttribute('uid') ?: 'N/A'));
+            $this->line("   - CN: " . $cn);
+            $this->line("   - Mail: " . ($user->getFirstAttribute('mail') ?: 'N/A'));
 
             // 2. Verificar OUs
             $this->info("\n2️⃣ Verificando OUs do usuário...");
             $ous = $user->getFirstAttribute('ou');
-            if (is_array($ous)) {
-                $this->line("📍 OUs (array): " . implode(', ', $ous));
+            if ($ous) {
+                if (is_array($ous)) {
+                    $this->line("📍 OUs (array): " . implode(', ', $ous));
+                } else {
+                    $this->line("📍 OU (string): {$ous}");
+                }
             } else {
-                $this->line("📍 OU (string): {$ous}");
+                $this->warn("⚠️  Usuário não tem atributo 'ou'");
             }
 
             // 3. Verificar organizationalUnits (se existir)
             $orgUnits = $user->getAttribute('organizationalUnits');
             if ($orgUnits) {
                 $this->line("🏢 organizationalUnits: " . json_encode($orgUnits, JSON_PRETTY_PRINT));
+            } else {
+                $this->line("🏢 organizationalUnits: Não definido");
             }
 
             // 4. Verificar employeeType (papel)
@@ -70,6 +85,19 @@ class DebugUserOu extends Command
                     $this->line("👤 employeeType (array): " . implode(', ', $employeeType));
                 } else {
                     $this->line("👤 employeeType (string): {$employeeType}");
+                }
+            } else {
+                $this->warn("⚠️  Usuário não tem atributo 'employeeType'");
+            }
+            
+            // 4.1. Verificar todos os atributos disponíveis
+            $this->info("\n📋 Todos os atributos do usuário:");
+            $attributes = $user->getAttributes();
+            foreach ($attributes as $key => $value) {
+                if (is_array($value)) {
+                    $this->line("   - {$key}: [" . implode(', ', $value) . "]");
+                } else {
+                    $this->line("   - {$key}: {$value}");
                 }
             }
 
@@ -126,11 +154,11 @@ class DebugUserOu extends Command
                 $this->error("❌ Nenhuma OU encontrada!");
             }
 
-            // 8. Verificar autenticação mock
+            // 8. Verificar dados para autenticação
             $this->info("\n6️⃣ Verificando dados para autenticação...");
             $this->line("DN: " . $user->getDn());
-            $this->line("Mail: " . $user->getFirstAttribute('mail'));
-            $this->line("CN: " . $user->getCommonName());
+            $this->line("Mail: " . ($user->getFirstAttribute('mail') ?: 'N/A'));
+            $this->line("CN: " . ($user->getFirstAttribute('cn') ?: 'N/A'));
 
         } catch (\Exception $e) {
             $this->error("❌ Erro durante debug: " . $e->getMessage());

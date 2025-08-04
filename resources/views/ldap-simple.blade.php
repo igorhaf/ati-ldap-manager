@@ -22,7 +22,7 @@
     <script>
         window.USER_ROLE = "{{ $userRole ?? 'user' }}";
         window.USER_UID = "{{ auth()->user()->getFirstAttribute('uid') ?? '' }}";
-        window.USER_CN = "{{ auth()->user()->getCommonName() ?? '' }}";
+        window.USER_CN = "{{ auth()->user()->getFirstAttribute('cn') ?? '' }}";
         window.USER_MAIL = "{{ auth()->user()->getFirstAttribute('mail') ?? '' }}";
         
         // Debug do usuário autenticado
