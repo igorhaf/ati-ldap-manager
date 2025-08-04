@@ -844,12 +844,16 @@
                     },
                     
                     openEditUserModal(user) {
+                        console.log('🔍 Dados do usuário para edição:', user);
+                        
                         this.editUser.uid = user.uid;
                         this.editUser.givenName = user.givenName;
                         this.editUser.sn = user.sn;
                         this.editUser.employeeNumber = user.employeeNumber;
                         this.editUser.mail = user.mail;
                         this.editUser.userPassword = '';
+                        
+                        console.log('📝 editUser após carregamento:', this.editUser);
                         
                         // Garantir que organizationalUnits seja um array de objetos
                         if (Array.isArray(user.organizationalUnits)) {

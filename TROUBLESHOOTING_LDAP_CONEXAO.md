@@ -463,7 +463,34 @@ sudo ./vendor/bin/sail artisan test:ou-field-removal alberto.viegas
 
 **Documentação completa:** `CORRECAO_CAMPO_OU_REMOVIDO.md`
 
-### **14. Problemas de Certificado SSL**
+### **14. Campo de Matrícula Não Exibido na Edição**
+```bash
+❌ Campo de matrícula aparece vazio na edição de usuário
+```
+
+**Causa:** Atributo `employeeNumber` pode não estar sendo retornado pelo LDAP ou não carregado no frontend.
+
+**Solução:** Logs de debug adicionados e comando de teste criado:
+
+```javascript
+// ✅ Logs adicionados no frontend
+console.log('🔍 Dados do usuário para edição:', user);
+console.log('📝 editUser após carregamento:', this.editUser);
+```
+
+**Teste:**
+```bash
+sudo ./vendor/bin/sail artisan test:employee-number renata.strobel
+```
+
+**Possíveis causas:**
+- ❌ Atributo `employeeNumber` não existe no LDAP
+- ❌ Usuário foi criado sem matrícula
+- ❌ Problema no carregamento do frontend
+
+**Documentação completa:** `CORRECAO_MATRICULA_NAO_EXIBIDA.md`
+
+### **15. Problemas de Certificado SSL**
 ```bash
 ❌ Falha na conexão SSL/TLS
 ```
