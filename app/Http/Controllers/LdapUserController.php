@@ -527,7 +527,7 @@ class LdapUserController extends Controller
                     $entry->setFirstAttribute('cn', trim(($request->get('givenName', $users->first()->getFirstAttribute('givenName'))) . ' ' . ($request->get('sn', $users->first()->getFirstAttribute('sn')))));
                     $entry->setFirstAttribute('mail', $request->get('mail', $users->first()->getFirstAttribute('mail')));
                     $entry->setFirstAttribute('employeeNumber', $request->get('employeeNumber', $users->first()->getFirstAttribute('employeeNumber')));
-                    if ($request->has('userPassword')) {
+                    if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $entry->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     } else {
                         $entry->setFirstAttribute('userPassword', $users->first()->getFirstAttribute('userPassword'));
