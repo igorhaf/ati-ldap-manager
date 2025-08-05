@@ -354,7 +354,45 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                                <input v-model="newUser.employeeNumber" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <div class="relative">
+                                    <input 
+                                        v-model="newUser.employeeNumber" 
+                                        @input="validateCpfUnique(newUser.employeeNumber, 'newUser')"
+                                        @blur="validateCpfUnique(newUser.employeeNumber, 'newUser')"
+                                        type="text" 
+                                        required 
+                                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        :class="{
+                                            'border-gray-300': cpfValidation.newUser.isValid && !cpfValidation.newUser.isChecking,
+                                            'border-red-500': !cpfValidation.newUser.isValid,
+                                            'border-yellow-400': cpfValidation.newUser.isChecking
+                                        }"
+                                        placeholder="Digite o CPF"
+                                    />
+                                    <!-- Spinner de loading -->
+                                    <div v-if="cpfValidation.newUser.isChecking" class="absolute right-3 top-2.5">
+                                        <svg class="animate-spin h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </div>
+                                    <!-- Ícone de sucesso -->
+                                    <div v-else-if="cpfValidation.newUser.isValid && newUser.employeeNumber" class="absolute right-3 top-2.5">
+                                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                    <!-- Ícone de erro -->
+                                    <div v-else-if="!cpfValidation.newUser.isValid" class="absolute right-3 top-2.5">
+                                        <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <!-- Mensagem de erro -->
+                                <div v-if="!cpfValidation.newUser.isValid && cpfValidation.newUser.errorMessage" class="mt-1 text-sm text-red-600">
+                                    @{{ cpfValidation.newUser.errorMessage }}
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
@@ -489,7 +527,49 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">CPF @{{ isRoot ? '' : '(não editável)' }}</label>
-                                <input type="text" v-model="editUser.employeeNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot ? '' : 'bg-gray-100'" :disabled="!isRoot" />
+                                <div class="relative">
+                                    <input 
+                                        type="text" 
+                                        v-model="editUser.employeeNumber" 
+                                        @input="isRoot ? validateCpfUnique(editUser.employeeNumber, 'editUser', editUser.uid) : null"
+                                        @blur="isRoot ? validateCpfUnique(editUser.employeeNumber, 'editUser', editUser.uid) : null"
+                                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                        :class="{
+                                            'bg-gray-100': !isRoot,
+                                            'border-gray-300': (cpfValidation.editUser.isValid && !cpfValidation.editUser.isChecking) || !isRoot,
+                                            'border-red-500': !cpfValidation.editUser.isValid && isRoot,
+                                            'border-yellow-400': cpfValidation.editUser.isChecking && isRoot
+                                        }"
+                                        :disabled="!isRoot" 
+                                        placeholder="Digite o CPF"
+                                    />
+                                    <!-- Indicadores apenas para ROOT -->
+                                    <template v-if="isRoot">
+                                        <!-- Spinner de loading -->
+                                        <div v-if="cpfValidation.editUser.isChecking" class="absolute right-3 top-2.5">
+                                            <svg class="animate-spin h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </div>
+                                        <!-- Ícone de sucesso -->
+                                        <div v-else-if="cpfValidation.editUser.isValid && editUser.employeeNumber" class="absolute right-3 top-2.5">
+                                            <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        </div>
+                                        <!-- Ícone de erro -->
+                                        <div v-else-if="!cpfValidation.editUser.isValid" class="absolute right-3 top-2.5">
+                                            <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </div>
+                                    </template>
+                                </div>
+                                <!-- Mensagem de erro apenas para ROOT -->
+                                <div v-if="isRoot && !cpfValidation.editUser.isValid && cpfValidation.editUser.errorMessage" class="mt-1 text-sm text-red-600">
+                                    @{{ cpfValidation.editUser.errorMessage }}
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
@@ -671,7 +751,21 @@
                         showDeleteUserModal: false,
                         userToDelete: null,
                         showEditOuModal: false,
-                        editOuData: { ou: '', description: '', dn: '' }
+                        editOuData: { ou: '', description: '', dn: '' },
+                        // Validação de CPF
+                        cpfValidation: {
+                            newUser: { 
+                                isChecking: false, 
+                                isValid: true, 
+                                errorMessage: '' 
+                            },
+                            editUser: { 
+                                isChecking: false, 
+                                isValid: true, 
+                                errorMessage: '' 
+                            }
+                        },
+                        cpfValidationTimeout: null
                     }
                 },
                 computed: {
@@ -871,11 +965,26 @@
                                 (typeof adminOuEntry === 'string' ? 'user' : adminOuEntry.role) : 'user';
                         }
                         
+                        // Resetar validação de CPF
+                        this.resetCpfValidation('editUser');
+                        
                         this.showEditUserModal = true;
                     },
                     
                     async updateUser() {
                         try {
+                            // Verificar se CPF é válido antes de enviar (apenas para ROOT que pode editar CPF)
+                            if (this.isRoot && !this.cpfValidation.editUser.isValid) {
+                                this.showNotification('Corrija os erros de validação antes de continuar', 'error');
+                                return;
+                            }
+
+                            // Se ainda está validando CPF, aguardar (apenas para ROOT)
+                            if (this.isRoot && this.cpfValidation.editUser.isChecking) {
+                                this.showNotification('Aguarde a validação do CPF...', 'warning');
+                                return;
+                            }
+
                             // Preparar dados baseado no tipo de usuário
                             let userData = { ...this.editUser };
                             
@@ -907,6 +1016,18 @@
                     
                     async createUser() {
                         try {
+                            // Verificar se CPF é válido antes de enviar
+                            if (!this.cpfValidation.newUser.isValid) {
+                                this.showNotification('Corrija os erros de validação antes de continuar', 'error');
+                                return;
+                            }
+
+                            // Se ainda está validando, aguardar
+                            if (this.cpfValidation.newUser.isChecking) {
+                                this.showNotification('Aguarde a validação do CPF...', 'warning');
+                                return;
+                            }
+
                             // Preparar dados baseado no tipo de usuário
                             let userData = { ...this.newUser };
                             
@@ -1011,6 +1132,7 @@
                     
                     openCreateUserModal() {
                         this.resetNewUser();
+                        this.resetCpfValidation('newUser');
                         
                         // Para admin de OU, verificar se adminOu está preenchida
                         if (this.isOuAdmin) {
@@ -1057,6 +1179,9 @@
                         if (this.isOuAdmin) {
                             this.newUserRole = 'user';
                         }
+                        
+                        // Resetar validação de CPF
+                        this.resetCpfValidation('newUser');
                     },
                     
                     resetNewOu() {
@@ -1334,6 +1459,89 @@
                             this.showNotification('Erro ao carregar logs', 'error');
                         }
                     },
+
+                    /**
+                     * Valida se um CPF é único no sistema
+                     */
+                    async validateCpfUnique(cpf, context, excludeUid = null) {
+                        // Limpar validação anterior
+                        this.cpfValidation[context].isChecking = true;
+                        this.cpfValidation[context].isValid = true;
+                        this.cpfValidation[context].errorMessage = '';
+
+                        // Se CPF está vazio, não validar
+                        if (!cpf || cpf.trim() === '') {
+                            this.cpfValidation[context].isChecking = false;
+                            return;
+                        }
+
+                        try {
+                            // Usar debounce para evitar muitas requisições
+                            clearTimeout(this.cpfValidationTimeout);
+                            this.cpfValidationTimeout = setTimeout(async () => {
+                                try {
+                                    // Verificar localmente primeiro (mais rápido)
+                                    const localConflict = this.users.find(user => {
+                                        return user.employeeNumber === cpf && 
+                                               (!excludeUid || user.uid !== excludeUid);
+                                    });
+
+                                    if (localConflict) {
+                                        this.cpfValidation[context].isValid = false;
+                                        this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${localConflict.fullName} (${localConflict.uid})`;
+                                        this.cpfValidation[context].isChecking = false;
+                                        return;
+                                    }
+
+                                    // Se não encontrou localmente, fazer verificação via API
+                                    const response = await fetch('/api/ldap/users', {
+                                        method: 'GET',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                        }
+                                    });
+
+                                    if (response.ok) {
+                                        const data = await response.json();
+                                        if (data.success) {
+                                            const conflict = data.data.find(user => {
+                                                return user.employeeNumber === cpf && 
+                                                       (!excludeUid || user.uid !== excludeUid);
+                                            });
+
+                                            if (conflict) {
+                                                this.cpfValidation[context].isValid = false;
+                                                this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${conflict.fullName} (${conflict.uid})`;
+                                            }
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.warn('Erro na validação de CPF:', error);
+                                    // Em caso de erro, não bloquear o usuário
+                                } finally {
+                                    this.cpfValidation[context].isChecking = false;
+                                }
+                            }, 500); // Delay de 500ms para debounce
+
+                        } catch (error) {
+                            console.warn('Erro na validação de CPF:', error);
+                            this.cpfValidation[context].isChecking = false;
+                        }
+                    },
+
+                    /**
+                     * Reseta validação de CPF
+                     */
+                    resetCpfValidation(context) {
+                        this.cpfValidation[context].isChecking = false;
+                        this.cpfValidation[context].isValid = true;
+                        this.cpfValidation[context].errorMessage = '';
+                        if (this.cpfValidationTimeout) {
+                            clearTimeout(this.cpfValidationTimeout);
+                        }
+                    },
+
                     pageNumbers(total) {
                         const current = this.activeTab === 'users' ? this.usersPage : (this.activeTab === 'organizational-units' ? this.ousPage : this.logsPage);
                         const delta = 2;

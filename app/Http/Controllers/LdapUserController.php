@@ -26,6 +26,36 @@ class LdapUserController extends Controller
     }
 
     /**
+     * Verifica se um CPF já está em uso no sistema, excluindo opcionalmente um usuário específico
+     */
+    private function isCpfAlreadyUsed(string $cpf, ?string $excludeUid = null): array
+    {
+        $existingUsers = LdapUserModel::where('employeeNumber', $cpf)->get();
+        
+        if ($excludeUid) {
+            // Filtrar para excluir o usuário que está sendo editado
+            $existingUsers = $existingUsers->reject(function($user) use ($excludeUid) {
+                return $user->getFirstAttribute('uid') === $excludeUid;
+            });
+        }
+        
+        if ($existingUsers->isEmpty()) {
+            return ['exists' => false, 'user' => null];
+        }
+        
+        $conflictUser = $existingUsers->first();
+        $conflictOus = $existingUsers->map(fn($u) => $this->extractOu($u))->filter()->unique()->values();
+        
+        return [
+            'exists' => true,
+            'user' => $conflictUser,
+            'uid' => $conflictUser->getFirstAttribute('uid'),
+            'name' => trim(($conflictUser->getFirstAttribute('givenName') ?? '') . ' ' . ($conflictUser->getFirstAttribute('sn') ?? '')),
+            'ous' => $conflictOus->toArray()
+        ];
+    }
+
+    /**
      * Safely get an attribute that might not be supported by the LDAP schema
      */
     private function safeGetAttribute($user, $attribute)
@@ -235,12 +265,17 @@ class LdapUserController extends Controller
                 }
             }
 
-            // Verificar se o CPF já existe
-            $existingEmployee = LdapUserModel::where('employeeNumber', $request->employeeNumber)->first();
-            if ($existingEmployee) {
+            // Verificar se o CPF já está em uso no sistema
+            $cpfCheck = $this->isCpfAlreadyUsed($request->employeeNumber);
+            if ($cpfCheck['exists']) {
+                $conflictUser = $cpfCheck['user'];
+                $conflictName = $cpfCheck['name'];
+                $conflictUid = $cpfCheck['uid'];
+                $conflictOus = implode(', ', $cpfCheck['ous']);
+                
                 return response()->json([
                     'success' => false,
-                    'message' => 'CPF já cadastrado'
+                    'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}"
                 ], 422);
             }
 
@@ -382,11 +417,27 @@ class LdapUserController extends Controller
                 'givenName' => 'sometimes|required|string|max:255',
                 'sn' => 'sometimes|required|string|max:255',
                 'mail' => 'sometimes|required|email',
+                'employeeNumber' => 'sometimes|required|string|max:255',
                 'userPassword' => 'sometimes|nullable|string|min:6',
                 'organizationalUnits' => 'sometimes|array',
                 // aceitar string ou objeto {ou, role}
                 'organizationalUnits.*' => 'required',
             ]);
+
+            // Verificar se o CPF já está em uso por outro usuário (se CPF foi fornecido)
+            if ($request->has('employeeNumber')) {
+                $cpfCheck = $this->isCpfAlreadyUsed($request->employeeNumber, $uid);
+                if ($cpfCheck['exists']) {
+                    $conflictName = $cpfCheck['name'];
+                    $conflictUid = $cpfCheck['uid'];
+                    $conflictOus = implode(', ', $cpfCheck['ous']);
+                    
+                    return response()->json([
+                        'success' => false,
+                        'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}"
+                    ], 422);
+                }
+            }
 
             $users = LdapUserModel::where('uid', $uid)->get();
             $role = RoleResolver::resolve(auth()->user());
@@ -453,6 +504,7 @@ class LdapUserController extends Controller
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
+                    if ($request->has('employeeNumber')) $user->setFirstAttribute('employeeNumber', $request->employeeNumber);
                     
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
@@ -474,7 +526,7 @@ class LdapUserController extends Controller
                     $entry->setFirstAttribute('sn', $request->get('sn', $users->first()->getFirstAttribute('sn')));
                     $entry->setFirstAttribute('cn', trim(($request->get('givenName', $users->first()->getFirstAttribute('givenName'))) . ' ' . ($request->get('sn', $users->first()->getFirstAttribute('sn')))));
                     $entry->setFirstAttribute('mail', $request->get('mail', $users->first()->getFirstAttribute('mail')));
-                    $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
+                    $entry->setFirstAttribute('employeeNumber', $request->get('employeeNumber', $users->first()->getFirstAttribute('employeeNumber')));
                     if ($request->has('userPassword')) {
                         $entry->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     } else {
@@ -499,6 +551,7 @@ class LdapUserController extends Controller
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
+                    if ($request->has('employeeNumber')) $user->setFirstAttribute('employeeNumber', $request->employeeNumber);
                     
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
