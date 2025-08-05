@@ -528,8 +528,8 @@
                         </div>
                     </div>
                     <div>
-                                                        <label class="block text-sm font-medium text-gray-700">CPF (não editável)</label>
-                        <input type="text" v-model="editUserData.employeeNumber" class="mt-1 block w-full border rounded px-3 py-2 bg-gray-100" disabled />
+                                                        <label class="block text-sm font-medium text-gray-700">CPF @{{ userRole === 'root' ? '' : '(não editável)' }}</label>
+                        <input type="text" v-model="editUserData.employeeNumber" class="mt-1 block w-full border rounded px-3 py-2" :class="userRole === 'root' ? '' : 'bg-gray-100'" :disabled="userRole !== 'root'" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">E-mails</label>
