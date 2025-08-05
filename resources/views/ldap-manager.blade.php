@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEI LDAP Admin</title>
+    <title>SEI Contas Admin</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Vue.js com compilação de template -->
@@ -16,7 +16,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center py-6">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">SEI LDAP Admin</h1>
+                        <h1 class="text-3xl font-bold text-gray-900">SEI Contas Admin</h1>
                         <p class="text-gray-600">Gerenciamento de Usuários e Unidades Organizacionais</p>
                     </div>
                     <div class="flex space-x-3">
