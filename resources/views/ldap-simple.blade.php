@@ -1461,7 +1461,7 @@
                     },
 
                     /**
-                     * Valida se um CPF é único nas OUs relevantes
+                     * Valida se um CPF é único no sistema
                      */
                     async validateCpfUnique(cpf, context, excludeUid = null) {
                         // Limpar validação anterior
@@ -1480,56 +1480,15 @@
                             clearTimeout(this.cpfValidationTimeout);
                             this.cpfValidationTimeout = setTimeout(async () => {
                                 try {
-                                    // Determinar as OUs relevantes para validação
-                                    let targetOus = [];
-                                    
-                                    if (context === 'newUser') {
-                                        // Para novo usuário, usar as OUs selecionadas
-                                        if (this.isRoot) {
-                                            targetOus = this.newUser.organizationalUnits
-                                                .filter(unit => unit.ou && unit.ou.trim() !== '')
-                                                .map(unit => unit.ou.toLowerCase());
-                                        } else if (this.isOuAdmin) {
-                                            targetOus = [this.adminOu.toLowerCase()];
-                                        }
-                                    } else if (context === 'editUser') {
-                                        // Para edição, usar as OUs do usuário sendo editado
-                                        if (this.isRoot) {
-                                            targetOus = this.editUser.organizationalUnits
-                                                .filter(unit => unit.ou && unit.ou.trim() !== '')
-                                                .map(unit => unit.ou.toLowerCase());
-                                        } else if (this.isOuAdmin) {
-                                            targetOus = [this.adminOu.toLowerCase()];
-                                        }
-                                    }
-
-                                    if (targetOus.length === 0) {
-                                        this.cpfValidation[context].isChecking = false;
-                                        return;
-                                    }
-
                                     // Verificar localmente primeiro (mais rápido)
-                                    const localConflicts = this.users.filter(user => {
-                                        if (user.employeeNumber !== cpf) return false;
-                                        if (excludeUid && user.uid === excludeUid) return false;
-                                        
-                                        // Verificar se o usuário está em alguma das OUs relevantes
-                                        const userOus = (user.organizationalUnits || [])
-                                            .map(unit => typeof unit === 'object' ? unit.ou : unit)
-                                            .filter(ou => ou)
-                                            .map(ou => ou.toLowerCase());
-                                        
-                                        return targetOus.some(targetOu => userOus.includes(targetOu));
+                                    const localConflict = this.users.find(user => {
+                                        return user.employeeNumber === cpf && 
+                                               (!excludeUid || user.uid !== excludeUid);
                                     });
 
-                                    if (localConflicts.length > 0) {
-                                        const conflict = localConflicts[0];
-                                        const conflictOus = (conflict.organizationalUnits || [])
-                                            .map(unit => typeof unit === 'object' ? unit.ou : unit)
-                                            .filter(ou => ou && targetOus.includes(ou.toLowerCase()));
-                                        
+                                    if (localConflict) {
                                         this.cpfValidation[context].isValid = false;
-                                        this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${conflict.fullName} (${conflict.uid}) na OU: ${conflictOus.join(', ')}`;
+                                        this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${localConflict.fullName} (${localConflict.uid})`;
                                         this.cpfValidation[context].isChecking = false;
                                         return;
                                     }
@@ -1546,27 +1505,14 @@
                                     if (response.ok) {
                                         const data = await response.json();
                                         if (data.success) {
-                                            const conflicts = data.data.filter(user => {
-                                                if (user.employeeNumber !== cpf) return false;
-                                                if (excludeUid && user.uid === excludeUid) return false;
-                                                
-                                                // Verificar se o usuário está em alguma das OUs relevantes
-                                                const userOus = (user.organizationalUnits || [])
-                                                    .map(unit => typeof unit === 'object' ? unit.ou : unit)
-                                                    .filter(ou => ou)
-                                                    .map(ou => ou.toLowerCase());
-                                                
-                                                return targetOus.some(targetOu => userOus.includes(targetOu));
+                                            const conflict = data.data.find(user => {
+                                                return user.employeeNumber === cpf && 
+                                                       (!excludeUid || user.uid !== excludeUid);
                                             });
 
-                                            if (conflicts.length > 0) {
-                                                const conflict = conflicts[0];
-                                                const conflictOus = (conflict.organizationalUnits || [])
-                                                    .map(unit => typeof unit === 'object' ? unit.ou : unit)
-                                                    .filter(ou => ou && targetOus.includes(ou.toLowerCase()));
-                                                
+                                            if (conflict) {
                                                 this.cpfValidation[context].isValid = false;
-                                                this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${conflict.fullName} (${conflict.uid}) na OU: ${conflictOus.join(', ')}`;
+                                                this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${conflict.fullName} (${conflict.uid})`;
                                             }
                                         }
                                     }

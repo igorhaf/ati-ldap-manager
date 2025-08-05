@@ -1,17 +1,16 @@
-# Validação de CPF Único por OU
+# Validação de CPF Único no Sistema
 
 ## ✅ **Funcionalidade Implementada**
 
-O sistema agora garante que o `employeeNumber` (CPF) seja **único por OU**, impedindo que usuários diferentes tenham o mesmo CPF na mesma OU, mas permitindo que o mesmo usuário tenha o mesmo CPF em múltiplas OUs.
+O sistema agora garante que o `employeeNumber` (CPF) seja **único em todo o sistema**, impedindo a criação ou edição de usuários com CPF duplicado, mesmo que estejam em OUs diferentes.
 
 ## 🎯 **Características da Implementação**
 
 ### **✅ Validação Abrangente**
-- **Backend**: Validação robusta por OU na API
+- **Backend**: Validação robusta na API
 - **Frontend**: Validação em tempo real com feedback visual
-- **Criação**: Impede criação de usuários diferentes com CPF duplicado na mesma OU
-- **Edição**: Impede edição que resulte em CPF duplicado na mesma OU
-- **Mesmo Usuário**: Permite mesmo usuário com mesmo CPF em múltiplas OUs
+- **Criação**: Impede criação de usuários com CPF duplicado
+- **Edição**: Impede edição que resulte em CPF duplicado
 - **Exclusão Inteligente**: Durante edição, exclui o próprio usuário da verificação
 
 ### **✅ Experiência do Usuário**
@@ -258,67 +257,50 @@ async validateCpfUnique(cpf, context, excludeUid = null) {
 
 ### **2. Teste via Comando Artisan**
 ```bash
-# Testar CPF disponível em uma OU
-php artisan test:cpf-unique-validation 12345678901 moreno
+# Testar CPF disponível
+php artisan test:cpf-unique-validation 12345678901
 
-# Testar CPF em uso em uma OU específica
-php artisan test:cpf-unique-validation 98765432100 moreno
+# Testar CPF em uso
+php artisan test:cpf-unique-validation 98765432100
 
 # Testar edição (excluindo usuário atual)
-php artisan test:cpf-unique-validation 98765432100 moreno --exclude-uid=joao.silva
+php artisan test:cpf-unique-validation 98765432100 --exclude-uid=joao.silva
 ```
 
 ### **3. Saída Esperada do Comando**
 ```
-🧪 Teste de Validação de CPF Único por OU
-=========================================
-CPF: 04818521400
-OU: moreno
+🧪 Teste de Validação de CPF Único
+=====================================
+CPF: 12345678901
 
-1️⃣ Buscando usuários com este CPF em todas as OUs...
-⚠️  Encontrados 3 usuário(s) com este CPF em todas as OUs:
+1️⃣ Buscando usuários com este CPF...
+⚠️  Encontrados 2 usuário(s) com este CPF:
 
    👤 Usuário 1:
       UID: joao.silva
       Nome: João Silva
-      OU: moreno
-      DN: uid=joao.silva,ou=moreno,dc=example,dc=com
+      OU: TI
+      DN: uid=joao.silva,ou=TI,dc=example,dc=com
 
    👤 Usuário 2:
       UID: joao.silva
       Nome: João Silva
-      OU: recife
-      DN: uid=joao.silva,ou=recife,dc=example,dc=com
+      OU: RH
+      DN: uid=joao.silva,ou=RH,dc=example,dc=com
 
-   👤 Usuário 3:
-      UID: maria.santos
-      Nome: Maria Santos
-      OU: moreno
-      DN: uid=maria.santos,ou=moreno,dc=example,dc=com
-
-2️⃣ Filtrando usuários na OU especificada...
-⚠️  Encontrados 2 usuário(s) com este CPF na OU 'moreno':
-   - João Silva (UID: joao.silva)
-   - Maria Santos (UID: maria.santos)
-
-❌ CPF já está em uso na OU 'moreno'
+❌ CPF já está em uso
 ❌ Criação seria bloqueada
 
-4️⃣ Análise de outras OUs:
-✅ CPF também existe em outras OUs (isso é permitido):
-   - João Silva (UID: joao.silva) na OU: recife
-
-5️⃣ Mensagem de erro que seria exibida:
-📝 "CPF 04818521400 já está cadastrado para o usuário 'João Silva' (UID: joao.silva) na(s) OU(s): moreno. Não é possível ter usuários diferentes com o mesmo CPF na mesma OU."
+4️⃣ Mensagem de erro que seria exibida:
+📝 "CPF 12345678901 já está cadastrado para o usuário 'João Silva' (UID: joao.silva) na(s) OU(s): TI, RH"
 ```
 
 ## 📊 **Benefícios da Implementação**
 
 ### **✅ Integridade de Dados**
-- Impede usuários diferentes com CPF duplicado na mesma OU
-- Permite mesmo usuário em múltiplas OUs com mesmo CPF
-- Mantém consistência dentro de cada OU
-- Evita problemas de identificação por OU
+- Impede CPFs duplicados em qualquer OU
+- Mantém consistência no sistema
+- Evita problemas de identificação
 
 ### **✅ Experiência do Usuário**
 - Feedback imediato durante digitação
@@ -363,15 +345,11 @@ A validação de CPF único está **completamente implementada** e **funcionando
 - ✅ **Documentação**: Completa e detalhada
 
 ### **Resultado:**
-O sistema agora **garante unicidade de CPF por OU**, impedindo que usuários diferentes tenham o mesmo CPF na mesma OU, mas permitindo que o mesmo usuário tenha o mesmo CPF em múltiplas OUs, mantendo a integridade dos dados e oferecendo excelente experiência do usuário.
-
-### **✅ Exemplos de Comportamento:**
-- ✅ **Permitido**: `joao.silva` CPF `04818521400` na OU `moreno` + `joao.silva` CPF `04818521400` na OU `recife`
-- ❌ **Bloqueado**: `joao.silva` CPF `04818521400` na OU `moreno` + `maria.santos` CPF `04818521400` na OU `moreno`
+O sistema agora **garante unicidade absoluta** do CPF (employeeNumber) em todo o sistema LDAP, independente da OU, mantendo a integridade dos dados e oferecendo excelente experiência do usuário.
 
 ---
 
-**Status**: ✅ **Validação de CPF único por OU implementada**  
+**Status**: ✅ **Validação de CPF único implementada**  
 **Cobertura**: Backend + Frontend + Testes  
 **Experiência**: Validação em tempo real com feedback visual  
-**Comando de teste**: `php artisan test:cpf-unique-validation {cpf} {ou} {--exclude-uid=}` 
+**Comando de teste**: `php artisan test:cpf-unique-validation {cpf} {--exclude-uid=}` 

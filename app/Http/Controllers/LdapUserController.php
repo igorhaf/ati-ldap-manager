@@ -26,20 +26,14 @@ class LdapUserController extends Controller
     }
 
     /**
-     * Verifica se um CPF já está em uso na(s) OU(s) especificada(s), excluindo opcionalmente um usuário específico
+     * Verifica se um CPF já está em uso no sistema, excluindo opcionalmente um usuário específico
      */
-    private function isCpfAlreadyUsedInOus(string $cpf, array $ous, ?string $excludeUid = null): array
+    private function isCpfAlreadyUsed(string $cpf, ?string $excludeUid = null): array
     {
-        $allUsersWithCpf = LdapUserModel::where('employeeNumber', $cpf)->get();
-        
-        // Filtrar apenas usuários nas OUs especificadas
-        $existingUsers = $allUsersWithCpf->filter(function($user) use ($ous) {
-            $userOu = $this->extractOu($user);
-            return $userOu && in_array(strtolower($userOu), array_map('strtolower', $ous));
-        });
+        $existingUsers = LdapUserModel::where('employeeNumber', $cpf)->get();
         
         if ($excludeUid) {
-            // Filtrar para excluir o usuário que está sendo editado (mesmo UID)
+            // Filtrar para excluir o usuário que está sendo editado
             $existingUsers = $existingUsers->reject(function($user) use ($excludeUid) {
                 return $user->getFirstAttribute('uid') === $excludeUid;
             });
@@ -271,6 +265,20 @@ class LdapUserController extends Controller
                 }
             }
 
+            // Verificar se o CPF já está em uso no sistema
+            $cpfCheck = $this->isCpfAlreadyUsed($request->employeeNumber);
+            if ($cpfCheck['exists']) {
+                $conflictUser = $cpfCheck['user'];
+                $conflictName = $cpfCheck['name'];
+                $conflictUid = $cpfCheck['uid'];
+                $conflictOus = implode(', ', $cpfCheck['ous']);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}"
+                ], 422);
+            }
+
             $baseDn = config('ldap.connections.default.base_dn');
 
             $units = collect($request->organizationalUnits)->map(function ($item) {
@@ -280,20 +288,6 @@ class LdapUserController extends Controller
                 }
                 return $item;
             });
-
-            // Verificar se o CPF já está em uso nas OUs especificadas
-            $targetOus = $units->pluck('ou')->toArray();
-            $cpfCheck = $this->isCpfAlreadyUsedInOus($request->employeeNumber, $targetOus);
-            if ($cpfCheck['exists']) {
-                $conflictName = $cpfCheck['name'];
-                $conflictUid = $cpfCheck['uid'];
-                $conflictOus = implode(', ', $cpfCheck['ous']);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}. Não é possível ter usuários diferentes com o mesmo CPF na mesma OU."
-                ], 422);
-            }
 
             // Hash da senha uma única vez para reutilizar
             $hashedPassword = LdapUtils::hashSsha($request->userPassword);
@@ -430,38 +424,18 @@ class LdapUserController extends Controller
                 'organizationalUnits.*' => 'required',
             ]);
 
-            // Verificar se o CPF já está em uso por outro usuário nas OUs relevantes (se CPF foi fornecido)
+            // Verificar se o CPF já está em uso por outro usuário (se CPF foi fornecido)
             if ($request->has('employeeNumber')) {
-                // Determinar quais OUs verificar baseado no contexto
-                $targetOus = [];
-                
-                if ($request->has('organizationalUnits')) {
-                    // Se OUs foram especificadas na requisição, usar essas
-                    $units = collect($request->organizationalUnits)->map(function($i){
-                        if (is_string($i)) return ['ou'=>$i,'role'=>'user'];
-                        return [
-                            'ou' => $i['ou'],
-                            'role' => $i['role'] ?? 'user'
-                        ];
-                    });
-                    $targetOus = $units->pluck('ou')->toArray();
-                } else {
-                    // Se não foram especificadas OUs, usar as OUs atuais do usuário
-                    $targetOus = $users->map(fn($u) => $this->extractOu($u))->filter()->unique()->toArray();
-                }
-                
-                if (!empty($targetOus)) {
-                    $cpfCheck = $this->isCpfAlreadyUsedInOus($request->employeeNumber, $targetOus, $uid);
-                    if ($cpfCheck['exists']) {
-                        $conflictName = $cpfCheck['name'];
-                        $conflictUid = $cpfCheck['uid'];
-                        $conflictOus = implode(', ', $cpfCheck['ous']);
-                        
-                        return response()->json([
-                            'success' => false,
-                            'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}. Não é possível ter usuários diferentes com o mesmo CPF na mesma OU."
-                        ], 422);
-                    }
+                $cpfCheck = $this->isCpfAlreadyUsed($request->employeeNumber, $uid);
+                if ($cpfCheck['exists']) {
+                    $conflictName = $cpfCheck['name'];
+                    $conflictUid = $cpfCheck['uid'];
+                    $conflictOus = implode(', ', $cpfCheck['ous']);
+                    
+                    return response()->json([
+                        'success' => false,
+                        'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}"
+                    ], 422);
                 }
             }
 
