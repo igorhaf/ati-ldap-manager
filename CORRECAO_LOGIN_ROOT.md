@@ -2,7 +2,7 @@
 
 ## ✅ **Problema Identificado**
 
-Usuários root não conseguiam fazer login via `contasadmin.sei.pe.gov.br/login` e recebiam a mensagem **"URL inválida para login"**.
+Usuários root não conseguiam fazer login via `contas.sei.pe.gov.br/login` e recebiam a mensagem **"URL inválida para login"**.
 
 ## 🔍 **Causa do Problema**
 
@@ -15,10 +15,10 @@ preg_match('/contas\\.([a-z0-9-]+)\\.sei\\.pe\\.gov\\.br/i', $host, $matches)
 ### **Padrão Original:**
 - ✅ `contas.moreno.sei.pe.gov.br` → Extrai "moreno" ✅
 - ✅ `contas.ti.sei.pe.gov.br` → Extrai "ti" ✅
-- ❌ `contasadmin.sei.pe.gov.br` → **Falha** (não há subdomínio entre "contas" e "sei.pe.gov.br")
+- ❌ `contas.sei.pe.gov.br` → **Falha** (não há subdomínio entre "contas" e "sei.pe.gov.br")
 
 ### **Resultado:**
-- A função retornava `null` para `contasadmin.sei.pe.gov.br`
+- A função retornava `null` para `contas.sei.pe.gov.br`
 - O sistema considerava a URL inválida
 - Usuários root não conseguiam fazer login
 
@@ -30,7 +30,7 @@ preg_match('/contas\\.([a-z0-9-]+)\\.sei\\.pe\\.gov\\.br/i', $host, $matches)
 private function extractOuFromHost($host)
 {
     // Caso especial para usuários root
-    if ($host === 'contasadmin.sei.pe.gov.br') {
+            if ($host === 'contas.sei.pe.gov.br') {
         return 'admin';
     }
     
@@ -44,14 +44,14 @@ private function extractOuFromHost($host)
 ```
 
 ### **Comportamento Após Correção:**
-- ✅ `contasadmin.sei.pe.gov.br` → Extrai "admin" ✅
+- ✅ `contas.sei.pe.gov.br` → Extrai "admin" ✅
 - ✅ `contas.moreno.sei.pe.gov.br` → Extrai "moreno" ✅
 - ✅ `contas.ti.sei.pe.gov.br` → Extrai "ti" ✅
 
 ## 🎯 **Como Funciona Agora**
 
 ### **1. Login de Usuários Root:**
-1. Usuário acessa `contasadmin.sei.pe.gov.br/login`
+1. Usuário acessa `contas.sei.pe.gov.br/login`
 2. Sistema extrai OU como "admin"
 3. Busca usuário com `uid` e `ou=admin`
 4. Verifica se é usuário root
@@ -65,7 +65,7 @@ private function extractOuFromHost($host)
 5. Permite login se tiver permissões
 
 ### **3. Verificação de URL:**
-- **Usuários root**: Só podem acessar via `contasadmin.sei.pe.gov.br`
+- **Usuários root**: Só podem acessar via `contas.sei.pe.gov.br`
 - **Admins de OU**: Podem acessar via `contas.<sua-ou>.sei.pe.gov.br`
 - **Usuários comuns**: Podem acessar via qualquer URL da sua OU
 
@@ -89,14 +89,14 @@ private function extractOuFromHost($host)
 ## 📁 **Arquivo Modificado**
 
 - `app/Http/Controllers/AuthController.php`
-  - Função `extractOuFromHost()`: Adicionado caso especial para `contasadmin.sei.pe.gov.br`
+  - Função `extractOuFromHost()`: Adicionado caso especial para `contas.sei.pe.gov.br`
 
 ## 🧪 **Testando a Correção**
 
 ### **Cenários de Teste:**
 
 1. **Usuário Root via URL Correta:**
-   - URL: `contasadmin.sei.pe.gov.br/login`
+   - URL: `contas.sei.pe.gov.br/login`
    - Usuário: admin
    - Senha: [senha do admin]
    - **Resultado Esperado**: ✅ Login bem-sucedido
@@ -116,9 +116,9 @@ private function extractOuFromHost($host)
 ## ✅ **Status Final**
 
 - ✅ **Problema de login resolvido** para usuários root
-- ✅ **URL inválida** não aparece mais para `contasadmin.sei.pe.gov.br`
+- ✅ **URL inválida** não aparece mais para `contas.sei.pe.gov.br`
 - ✅ **Segurança mantida** com restrições de acesso
 - ✅ **Compatibilidade preservada** com URLs existentes
 - ✅ **Commit automático** realizado
 
-A correção está **completa e funcional**! Agora usuários root podem fazer login normalmente via `contasadmin.sei.pe.gov.br/login` sem receber a mensagem de "URL inválida". 🎉 
+A correção está **completa e funcional**! Agora usuários root podem fazer login normalmente via `contas.sei.pe.gov.br/login` sem receber a mensagem de "URL inválida". 🎉 

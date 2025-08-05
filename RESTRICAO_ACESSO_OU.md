@@ -108,7 +108,7 @@ if ($role !== RoleResolver::ROLE_ROOT) {
 ## 🎯 **Comportamento Final**
 
 ### **Para Usuários Root:**
-- Acessam `contasadmin.sei.pe.gov.br`
+- Acessam `contas.sei.pe.gov.br`
 - Veem todas as abas (Usuários, Unidades, Logs)
 - Podem gerenciar OUs e usuários de todas as OUs
 

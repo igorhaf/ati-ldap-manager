@@ -186,7 +186,7 @@ class AuthController extends Controller
     /**
      * Extrai a OU do subdomínio da URL
      * Exemplo: contas.moreno.sei.pe.gov.br => moreno
-     * Para contasadmin.sei.pe.gov.br => admin (usuário root)
+     * Para contas.sei.pe.gov.br => admin (usuário root)
      */
     private function extractOuFromHost($host)
     {
@@ -194,7 +194,7 @@ class AuthController extends Controller
         \Log::info('AuthController: Host recebido', ['host' => $host]);
         
         // Caso especial para usuários root
-        if ($host === 'contasadmin.sei.pe.gov.br') {
+        if ($host === 'contas.sei.pe.gov.br') {
             \Log::info('AuthController: Detectado usuário root');
             return 'admin';
         }
@@ -295,12 +295,12 @@ class AuthController extends Controller
         if ($role === RoleResolver::ROLE_ROOT) {
             $host = $this->getOriginalHost($request);
             
-            if ($host !== 'contasadmin.sei.pe.gov.br') {
+            if ($host !== 'contas.sei.pe.gov.br') {
                 if ($request->expectsJson()) {
-                    abort(403, 'Usuários root só podem acessar via contasadmin.sei.pe.gov.br');
+                    abort(403, 'Usuários root só podem acessar via contas.sei.pe.gov.br');
                 }
                 
-                abort(403, 'Usuários root só podem acessar via contasadmin.sei.pe.gov.br');
+                abort(403, 'Usuários root só podem acessar via contas.sei.pe.gov.br');
             }
         }
 

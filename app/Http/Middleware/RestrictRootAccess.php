@@ -29,10 +29,10 @@ class RestrictRootAccess
         if ($role === RoleResolver::ROLE_ROOT) {
             $host = $this->getOriginalHost($request);
             
-            // Permitir apenas acesso via contasadmin.sei.pe.gov.br
-            if ($host !== 'contasadmin.sei.pe.gov.br') {
+                    // Permitir apenas acesso via contas.sei.pe.gov.br
+        if ($host !== 'contas.sei.pe.gov.br') {
                 // Lançar exceção que será capturada pela página de erro 403
-                throw new AccessDeniedHttpException('Usuários root só podem acessar via contasadmin.sei.pe.gov.br');
+                throw new AccessDeniedHttpException('Usuários root só podem acessar via contas.sei.pe.gov.br');
             }
         }
 

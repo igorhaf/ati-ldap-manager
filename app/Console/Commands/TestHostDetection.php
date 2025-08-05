@@ -71,7 +71,7 @@ class TestHostDetection extends Command
         // Mostrar exemplos válidos
         $this->info("\n📝 Exemplos de URLs válidas:");
         $this->info("────────────────────────────");
-        $this->line("- https://contasadmin.sei.pe.gov.br (ROOT)");
+        $this->line("- https://contas.sei.pe.gov.br (ROOT)");
         $this->line("- https://contas.moreno.sei.pe.gov.br (OU: moreno)");
         $this->line("- https://contas.ti.sei.pe.gov.br (OU: ti)");
         $this->line("- https://contas.rh.sei.pe.gov.br (OU: rh)");
@@ -94,7 +94,7 @@ class TestHostDetection extends Command
     private function extractOuFromHost($host)
     {
         // Caso especial para usuários root
-        if ($host === 'contasadmin.sei.pe.gov.br') {
+        if ($host === 'contas.sei.pe.gov.br') {
             return 'admin';
         }
         

@@ -22,7 +22,7 @@ trait ChecksRootAccess
         if ($role === RoleResolver::ROLE_ROOT) {
             $host = $this->getOriginalHost($request);
             
-            if ($host !== 'contasadmin.sei.pe.gov.br') {
+            if ($host !== 'contas.sei.pe.gov.br') {
                 if ($request->expectsJson()) {
                     abort(403, 'O acesso a este usuário não pode ser feito por essa URL');
                 }

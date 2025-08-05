@@ -107,7 +107,7 @@ Implementado logging detalhado para troubleshooting:
 ```bash
 # Testar detecção de host
 php artisan test:host-detection https://contas.moreno.sei.pe.gov.br
-php artisan test:host-detection https://contasadmin.sei.pe.gov.br
+php artisan test:host-detection https://contas.sei.pe.gov.br
 ```
 
 ### **2. Debug da Estrutura LDAP**
@@ -123,7 +123,7 @@ php artisan debug:ldap-structure
 ```bash
 # Simular processo completo de login
 php artisan test:login-debug joao senha123 contas.ti.sei.pe.gov.br
-php artisan test:login-debug admin senharoot contasadmin.sei.pe.gov.br
+php artisan test:login-debug admin senharoot contas.sei.pe.gov.br
 ```
 
 ### **4. Verificar Logs em Produção**

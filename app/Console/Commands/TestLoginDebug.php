@@ -159,7 +159,7 @@ class TestLoginDebug extends Command
     private function extractOuFromHost($host)
     {
         // Caso especial para usuários root
-        if ($host === 'contasadmin.sei.pe.gov.br') {
+        if ($host === 'contas.sei.pe.gov.br') {
             return 'admin';
         }
         

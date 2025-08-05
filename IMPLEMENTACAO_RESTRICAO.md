@@ -19,7 +19,7 @@ O erro `Target class [restrict.root] does not exist` foi resolvido implementando
 ```php
 if ($role === RoleResolver::ROLE_ROOT) {
     $host = $request->getHost();
-    if ($host !== 'contasadmin.sei.pe.gov.br') {
+            if ($host !== 'contas.sei.pe.gov.br') {
         abort(403, 'O acesso a este usuário não pode ser feito por essa URL');
     }
 }
@@ -45,7 +45,7 @@ if ($role === RoleResolver::ROLE_ROOT) {
 ### **1. Durante o Login**
 - Usuário tenta fazer login
 - Sistema verifica se é root
-- Se for root e não estiver via `contasadmin.sei.pe.gov.br` → Login rejeitado
+- Se for root e não estiver via `contas.sei.pe.gov.br` → Login rejeitado
 
 ### **2. Após o Login**
 - Todas as requisições passam pela verificação
@@ -86,12 +86,12 @@ sail artisan test:root-access admin
 
 ### **Opcional - Tornar Configurável:**
 ```env
-ROOT_ACCESS_URL=contasadmin.sei.pe.gov.br
+ROOT_ACCESS_URL=contas.sei.pe.gov.br
 ```
 
 ### **Opcional - Adicionar Whitelist:**
 ```php
-$allowedHosts = ['contasadmin.sei.pe.gov.br', 'admin.sei.pe.gov.br'];
+$allowedHosts = ['contas.sei.pe.gov.br', 'admin.sei.pe.gov.br'];
 ```
 
 ## ✅ **Status Final**
@@ -103,4 +103,4 @@ $allowedHosts = ['contasadmin.sei.pe.gov.br', 'admin.sei.pe.gov.br'];
 - ✅ Comando de teste disponível
 - ✅ Mensagens de erro profissionais e genéricas
 
-A implementação está **completa e funcional**! Usuários root agora só conseguem acessar o sistema através de `contasadmin.sei.pe.gov.br` com mensagens de erro profissionais. 
+A implementação está **completa e funcional**! Usuários root agora só conseguem acessar o sistema através de `contas.sei.pe.gov.br` com mensagens de erro profissionais. 

@@ -10,7 +10,7 @@ O sistema estava tentando buscar usuários root com a restrição `ou=admin`, ma
 
 ### **Busca Original (Incorreta):**
 ```php
-// Para contasadmin.sei.pe.gov.br, extraía OU como "admin"
+// Para contas.sei.pe.gov.br, extraía OU como "admin"
 $ou = 'admin';
 
 // Buscava usuário com uid E ou=admin
@@ -30,7 +30,7 @@ $user = LdapUserModel::where('uid', $credentials['uid'])
 
 ```php
 // Buscar usuário - lógica diferente para root vs outros usuários
-if ($host === 'contasadmin.sei.pe.gov.br') {
+if ($host === 'contas.sei.pe.gov.br') {
     // Para usuários root: buscar apenas pelo uid (estão na raiz do LDAP)
     $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
 } else {
@@ -44,7 +44,7 @@ if ($host === 'contasadmin.sei.pe.gov.br') {
 ### **Mensagens de Erro Específicas:**
 ```php
 if (!$user) {
-    if ($host === 'contasadmin.sei.pe.gov.br') {
+    if ($host === 'contas.sei.pe.gov.br') {
         return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');
     } else {
         return back()->withErrors(['uid' => 'Usuário não encontrado para esta OU.'])->onlyInput('uid');
@@ -55,7 +55,7 @@ if (!$user) {
 ## 🎯 **Como Funciona Agora**
 
 ### **1. Login de Usuários Root:**
-1. Usuário acessa `contasadmin.sei.pe.gov.br/login`
+1. Usuário acessa `contas.sei.pe.gov.br/login`
 2. Sistema identifica que é URL de root
 3. **Busca apenas pelo `uid`** (sem restrição de OU)
 4. Encontra usuário na raiz do LDAP
@@ -98,13 +98,13 @@ if (!$user) {
 ### **Cenários de Teste:**
 
 1. **Usuário Root via URL Correta:**
-   - URL: `contasadmin.sei.pe.gov.br/login`
+   - URL: `contas.sei.pe.gov.br/login`
    - Usuário: admin (na raiz do LDAP)
    - Senha: [senha do admin]
    - **Resultado Esperado**: ✅ Login bem-sucedido
 
 2. **Usuário Root Inexistente:**
-   - URL: `contasadmin.sei.pe.gov.br/login`
+   - URL: `contas.sei.pe.gov.br/login`
    - Usuário: inexistente
    - Senha: qualquer
    - **Resultado Esperado**: ❌ "Usuário root não encontrado"

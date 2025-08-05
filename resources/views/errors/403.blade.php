@@ -31,7 +31,7 @@
                 <p class="text-gray-600 mb-6">Você não tem permissão para acessar este recurso.</p>
             </div>
 
-            @if(isset($exception) && str_contains($exception->getMessage(), 'contasadmin.sei.pe.gov.br'))
+            @if(isset($exception) && str_contains($exception->getMessage(), 'contas.sei.pe.gov.br'))
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
@@ -50,7 +50,7 @@
                 </div>
 
                 <div class="space-y-3">
-                    <a href="https://contasadmin.sei.pe.gov.br" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg flex items-center justify-center gap-2">
+                                            <a href="https://contas.sei.pe.gov.br" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>

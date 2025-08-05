@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O sistema implementa uma restrição de segurança que impede usuários com perfil **root** de acessarem o sistema através de URLs que não sejam `contasadmin.sei.pe.gov.br`.
+O sistema implementa uma restrição de segurança que impede usuários com perfil **root** de acessarem o sistema através de URLs que não sejam `contas.sei.pe.gov.br`.
 
 ## Como Funciona
 
@@ -12,7 +12,7 @@ O sistema implementa uma restrição de segurança que impede usuários com perf
 
 ### 2. **Verificação de URL**
 - Durante o login e em todas as requisições autenticadas, o sistema verifica o host da requisição
-- Se o usuário é root e não está acessando via `contasadmin.sei.pe.gov.br`, o acesso é negado
+- Se o usuário é root e não está acessando via `contas.sei.pe.gov.br`, o acesso é negado
 
 ### 3. **Comportamento**
 - **Durante o Login**: Se um usuário root tentar fazer login via URL incorreta, o login é rejeitado com mensagem de erro
@@ -27,7 +27,7 @@ O sistema implementa uma restrição de segurança que impede usuários com perf
 // Verifica se usuário root está acessando pela URL correta
 if ($role === RoleResolver::ROLE_ROOT) {
     $host = $request->getHost();
-    if ($host !== 'contasadmin.sei.pe.gov.br') {
+    if ($host !== 'contas.sei.pe.gov.br') {
         abort(403, 'O acesso a este usuário não pode ser feito por essa URL');
     }
 }
@@ -38,7 +38,7 @@ if ($role === RoleResolver::ROLE_ROOT) {
 // Verificação adicional durante o login
 if ($role === RoleResolver::ROLE_ROOT) {
     $host = $request->getHost();
-    if ($host !== 'contasadmin.sei.pe.gov.br') {
+    if ($host !== 'contas.sei.pe.gov.br') {
         Auth::logout();
         return back()->withErrors(['uid' => 'O acesso a este usuário não pode ser feito por essa URL']);
     }
@@ -95,12 +95,12 @@ Entradas encontradas: 1
 A URL permitida está hardcoded no trait. Para torná-la configurável, adicione ao `.env`:
 
 ```env
-ROOT_ACCESS_URL=contasadmin.sei.pe.gov.br
+ROOT_ACCESS_URL=contas.sei.pe.gov.br
 ```
 
 E modifique o trait para usar:
 ```php
-$allowedHost = config('app.root_access_url', 'contasadmin.sei.pe.gov.br');
+$allowedHost = config('app.root_access_url', 'contas.sei.pe.gov.br');
 ```
 
 ## Segurança
@@ -118,7 +118,7 @@ $allowedHost = config('app.root_access_url', 'contasadmin.sei.pe.gov.br');
 ## Troubleshooting
 
 ### Problema: Usuário root não consegue acessar
-**Solução**: Verificar se está acessando via `contasadmin.sei.pe.gov.br`
+**Solução**: Verificar se está acessando via `contas.sei.pe.gov.br`
 
 ### Problema: Erro 403 inesperado
 **Solução**: Verificar se o usuário tem `employeeType` com valor "root" no LDAP
