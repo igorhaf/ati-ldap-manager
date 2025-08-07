@@ -483,7 +483,7 @@ class LdapUserController extends Controller
 
             $baseDn = config('ldap.connections.default.base_dn');
 
-            // Unidades enviadas na requisição
+            // Organizações enviadas na requisição
             $units = collect($request->organizationalUnits ?? [])->map(function($i){
                 if (is_string($i)) return ['ou'=>$i,'role'=>'user'];
                 return [
@@ -492,7 +492,7 @@ class LdapUserController extends Controller
                 ];
             });
 
-            // Loop unidades solicitadas
+            // Loop organizações solicitadas
             foreach ($units as $unit) {
                 $ouLower = strtolower($unit['ou']);
                 $role     = $unit['role'];
@@ -671,7 +671,7 @@ class LdapUserController extends Controller
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Acesso negado: apenas usuários root podem visualizar unidades organizacionais'
+                    'message' => 'Acesso negado: apenas usuários root podem visualizar organizações'
                 ], 403);
             }
 
@@ -688,12 +688,12 @@ class LdapUserController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $formattedOus,
-                'message' => 'Unidades organizacionais carregadas com sucesso'
+                'message' => 'Organizações carregadas com sucesso'
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao carregar unidades organizacionais: ' . $e->getMessage()
+                'message' => 'Erro ao carregar organizações: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -712,7 +712,7 @@ class LdapUserController extends Controller
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Acesso negado: apenas usuários root podem criar unidades organizacionais'
+                    'message' => 'Acesso negado: apenas usuários root podem criar organizações'
                 ], 403);
             }
 
@@ -783,7 +783,7 @@ class LdapUserController extends Controller
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Acesso negado: apenas usuários root podem editar unidades organizacionais'
+                    'message' => 'Acesso negado: apenas usuários root podem editar organizações'
                 ], 403);
             }
 

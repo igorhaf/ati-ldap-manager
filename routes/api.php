@@ -16,7 +16,7 @@ Route::middleware(['web','auth'])->prefix('ldap')->group(function () {
 
     // Rotas acessíveis apenas ao ROOT
     Route::middleware(IsRootUser::class)->group(function () {
-        // Unidades organizacionais
+        // Organizações
         Route::post('/organizational-units', [LdapUserController::class, 'createOrganizationalUnit']);
         Route::put('/organizational-units/{ou}', [LdapUserController::class, 'updateOrganizationalUnit']);
     });

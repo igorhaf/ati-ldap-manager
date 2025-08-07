@@ -1,8 +1,8 @@
-# Remoção da Obrigatoriedade do Campo Descrição - Unidades Organizacionais
+# Remoção da Obrigatoriedade do Campo Descrição - Organizações
 
 ## ✅ **Alteração Realizada**
 
-Removida a obrigatoriedade do campo **descrição** nos formulários de cadastro e edição de unidades organizacionais.
+Removida a obrigatoriedade do campo **descrição** nos formulários de cadastro e edição de organizações.
 
 ## 🔧 **Modificações no Backend**
 
@@ -122,4 +122,4 @@ curl -X POST http://localhost/api/ldap/organizational-units \
 - ✅ Compatibilidade mantida com OUs existentes
 - ✅ Interface permanece consistente
 
-A alteração está **completa e funcional**! Agora é possível criar e editar unidades organizacionais sem a necessidade de preencher o campo descrição. 
+A alteração está **completa e funcional**! Agora é possível criar e editar organizações sem a necessidade de preencher o campo descrição. 

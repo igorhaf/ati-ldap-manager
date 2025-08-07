@@ -2,7 +2,7 @@
 
 ## ✅ **Problema Identificado**
 
-Ao logar como **admin de OU** ou **usuário comum**, o frontend fazia uma requisição automática para a API de unidades organizacionais (`/api/ldap/organizational-units`), mas o backend retornava erro 403 (acesso negado). O frontend interpretava isso como "Erro de Conexão LDAP", exibindo uma mensagem confusa para o usuário.
+Ao logar como **admin de Organização** ou **usuário comum**, o frontend fazia uma requisição automática para a API de organizações (`/api/ldap/organizational-units`), mas o backend retornava erro 403 (acesso negado). O frontend interpretava isso como "Erro de Conexão LDAP", exibindo uma mensagem confusa para o usuário.
 
 ## 🔧 **Correções Implementadas**
 
@@ -33,14 +33,14 @@ mounted() {
 ### **2. Função loadOrganizationalUnits Melhorada**
 ```javascript
 async loadOrganizationalUnits() {
-    console.log('🔄 Carregando Unidades Organizacionais...');
+                console.log('🔄 Carregando Organizações...');
     try {
         const response = await fetch('/api/ldap/organizational-units');
         const data = await response.json();
         
         if (data.success) {
             this.organizationalUnits = data.data;
-            console.log('✅ Unidades Organizacionais carregadas:', data.data.length);
+            console.log('✅ Organizações carregadas:', data.data.length);
         } else {
             // Se for erro 403 (acesso negado), não mostrar erro de conexão LDAP
             if (data.message && data.message.includes('Acesso negado')) {
@@ -53,7 +53,7 @@ async loadOrganizationalUnits() {
         }
     } catch (error) {
         console.log('❌ Erro de rede Unidade Organizacional:', error);
-        this.handleNetworkError('Erro ao carregar unidades organizacionais', error);
+                    this.handleNetworkError('Erro ao carregar organizações', error);
     }
 },
 ```

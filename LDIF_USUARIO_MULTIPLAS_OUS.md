@@ -1,6 +1,6 @@
 # Criação de Usuários via LDIF em Múltiplas OUs
 
-Este documento explica como usar a funcionalidade LDIF para criar o mesmo usuário em diferentes Unidades Organizacionais (OUs).
+Este documento explica como usar a funcionalidade LDIF para criar o mesmo usuário em diferentes Organizações.
 
 ## Visão Geral
 

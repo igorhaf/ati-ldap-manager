@@ -18,14 +18,14 @@
   - mail (múltiplos emails)
   - employeeNumber (CPF - obrigatório)
   - userPassword (senha)
-  - organizationalUnits (múltiplas unidades organizacionais)
+  - organizationalUnits (múltiplas organizações)
 
-- ✅ **OrganizationalUnit.php** - Modelo para unidades organizacionais
+- ✅ **OrganizationalUnit.php** - Modelo para organizações
 
 ### 3. **Controlador LDAP**
 - ✅ **LdapUserController.php** - Controlador completo com:
   - CRUD completo de usuários
-  - Gerenciamento de unidades organizacionais
+  - Gerenciamento de organizações
   - Validação de dados
   - Tratamento de erros
   - Respostas JSON padronizadas
@@ -48,7 +48,7 @@
   - `PUT /api/ldap/users/{uid}` - Atualizar usuário
   - `DELETE /api/ldap/users/{uid}` - Excluir usuário
 
-- ✅ Rotas para unidades organizacionais:
+- ✅ Rotas para organizações:
   - `GET /api/ldap/organizational-units` - Listar OUs
   - `POST /api/ldap/organizational-units` - Criar OU
 
@@ -74,9 +74,9 @@
 - ✅ Exclusão de usuários
 - ✅ Validação de UID e CPF únicos
 - ✅ Suporte a múltiplos emails
-- ✅ Suporte a múltiplas unidades organizacionais
+- ✅ Suporte a múltiplas organizações
 
-### **Gerenciamento de Unidades Organizacionais**
+### **Gerenciamento de Organizações**
 - ✅ Criação de novas OUs
 - ✅ Listagem de OUs existentes
 - ✅ Associação de usuários a OUs
@@ -136,7 +136,7 @@ php artisan serve
 O gerenciador LDAP foi implementado com sucesso, incluindo todas as funcionalidades solicitadas:
 
 - ✅ CRUD completo de usuários
-- ✅ Gerenciamento de privilégios (através de unidades organizacionais)
+- ✅ Gerenciamento de privilégios (através de organizações)
 - ✅ Interface moderna com Laravel, Tailwind CSS e Vue.js
 - ✅ Todos os atributos LDAP especificados
 - ✅ Validação e tratamento de erros

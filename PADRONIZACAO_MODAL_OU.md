@@ -2,7 +2,7 @@
 
 ## ✅ **Alteração Realizada**
 
-Padronizado o modal de edição de unidades organizacionais para ficar igual ao modal de criação, com o mesmo design e layout.
+Padronizado o modal de edição de organizações para ficar igual ao modal de criação, com o mesmo design e layout.
 
 ## 🔧 **Diferenças Identificadas**
 
@@ -132,4 +132,4 @@ Padronizado o modal de edição de unidades organizacionais para ficar igual ao 
 - ✅ Experiência do usuário uniforme
 - ✅ Acessibilidade melhorada
 
-A padronização está **completa e funcional**! Agora ambos os modais de unidades organizacionais têm o mesmo design moderno e profissional. 
+A padronização está **completa e funcional**! Agora ambos os modais de organizações têm o mesmo design moderno e profissional. 

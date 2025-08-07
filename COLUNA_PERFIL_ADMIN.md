@@ -2,12 +2,12 @@
 
 ## ✅ **Alteração Realizada**
 
-Implementada coluna "Perfil" que substitui a coluna "Unidades" para usuários admin de OU, mostrando apenas se o usuário é "Admin" ou "Usuário" com badges visuais e funcionalidade de filtro.
+Implementada coluna "Perfil" que substitui a coluna "Organizações" para usuários admin de Organização, mostrando apenas se o usuário é "Admin" ou "Usuário" com badges visuais e funcionalidade de filtro.
 
 ## 🎯 **Comportamento por Perfil**
 
 ### **👑 Para Usuários Root:**
-- ✅ **Coluna**: "Unidades"
+- ✅ **Coluna**: "Organizações"
 - ✅ **Conteúdo**: Lista todas as OUs com badges de role
 - ✅ **Filtro**: Por OU (clique no badge da OU)
 - ✅ **Funcionalidade**: Completa visão de todas as OUs
@@ -23,7 +23,7 @@ Implementada coluna "Perfil" que substitui a coluna "Unidades" para usuários ad
 ### **1. Cabeçalho Dinâmico**
 ```html
 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-    @{{ isRoot ? 'Unidades' : 'Perfil' }}
+    @{{ isRoot ? 'Organizações' : 'Perfil' }}
 </th>
 ```
 

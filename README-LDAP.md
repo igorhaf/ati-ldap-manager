@@ -5,7 +5,7 @@ Um gerenciador completo de usuários LDAP desenvolvido com Laravel, Tailwind CSS
 ## Funcionalidades
 
 - ✅ **CRUD completo de usuários LDAP**
-- ✅ **Gerenciamento de unidades organizacionais**
+- ✅ **Gerenciamento de organizações**
 - ✅ **Interface moderna e responsiva**
 - ✅ **Validação de dados**
 - ✅ **Busca e filtros**
@@ -22,7 +22,7 @@ O sistema gerencia os seguintes atributos de usuário:
 - **mail**: Múltiplos emails (obrigatório pelo menos um)
 - **employeeNumber**: CPF (obrigatório)
 - **userPassword**: Senha (obrigatório)
-- **organizationalUnits**: Múltiplas unidades organizacionais (opcional)
+- **organizationalUnits**: Múltiplas organizações (opcional)
 
 ## Configuração
 
@@ -94,7 +94,7 @@ Acesse a URL: `http://localhost:8000/ldap-manager`
 - `PUT /api/ldap/users/{uid}` - Atualizar usuário
 - `DELETE /api/ldap/users/{uid}` - Excluir usuário
 
-#### Unidades Organizacionais
+#### Organizações
 
 - `GET /api/ldap/organizational-units` - Listar todas as OUs
 - `POST /api/ldap/organizational-units` - Criar nova OU

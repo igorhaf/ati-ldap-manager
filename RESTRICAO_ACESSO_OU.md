@@ -84,7 +84,7 @@ if ($role !== RoleResolver::ROLE_ROOT) {
 
 ### **Frontend**
 - `resources/views/ldap-simple.blade.php`
-  - Botão da aba "Unidades": Adicionado `v-if="isRoot"`
+  - Botão da aba "Organizações": Adicionado `v-if="isRoot"`
   - Conteúdo da aba: Adicionado `v-if="activeTab === 'organizational-units' && isRoot"`
   - Botão "Nova OU": Já tinha `v-if="isRoot"`
 
@@ -109,7 +109,7 @@ if ($role !== RoleResolver::ROLE_ROOT) {
 
 ### **Para Usuários Root:**
 - Acessam `contas.sei.pe.gov.br`
-- Veem todas as abas (Usuários, Unidades, Logs)
+- Veem todas as abas (Usuários, Organizações, Logs)
 - Podem gerenciar OUs e usuários de todas as OUs
 
 ### **Para Admins de OU:**
