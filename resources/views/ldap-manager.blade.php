@@ -17,7 +17,7 @@
                 <div class="flex justify-between items-center py-6">
                     <div>
                         <h1 class="text-3xl font-bold text-gray-900">SEI Contas Admin</h1>
-                        <p class="text-gray-600">Gerenciamento de Usuários e Unidades Organizacionais</p>
+                        <p class="text-gray-600">Gerenciamento de Usuários e Organizações</p>
                     </div>
                     <div class="flex space-x-3">
                         <button @click="showCreateUserModal = true" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
@@ -97,7 +97,7 @@
                         Usuários
                     </button>
                     <button @click="activeTab = 'organizational-units'" :class="activeTab === 'organizational-units' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                        Unidades Organizacionais
+                        Organizações
                     </button>
                 </nav>
             </div>
@@ -170,7 +170,7 @@
             <div v-if="activeTab === 'organizational-units'" class="space-y-6">
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais</h3>
+                        <h3 class="text-lg font-medium text-gray-900">Organizações</h3>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -265,7 +265,7 @@
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <label class="form-label">Unidades Organizacionais</label>
+                                        <label class="form-label">Organizações</label>
                                         <div v-for="(ou, index) in ldifForm.organizationalUnits" :key="index" 
                                              class="row mb-2 align-items-center">
                                             <div class="col-md-5">
@@ -448,7 +448,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Organizações</label>
                             <div class="space-y-2">
                                 <div v-for="(ou, index) in newUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
                                     <select v-model="newUser.organizationalUnits[index]" class="flex-1 border rounded px-3 py-2">
@@ -457,7 +457,7 @@
                                     </select>
                                     <button v-if="index > 0" @click="newUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                                 </div>
-                                <button @click="newUser.organizationalUnits.push('')" class="mt-2 text-blue-600">+ adicionar OU</button>
+                                <button @click="newUser.organizationalUnits.push('')" class="mt-2 text-blue-600">+ adicionar Organização</button>
                             </div>
                         </div>
 
@@ -540,7 +540,7 @@
                         <button @click="editUserData.mail.push('')" class="mt-2 text-blue-600">+ adicionar email</button>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Unidades Organizacionais</label>
+                        <label class="block text-sm font-medium text-gray-700">Organizações</label>
                         <div v-for="(ou, index) in editUserData.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
                             <select v-model="editUserData.organizationalUnits[index]" class="flex-1 border rounded px-3 py-2">
                                 <option value="" disabled>Selecione...</option>
@@ -692,7 +692,7 @@
                                     this.handleApiError('Erro de Conexão LDAP', data.message);
                                 }
                             } catch (error) {
-                                this.handleNetworkError('Erro ao carregar unidades organizacionais', error);
+                                this.handleNetworkError('Erro ao carregar organizações', error);
                             }
                         },
                         

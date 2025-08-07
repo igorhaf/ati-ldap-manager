@@ -52,7 +52,7 @@
                             </svg>
                             Sei Contas Admin
                         </h1>
-                        <p class="text-blue-100">Gerenciamento de Usuários e Unidades Organizacionais</p>
+                        <p class="text-blue-100">Gerenciamento de Usuários e Organizações</p>
                     </div>
                     <div class="flex space-x-3">
                                                     <button v-if="canManageUsers" @click="openCreateUserModal" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center gap-2">
@@ -65,7 +65,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
-                            Nova OU
+                            Nova Organização
                         </button>
                         <button @click="logout" class="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg backdrop-blur-sm flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -240,7 +240,7 @@
              <div v-if="activeTab === 'organizational-units' && isRoot" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                      <div class="px-6 py-4 border-b border-gray-200">
-                         <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais (@{{ organizationalUnits.length }})</h3>
+                         <h3 class="text-lg font-medium text-gray-900">Organizações (@{{ organizationalUnits.length }})</h3>
                      </div>
                      <div class="overflow-x-auto">
                          <table class="min-w-full divide-y divide-gray-200">
@@ -421,7 +421,7 @@
 
                         <!-- Interface para ROOT: múltiplas OUs -->
                         <div v-if="isRoot">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Organizações</label>
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in newUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
                                     <select v-model="newUser.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
@@ -434,14 +434,14 @@
                                     </select>
                                     <button v-if="index > 0" @click="newUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                                 </div>
-                                <button @click="newUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
+                                <button @click="newUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar Organização</button>
                             </div>
                         </div>
 
-                        <!-- Interface para Admin OU: apenas dropdown de papel -->
+                        <!-- Interface para Admin Organização: apenas dropdown de papel -->
                         <div v-if="isOuAdmin">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua OU</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua Organização</label>
                                 <select v-model="newUserRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="user">Usuário Comum</option>
                                     <option value="admin">Administrador</option>
@@ -467,7 +467,7 @@
                             <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
-                            Criar Nova Unidade Organizacional
+                            Criar Nova Organização
                         </h3>
                         <button @click="showCreateOuModal = false" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -478,7 +478,7 @@
                     
                     <form @submit.prevent="createOu" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Unidade Organizacional</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Organização</label>
                             <input v-model="newOu.ou" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         
@@ -489,7 +489,7 @@
 
                         <div class="flex justify-end space-x-4 pt-8 border-t border-gray-200">
                             <button @click="showCreateOuModal = false" type="button" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-medium transition-colors">Cancelar</button>
-                            <button type="submit" class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors hover:shadow-lg">Criar Unidade Organizacional</button>
+                            <button type="submit" class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors hover:shadow-lg">Criar Organização</button>
                         </div>
                     </form>
                 </div>
@@ -597,7 +597,7 @@
 
                         <!-- Interface para ROOT: múltiplas OUs -->
                         <div v-if="isRoot">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Organizações</label>
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in editUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
                                     <select v-model="editUser.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
@@ -610,14 +610,14 @@
                                     </select>
                                     <button v-if="index > 0" @click="editUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                                 </div>
-                                <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
+                                <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar Organização</button>
                             </div>
                         </div>
 
-                        <!-- Interface para Admin OU: apenas dropdown de papel -->
+                        <!-- Interface para Admin Organização: apenas dropdown de papel -->
                         <div v-if="isOuAdmin">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua OU</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua Organização</label>
                                 <select v-model="editUserRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="user">Usuário Comum</option>
                                     <option value="admin">Administrador</option>
@@ -658,7 +658,7 @@
                             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
-                            Editar Unidade Organizacional
+                            Editar Organização
                         </h3>
                         <button @click="showEditOuModal = false" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -669,7 +669,7 @@
                     
                     <form @submit.prevent="updateOu" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Unidade Organizacional</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Organização</label>
                             <input v-model="editOuData.ou" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         
@@ -907,14 +907,14 @@
                     },
                     
                     async loadOrganizationalUnits() {
-                        console.log('🔄 Carregando Unidades Organizacionais...');
+                        console.log('🔄 Carregando Organizações...');
                         try {
                             const response = await fetch('/api/ldap/organizational-units');
                             const data = await response.json();
                             
                             if (data.success) {
                                 this.organizationalUnits = data.data;
-                                console.log('✅ Unidades Organizacionais carregadas:', data.data.length);
+                                console.log('✅ Organizações carregadas:', data.data.length);
                             } else {
                                 // Se for erro 403 (acesso negado), não mostrar erro de conexão LDAP
                                 if (data.message && data.message.includes('Acesso negado')) {
@@ -927,7 +927,7 @@
                             }
                         } catch (error) {
                             console.log('❌ Erro de rede Unidade Organizacional:', error);
-                            this.handleNetworkError('Erro ao carregar unidades organizacionais', error);
+                            this.handleNetworkError('Erro ao carregar organizações', error);
                         }
                     },
                     
@@ -1045,7 +1045,7 @@
                                     role: this.newUserRole || 'user' 
                                 }];
                                 
-                                console.log('🏢 Dados para admin OU:', {
+                                console.log('🏢 Dados para admin Organização:', {
                                     adminOu: this.adminOu,
                                     newUserRole: this.newUserRole,
                                     organizationalUnits: userData.organizationalUnits
@@ -1136,7 +1136,7 @@
                         
                         // Para admin de OU, verificar se adminOu está preenchida
                         if (this.isOuAdmin) {
-                            console.log('🏢 Abrindo modal para admin OU. AdminOU atual:', this.adminOu);
+                            console.log('🏢 Abrindo modal para admin Organização. AdminOU atual:', this.adminOu);
                             
                             if (!this.adminOu || this.adminOu.trim() === '') {
                                 console.warn('⚠️  adminOu vazia, tentando recarregar...');

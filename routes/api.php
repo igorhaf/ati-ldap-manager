@@ -21,13 +21,13 @@ Route::middleware(['web','auth'])->prefix('ldap')->group(function () {
         Route::put('/organizational-units/{ou}', [LdapUserController::class, 'updateOrganizationalUnit']);
     });
 
-    // Logs (acessível para ROOT e Admin OU)
+    // Logs (acessível para ROOT e Admin Organização)
     Route::middleware(IsOUAdmin::class)->get('/logs', [LdapUserController::class, 'getOperationLogs']);
 
-    // Rotas de leitura de OUs (root ou admin OU)
+    // Rotas de leitura de Organizações (root ou admin Organização)
     Route::middleware(IsOUAdmin::class)->get('/organizational-units', [LdapUserController::class, 'getOrganizationalUnits']);
 
-    // Rotas de usuários (root e admin OU)
+    // Rotas de usuários (root e admin Organização)
     Route::middleware(IsOUAdmin::class)->group(function () {
     Route::get('/users', [LdapUserController::class, 'index']);
     Route::post('/users', [LdapUserController::class, 'store']);
@@ -42,7 +42,7 @@ Route::middleware(['web','auth'])->prefix('ldap')->group(function () {
         Route::post('/ldif/upload', [LdapUserController::class, 'uploadLdif']);
     });
     
-    // Rota para usuário comum acessar seu próprio perfil (ou root/admin OU também passam)
+    // Rota para usuário comum acessar seu próprio perfil (ou root/admin Organização também passam)
     Route::middleware(IsSelfAccess::class)->get('/users/{uid}', [LdapUserController::class, 'show']);
 
     // Rota para usuário comum alterar sua própria senha

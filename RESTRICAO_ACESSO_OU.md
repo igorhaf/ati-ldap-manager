@@ -1,20 +1,20 @@
-# Restrição de Acesso às Unidades Organizacionais (OUs)
+# Restrição de Acesso às Organizações
 
 ## ✅ **Alteração Realizada**
 
-Implementada restrição de acesso para que **apenas usuários root** possam visualizar, criar, editar e gerenciar Unidades Organizacionais (OUs). Usuários do tipo **admin de OU** não têm mais acesso à tabela de OUs.
+Implementada restrição de acesso para que **apenas usuários root** possam visualizar, criar, editar e gerenciar Organizações. Usuários do tipo **admin de Organização** não têm mais acesso à tabela de Organizações.
 
 ## 🔒 **Regras de Acesso Implementadas**
 
 ### **Backend (API/Controller)**
-- ✅ **Listagem de OUs** (`getOrganizationalUnits`): Apenas root
-- ✅ **Criação de OUs** (`createOrganizationalUnit`): Apenas root  
-- ✅ **Edição de OUs** (`updateOrganizationalUnit`): Apenas root
-- ✅ **Exclusão de OUs**: Apenas root (se existir)
+- ✅ **Listagem de Organizações** (`getOrganizationalUnits`): Apenas root
+- ✅ **Criação de Organizações** (`createOrganizationalUnit`): Apenas root  
+- ✅ **Edição de Organizações** (`updateOrganizationalUnit`): Apenas root
+- ✅ **Exclusão de Organizações**: Apenas root (se existir)
 
 ### **Frontend (Interface)**
-- ✅ **Aba "Unidades"**: Ocultada para usuários não-root
-- ✅ **Botão "Nova OU"**: Ocultado para usuários não-root
+- ✅ **Aba "Organizações"**: Ocultada para usuários não-root
+- ✅ **Botão "Nova Organização"**: Ocultado para usuários não-root
 - ✅ **Conteúdo da aba**: Ocultado para usuários não-root
 
 ## 🛡️ **Proteções Implementadas**
@@ -23,11 +23,11 @@ Implementada restrição de acesso para que **apenas usuários root** possam vis
 ```php
 $role = RoleResolver::resolve(auth()->user());
 
-// Apenas usuários root podem visualizar OUs
+// Apenas usuários root podem visualizar Organizações
 if ($role !== RoleResolver::ROLE_ROOT) {
     return response()->json([
         'success' => false,
-        'message' => 'Acesso negado: apenas usuários root podem visualizar unidades organizacionais'
+        'message' => 'Acesso negado: apenas usuários root podem visualizar organizações'
     ], 403);
 }
 ```
@@ -36,41 +36,41 @@ if ($role !== RoleResolver::ROLE_ROOT) {
 ```html
 <!-- Botão da aba -->
 <button v-if="isRoot" @click="activeTab = 'organizational-units'">
-    Unidades
+    Organizações
 </button>
 
 <!-- Conteúdo da aba -->
 <div v-if="activeTab === 'organizational-units' && isRoot">
-    <!-- Tabela de OUs -->
+    <!-- Tabela de Organizações -->
 </div>
 
-<!-- Botão de criar OU -->
+<!-- Botão de criar Organização -->
 <button v-if="isRoot" @click="showCreateOuModal = true">
-    Nova OU
+    Nova Organização
 </button>
 ```
 
 ## 📋 **Hierarquia de Permissões**
 
 ### **👑 Usuário Root**
-- ✅ Visualizar todas as OUs
-- ✅ Criar novas OUs
-- ✅ Editar OUs existentes
-- ✅ Excluir OUs (se implementado)
-- ✅ Gerenciar usuários de todas as OUs
+- ✅ Visualizar todas as Organizações
+- ✅ Criar novas Organizações
+- ✅ Editar Organizações existentes
+- ✅ Excluir Organizações (se implementado)
+- ✅ Gerenciar usuários de todas as Organizações
 - ✅ Acessar logs do sistema
 
-### **👨‍💼 Admin de OU**
-- ❌ **NÃO** pode visualizar tabela de OUs
-- ❌ **NÃO** pode criar OUs
-- ❌ **NÃO** pode editar OUs
-- ❌ **NÃO** pode excluir OUs
-- ✅ Gerenciar usuários apenas da sua OU
+### **👨‍💼 Admin de Organização**
+- ❌ **NÃO** pode visualizar tabela de Organizações
+- ❌ **NÃO** pode criar Organizações
+- ❌ **NÃO** pode editar Organizações
+- ❌ **NÃO** pode excluir Organizações
+- ✅ Gerenciar usuários apenas da sua Organização
 - ✅ Acessar logs do sistema
 
 ### **👤 Usuário Comum**
-- ❌ **NÃO** pode visualizar tabela de OUs
-- ❌ **NÃO** pode criar/editar/excluir OUs
+- ❌ **NÃO** pode visualizar tabela de Organizações
+- ❌ **NÃO** pode criar/editar/excluir Organizações
 - ❌ **NÃO** pode gerenciar usuários
 - ✅ Trocar apenas sua própria senha
 
@@ -96,7 +96,7 @@ if ($role !== RoleResolver::ROLE_ROOT) {
 - ✅ Interface adaptativa baseada em permissões
 
 ### **2. Usabilidade**
-- ✅ Interface limpa para admins de OU (sem elementos desnecessários)
+- ✅ Interface limpa para admins de Organização (sem elementos desnecessários)
 - ✅ Foco nas funcionalidades permitidas
 - ✅ Experiência de usuário otimizada por perfil
 
