@@ -345,7 +345,7 @@
         <!-- Drawer simples para logs -->
         <transition name="slide-in">
             <div v-if="showRightDrawer" class="fixed inset-0 z-50" @click="closeLogDrawer">
-                <div class="fixed top-0 right-0 h-full w-full md:w-80 bg-white shadow-2xl border-l border-gray-200 overflow-y-auto" @click.stop>
+                <div class="fixed top-0 right-0 h-full w-full md:w-96 lg:w-1/3 xl:w-1/4 bg-white shadow-2xl border-l border-gray-200 overflow-y-auto" @click.stop>
                     <div class="p-4 border-b flex items-center justify-between">
                         <h4 class="text-base font-semibold">Detalhes do Log</h4>
                         <button class="text-gray-500 hover:text-gray-700" @click="closeLogDrawer">✕</button>

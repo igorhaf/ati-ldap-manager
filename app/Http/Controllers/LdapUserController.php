@@ -577,13 +577,26 @@ class LdapUserController extends Controller
             }
             if (!$units->isEmpty()) {
                 $newUnits = $units->values();
-                // Comparar JSON para simplificar diff
-                if (json_encode($originalUnits) !== json_encode($newUnits)) {
-                    $changes['organizationalUnits'] = [
-                        'old' => $originalUnits->toArray(),
-                        'new' => $newUnits->toArray(),
+                // Separar comparações por OU e Role
+                $oldOUs = $originalUnits->pluck('ou')->join(', ');
+                $newOUs = $newUnits->pluck('ou')->join(', ');
+                $oldRoles = $originalUnits->pluck('role')->join(', ');
+                $newRoles = $newUnits->pluck('role')->join(', ');
+                
+                if ($oldOUs !== $newOUs) {
+                    $changes['ou'] = [
+                        'old' => $oldOUs,
+                        'new' => $newOUs,
                     ];
-                    $summaryParts[] = 'Organização atualizada';
+                    $summaryParts[] = 'Organização: \'' . $oldOUs . '\' → \'' . $newOUs . '\'';
+                }
+                
+                if ($oldRoles !== $newRoles) {
+                    $changes['employeeType'] = [
+                        'old' => $oldRoles,
+                        'new' => $newRoles,
+                    ];
+                    $summaryParts[] = 'Papel: \'' . $oldRoles . '\' → \'' . $newRoles . '\'';
                 }
             }
             $changesSummary = empty($summaryParts) ? 'Sem alterações de dados' : implode('; ', $summaryParts);
@@ -1014,10 +1027,13 @@ class LdapUserController extends Controller
                     foreach ($rawChanges as $attr => $change) {
                         $label = $labelMap[$attr] ?? ucfirst(str_replace('_', ' ', (string) $attr));
                         if ($attr === 'userPassword') {
-                            $normalizedChanges[] = [
-                                'field' => $label,
-                                'note' => 'Senha alterada',
-                            ];
+                            // Verificar se realmente houve mudança de senha
+                            if (is_array($change) && isset($change['changed']) && $change['changed']) {
+                                $normalizedChanges[] = [
+                                    'field' => $label,
+                                    'note' => 'Senha alterada',
+                                ];
+                            }
                             continue;
                         }
 
