@@ -235,8 +235,12 @@ class LdapUserController extends Controller
                 }
             }
 
+            // Normalizar CPF: manter apenas dígitos
+            $cpfDigits = preg_replace('/\D+/', '', (string) $request->employeeNumber);
+            $request->merge(['employeeNumber' => $cpfDigits]);
+
             // Verificar se o CPF já existe
-            $existingEmployee = LdapUserModel::where('employeeNumber', $request->employeeNumber)->first();
+            $existingEmployee = LdapUserModel::where('employeeNumber', $cpfDigits)->first();
             if ($existingEmployee) {
                 return response()->json([
                     'success' => false,
@@ -275,7 +279,7 @@ class LdapUserController extends Controller
                 $entry->setFirstAttribute('sn',         $request->sn);
                 $entry->setFirstAttribute('cn',         $request->givenName.' '.$request->sn);
                 $entry->setFirstAttribute('mail',       $request->mail);
-                $entry->setFirstAttribute('employeeNumber', $request->employeeNumber);
+                $entry->setFirstAttribute('employeeNumber', $cpfDigits);
                 $entry->setFirstAttribute('userPassword',   $hashedPassword);
                 $entry->setFirstAttribute('ou',         $ou);
                 $entry->setAttribute('employeeType',    [$role]);
@@ -512,7 +516,7 @@ class LdapUserController extends Controller
                     $entry->setFirstAttribute('cn', trim(($request->get('givenName', $users->first()->getFirstAttribute('givenName'))) . ' ' . ($request->get('sn', $users->first()->getFirstAttribute('sn')))));
                     $entry->setFirstAttribute('mail', $request->get('mail', $users->first()->getFirstAttribute('mail')));
                     $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
-                    if ($request->has('userPassword')) {
+                    if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $entry->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     } else {
                         $entry->setFirstAttribute('userPassword', $users->first()->getFirstAttribute('userPassword'));
@@ -527,6 +531,20 @@ class LdapUserController extends Controller
                     ]);
                     $entry->setDn("uid={$uid},ou={$unit['ou']},{$baseDn}");
                     $entry->save();
+                }
+            }
+
+            // Se houve mudança de OU, remover efetivamente as entradas das OUs que saíram
+            if (!$units->isEmpty()) {
+                $newOuSet = collect($units)->map(fn($u) => strtolower($u['ou']))->values()->all();
+                $removedOus = $existingByOu->keys()->filter(function ($ou) use ($newOuSet) {
+                    return !in_array($ou, $newOuSet, true);
+                });
+                foreach ($removedOus as $removedOu) {
+                    $oldEntry = $existingByOu->get($removedOu);
+                    if ($oldEntry) {
+                        $oldEntry->delete();
+                    }
                 }
             }
 
@@ -614,9 +632,10 @@ class LdapUserController extends Controller
                 'description' => 'Usuário ' . $uid . ' atualizado',
             ]);
 
-            // Retornar primeira entrada consolidada
-            $first = $users->first();
-            $ous = $users->map(fn ($e) => $this->extractOu($e))->filter()->unique()->values();
+            // Recarregar e retornar primeira entrada consolidada após alterações
+            $updatedUsers = LdapUserModel::where('uid', $uid)->get();
+            $first = $updatedUsers->first();
+            $ous = $updatedUsers->map(fn ($e) => $this->extractOu($e))->filter()->unique()->values();
 
             return response()->json([
                 'success' => true,

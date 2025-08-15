@@ -68,8 +68,8 @@
                         </h1>
                         <p class="text-blue-100">Gerenciamento de Usuários e Unidades Organizacionais</p>
                     </div>
-                    <div class="flex space-x-3">
-                                                    <button v-if="canManageUsers" @click="openCreateUserModal" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center gap-2">
+                    <div class="flex items-center space-x-3">
+                        <button v-if="canManageUsers" @click="openCreateUserModal" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
@@ -79,14 +79,43 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
-                            Nova OU
+                            Nova Organização
                         </button>
-                        <button @click="logout" class="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg backdrop-blur-sm flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            Sair
-                        </button>
+                        <!-- Menu Suspenso do Perfil -->
+                        <div v-if="canManageUsers || isRoot" class="relative" @click.self="showProfileMenu=false">
+                            <button @click="showProfileMenu = !showProfileMenu" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 hover:shadow-lg backdrop-blur-sm flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.89 0 5.566.915 7.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                @{{ window.USER_CN || window.USER_UID }}
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div v-if="showProfileMenu" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                                <a href="#" @click.prevent="goToProfile" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.89 0 5.566.915 7.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Meu Perfil
+                                </a>
+                                <a :href="'/password-change'" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11m6 0c0 1.657 1.343 3 3 3s3-1.343 3-3m-6 0V8m0 3v3" />
+                                    </svg>
+                                    Alterar Senha
+                                </a>
+                                <form method="POST" action="/logout" class="border-t border-gray-100 mt-2">
+                                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="w-full text-left flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        Sair
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -159,7 +188,7 @@
                      <div class="flex flex-col sm:flex-row gap-4">
                          <div class="flex-1">
                              <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar Usuários</label>
-                                                             <input v-model="searchTerm" type="text" id="search" placeholder="Buscar por nome, UID ou CPF..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                             <input v-model="searchTerm" type="text" id="search" placeholder="Buscar por nome, usuário ou CPF..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                          </div>
                          <div class="flex items-end">
                              <button @click="loadUsers" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg flex items-center gap-2">
@@ -181,7 +210,7 @@
                          <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50 sticky top-0 z-10">
                                  <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">@{{ isRoot ? 'Unidades' : 'Perfil' }}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
@@ -214,7 +243,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         <div class="text-sm font-medium text-gray-900">@{{ user.mail }}</div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ user.employeeNumber }}</td>
+                                    <td class="px-6 py-4 text-sm" :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">@{{ formatCpf(user.employeeNumber) }}</td>
                                     <td v-if="canManageUsers" class="px-6 py-4 text-sm font-medium">
                                         <template v-if="user.uid !== 'root'">
                                             <button @click="openEditUserModal(user)" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900 mr-4 transition-colors">
@@ -254,7 +283,10 @@
              <div v-if="activeTab === 'organizational-units' && isRoot" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                      <div class="px-6 py-4 border-b border-gray-200">
-                         <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais (@{{ organizationalUnits.length }})</h3>
+                         <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais (@{{ filteredOus.length }})</h3>
+                         <div class="mt-3">
+                             <input v-model="ouSearchTerm" type="text" placeholder="Buscar por organização, descrição ou DN..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                         </div>
                      </div>
                      <div class="overflow-x-auto">
                          <table class="min-w-full divide-y divide-gray-200">
@@ -280,7 +312,7 @@
                                         </button>
                                      </td>
                                  </tr>
-                                 <tr v-if="organizationalUnits.length === 0">
+                                 <tr v-if="filteredOus.length === 0">
                                      <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
                                          📁 Nenhuma unidade organizacional encontrada
                                      </td>
@@ -301,7 +333,22 @@
              <div v-if="activeTab === 'logs' && canManageUsers" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                      <div class="px-6 py-4 border-b border-gray-200">
-                         <h3 class="text-lg font-medium text-gray-900">Logs de Operações (@{{ logs.length }})</h3>
+                         <h3 class="text-lg font-medium text-gray-900">Logs de Operações (@{{ filteredLogs.length }})</h3>
+                         <div class="mt-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                             <input v-model="logFilters.actor" type="text" placeholder="Filtrar por Executor" class="px-3 py-2 border rounded-md">
+                             <input v-model="logFilters.action" type="text" placeholder="Filtrar por Ação" class="px-3 py-2 border rounded-md">
+                             <input v-model="logFilters.target" type="text" placeholder="Filtrar por Usuário afetado" class="px-3 py-2 border rounded-md">
+                             <input v-model="logFilters.ou" type="text" placeholder="Filtrar por Organização" class="px-3 py-2 border rounded-md">
+                             <select v-model="logFilters.result" class="px-3 py-2 border rounded-md">
+                                 <option value="">Resultado (todos)</option>
+                                 <option>Sucesso</option>
+                                 <option>Falha</option>
+                             </select>
+                             <input v-model="logFilters.description" type="text" placeholder="Filtrar por Descrição" class="px-3 py-2 border rounded-md">
+                             <input v-model="logFilters.cpf" @input="maskCpfFilter" inputmode="numeric" type="text" placeholder="Filtrar por CPF" class="px-3 py-2 border rounded-md" title="CPF">
+                             <input v-model="logFilters.whenStart" type="date" class="px-3 py-2 border rounded-md" title="Data inicial">
+                             <input v-model="logFilters.whenEnd" type="date" class="px-3 py-2 border rounded-md" title="Data final">
+                         </div>
                      </div>
                      <div class="overflow-x-auto">
                          <table class="min-w-full divide-y divide-gray-200">
@@ -326,7 +373,7 @@
                                      <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.when).toLocaleString() }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
                                    </tr>
-                                   <tr v-if="logs.length === 0">
+                                   <tr v-if="filteredLogs.length === 0">
                                       <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log encontrado</td>
                                    </tr>
                                </tbody>
@@ -450,7 +497,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                                <input v-model="newUser.employeeNumber" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input v-model="newUser.employeeNumber" @input="maskCpf('new')" type="text" inputmode="numeric" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="000.000.000-00">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
@@ -475,6 +522,18 @@
                                     required
                                 >
                             </div>
+                        </div>
+
+                        <!-- Ativação do Usuário -->
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status do usuário</label>
+                            <label class="inline-flex items-center cursor-pointer select-none">
+                                <input type="checkbox" v-model="newUser.isActive" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-colors relative">
+                                    <div class="absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                                </div>
+                                <span class="ml-3 text-sm text-gray-700">@{{ newUser.isActive ? 'Ativo' : 'Desativado' }}</span>
+                            </label>
                         </div>
 
                         <!-- Interface para ROOT: múltiplas OUs -->
@@ -580,12 +639,12 @@
                     <form @submit.prevent="updateUser" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">UID (não editável)</label>
-                                <input type="text" v-model="editUser.uid" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100" disabled />
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Usuário (Login) @{{ isRoot && !editUser.isRootUser ? '' : '(não editável)' }}</label>
+                                <input type="text" v-model="editUser.uid" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot && !editUser.isRootUser ? '' : 'bg-gray-100'" :disabled="!isRoot || editUser.isRootUser" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">CPF @{{ isRoot ? '' : '(não editável)' }}</label>
-                                <input type="text" v-model="editUser.employeeNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot ? '' : 'bg-gray-100'" :disabled="!isRoot" />
+                                <input type="text" v-model="editUser.employeeNumber" @input="maskCpf('edit')" inputmode="numeric" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot ? '' : 'bg-gray-100'" :disabled="!isRoot" placeholder="000.000.000-00" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
@@ -609,6 +668,18 @@
                                     placeholder="exemplo@empresa.com"
                                 >
                             </div>
+                        </div>
+
+                        <!-- Ativação do Usuário -->
+                        <div class="mt-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status do usuário</label>
+                            <label class="inline-flex items-center cursor-pointer select-none">
+                                <input type="checkbox" v-model="editUser.isActive" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-500 transition-colors relative">
+                                    <div class="absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                                </div>
+                                <span class="ml-3 text-sm text-gray-700">@{{ editUser.isActive ? 'Ativo' : 'Desativado' }}</span>
+                            </label>
                         </div>
 
                         <!-- Interface para ROOT: múltiplas OUs -->
@@ -725,6 +796,7 @@
                         logsPage: 1,
                         searchTerm: '',
                         showCreateUserModal: false,
+                        showProfileMenu: false,
                         showCreateOuModal: false,
                         systemStatus: {
                             type: 'success',
@@ -748,7 +820,8 @@
                             employeeNumber: '',
                             mail: '',
                             userPassword: '',
-                            organizationalUnits: [{ou: '', role: 'user'}]
+                            organizationalUnits: [{ou: '', role: 'user'}],
+                            isActive: true
                         },
                         newOu: {
                             ou: '',
@@ -761,7 +834,8 @@
                             employeeNumber: '',
                             mail: '',
                             userPassword: '',
-                            organizationalUnits: [{ou: '', role: 'user'}]
+                            organizationalUnits: [{ou: '', role: 'user'}],
+                            isRootUser: false
                         },
                         showEditUserModal: false,
                         showDeleteUserModal: false,
@@ -771,7 +845,10 @@
                         // Drawer à direita
                         showRightDrawer: false,
                         selectedLogId: null,
-                        selectedLog: null
+                        selectedLog: null,
+                        // Filtros de logs
+                        logFilters: { actor: '', action: '', target: '', ou: '', result: '', description: '', whenStart: '', whenEnd: '', cpf: '' },
+                        ouSearchTerm: '',
                     }
                 },
                 computed: {
@@ -804,11 +881,13 @@
                         if (!this.searchTerm) return list;
                         
                         const term = this.searchTerm.toLowerCase();
-                        return list.filter(user => 
-                            user.uid.toLowerCase().includes(term) ||
-                            user.fullName.toLowerCase().includes(term) ||
-                            user.employeeNumber.toLowerCase().includes(term)
-                        );
+                        return list.filter(user => {
+                            const mail = (user.mail || '').toLowerCase();
+                            const uid = (user.uid || '').toLowerCase();
+                            const fullName = (user.fullName || '').toLowerCase();
+                            const cpf = (user.employeeNumber || '').toLowerCase();
+                            return uid.includes(term) || fullName.includes(term) || cpf.includes(term) || mail.includes(term);
+                        });
                     },
                     // Paginação usuários
                     paginatedUsers() {
@@ -816,18 +895,72 @@
                         return this.filteredUsers.slice(start, start + this.itemsPerPage);
                     },
                     totalUsersPages() { return Math.ceil(this.filteredUsers.length / this.itemsPerPage) || 1; },
-                    // Paginação OUs
+                    // Filtro e Paginação OUs
+                    filteredOus() {
+                        if (!this.ouSearchTerm) return this.organizationalUnits;
+                        const term = this.ouSearchTerm.toLowerCase();
+                        return this.organizationalUnits.filter(ou =>
+                            (ou.ou || '').toLowerCase().includes(term) ||
+                            (ou.description || '').toLowerCase().includes(term) ||
+                            (ou.dn || '').toLowerCase().includes(term)
+                        );
+                    },
                     paginatedOus() {
                         const start = (this.ousPage - 1) * this.itemsPerPage;
-                        return this.organizationalUnits.slice(start, start + this.itemsPerPage);
+                        return this.filteredOus.slice(start, start + this.itemsPerPage);
                     },
-                    totalOusPages() { return Math.ceil(this.organizationalUnits.length / this.itemsPerPage) || 1; },
-                    // Paginação logs
+                    totalOusPages() { return Math.ceil(this.filteredOus.length / this.itemsPerPage) || 1; },
+                    // Filtro + Paginação logs
+                    filteredLogs() {
+                        const f = this.logFilters;
+                        const norm = s => (s || '').toString().toLowerCase();
+                        return this.logs.filter(l => {
+                            const base = (!f.actor || norm(l.actor).includes(norm(f.actor))) &&
+                                (!f.action || norm(l.action).includes(norm(f.action))) &&
+                                (!f.target || norm(l.target).includes(norm(f.target))) &&
+                                (!f.ou || norm(l.ou).includes(norm(f.ou))) &&
+                                (!f.result || norm(l.result) === norm(f.result)) &&
+                                (!f.description || norm(l.description).includes(norm(f.description)));
+                            if (!base) return false;
+                            // Filtro por data (quando)
+                            if (f.whenStart || f.whenEnd) {
+                                const logDate = new Date(l.when);
+                                if (isNaN(logDate.getTime())) return false;
+                                if (f.whenStart) {
+                                    const start = new Date(f.whenStart + 'T00:00:00');
+                                    if (logDate < start) return false;
+                                }
+                                if (f.whenEnd) {
+                                    const end = new Date(f.whenEnd + 'T23:59:59');
+                                    if (logDate > end) return false;
+                                }
+                            }
+                            // Filtro por CPF (desmascarado)
+                            if (f.cpf) {
+                                const digits = s => (s || '').toString().replace(/\D+/g, '');
+                                const targetCpf = digits(f.cpf);
+                                if (targetCpf.length < 11) return false;
+                                const candidates = [];
+                                if (Array.isArray(l.changes)) {
+                                    l.changes.forEach(chg => {
+                                        if (chg && chg.field === 'CPF') {
+                                            candidates.push(digits(chg.old), digits(chg.new));
+                                        }
+                                    });
+                                }
+                                if (l.description) candidates.push(digits(l.description));
+                                if (l.changes_summary) candidates.push(digits(l.changes_summary));
+                                const hasMatch = candidates.some(c => c && c.length === 11 && c === targetCpf);
+                                if (!hasMatch) return false;
+                            }
+                            return true;
+                        });
+                    },
                     paginatedLogs() {
                         const start = (this.logsPage - 1) * this.itemsPerPage;
-                        return this.logs.slice(start, start + this.itemsPerPage);
+                        return this.filteredLogs.slice(start, start + this.itemsPerPage);
                     },
-                    totalLogPages() { return Math.ceil(this.logs.length / this.itemsPerPage) || 1; },
+                    totalLogPages() { return Math.ceil(this.filteredLogs.length / this.itemsPerPage) || 1; },
                 },
                 mounted() {
                     console.log('✅ LDAP Manager montado com sucesso!');
@@ -948,6 +1081,8 @@
                         this.editUser.givenName = user.givenName;
                         this.editUser.sn = user.sn;
                         this.editUser.employeeNumber = user.employeeNumber;
+                        // Aplicar máscara ao carregar no modal
+                        this.$nextTick(() => this.maskCpf('edit'));
                         this.editUser.mail = user.mail;
                         this.editUser.userPassword = '';
                         
@@ -971,6 +1106,9 @@
                                 (typeof adminOuEntry === 'string' ? 'user' : adminOuEntry.role) : 'user';
                         }
                         
+                        // Definir se o usuário sendo editado é root
+                        this.editUser.isRootUser = this.isUserRoot(user);
+                        
                         this.showEditUserModal = true;
                     },
                     
@@ -978,6 +1116,8 @@
                         try {
                             // Preparar dados baseado no tipo de usuário
                             let userData = { ...this.editUser };
+                            // Sanitizar CPF: somente números
+                            userData.employeeNumber = (userData.employeeNumber || '').replace(/\D+/g, '');
                             
                             if (this.isOuAdmin) {
                                 // Para admin de OU: usar apenas sua OU com o papel selecionado
@@ -1458,6 +1598,45 @@
                         this.showRightDrawer = false;
                         this.selectedLogId = null;
                         this.selectedLog = null;
+                    },
+                    formatCpf(cpf) {
+                        if (!cpf) return '';
+                        const digits = cpf.replace(/\D+/g, '');
+                        if (digits.length === 11) {
+                            return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                        }
+                        return cpf; // Se não tiver 11 dígitos, retorna como está
+                    },
+                    maskCpf(context){
+                        const key = context === 'new' ? 'newUser' : 'editUser';
+                        let digits = (this[key].employeeNumber || '').replace(/\D+/g, '');
+                        if (digits.length > 11) digits = digits.slice(0,11);
+                        // Formatar: 000.000.000-00
+                        let formatted = digits;
+                        if (digits.length > 9) formatted = digits.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, (m,a,b,c,d)=> d?`${a}.${b}.${c}-${d}`:`${a}.${b}.${c}`);
+                        else if (digits.length > 6) formatted = digits.replace(/(\d{3})(\d{3})(\d{0,3})/, (m,a,b,c)=> c?`${a}.${b}.${c}`:`${a}.${b}`);
+                        else if (digits.length > 3) formatted = digits.replace(/(\d{3})(\d{0,3})/, (m,a,b)=> b?`${a}.${b}`:`${a}`);
+                        this[key].employeeNumber = formatted;
+                    },
+                    maskCpfFilter(){
+                        let digits = (this.logFilters.cpf || '').replace(/\D+/g, '');
+                        if (digits.length > 11) digits = digits.slice(0,11);
+                        let formatted = digits;
+                        if (digits.length > 9) formatted = digits.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, (m,a,b,c,d)=> d?`${a}.${b}.${c}-${d}`:`${a}.${b}.${c}`);
+                        else if (digits.length > 6) formatted = digits.replace(/(\d{3})(\d{3})(\d{0,3})/, (m,a,b,c)=> c?`${a}.${b}.${c}`:`${a}.${b}`);
+                        else if (digits.length > 3) formatted = digits.replace(/(\d{3})(\d{0,3})/, (m,a,b)=> b?`${a}.${b}`:`${a}`);
+                        this.logFilters.cpf = formatted;
+                    },
+                    
+                    isUserRoot(user) {
+                        // Verifica se o usuário tem employeeType 'root' em alguma de suas organizationalUnits
+                        if (Array.isArray(user.organizationalUnits)) {
+                            return user.organizationalUnits.some(unit => {
+                                const role = typeof unit === 'string' ? 'user' : (unit.role || 'user');
+                                return role === 'root';
+                            });
+                        }
+                        return false;
                     },
                 }
             }).mount('#app');
