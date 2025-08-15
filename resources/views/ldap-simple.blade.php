@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Sei Contas Admin</title>
+    <title>SEI LDAP Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -50,9 +50,9 @@
                             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clip-rule="evenodd" />
                             </svg>
-                            Sei Contas Admin
+                            SEI LDAP Admin
                         </h1>
-                        <p class="text-blue-100">Gerenciamento de Usuários e Organizações</p>
+                        <p class="text-blue-100">Gerenciamento de Usuários e Unidades Organizacionais</p>
                     </div>
                     <div class="flex space-x-3">
                                                     <button v-if="canManageUsers" @click="openCreateUserModal" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center gap-2">
@@ -65,7 +65,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
-                            Nova Organização
+                            Nova OU
                         </button>
                         <button @click="logout" class="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg backdrop-blur-sm flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +127,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
-                        Organizações
+                        Unidades
                      </button>
                      <button v-if="canManageUsers" @click="activeTab = 'logs'" :class="activeTab === 'logs' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'" class="whitespace-nowrap px-6 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +169,7 @@
                                  <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UID</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">@{{ isRoot ? 'Organizações' : 'Perfil' }}</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">@{{ isRoot ? 'Unidades' : 'Perfil' }}</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF</th>
                                     <th v-if="canManageUsers" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
@@ -240,7 +240,7 @@
              <div v-if="activeTab === 'organizational-units' && isRoot" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                      <div class="px-6 py-4 border-b border-gray-200">
-                         <h3 class="text-lg font-medium text-gray-900">Organizações (@{{ organizationalUnits.length }})</h3>
+                         <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais (@{{ organizationalUnits.length }})</h3>
                      </div>
                      <div class="overflow-x-auto">
                          <table class="min-w-full divide-y divide-gray-200">
@@ -354,45 +354,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                                <div class="relative">
-                                    <input 
-                                        v-model="newUser.employeeNumber" 
-                                        @input="validateCpfUnique(newUser.employeeNumber, 'newUser')"
-                                        @blur="validateCpfUnique(newUser.employeeNumber, 'newUser')"
-                                        type="text" 
-                                        required 
-                                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        :class="{
-                                            'border-gray-300': cpfValidation.newUser.isValid && !cpfValidation.newUser.isChecking,
-                                            'border-red-500': !cpfValidation.newUser.isValid,
-                                            'border-yellow-400': cpfValidation.newUser.isChecking
-                                        }"
-                                        placeholder="Digite o CPF"
-                                    />
-                                    <!-- Spinner de loading -->
-                                    <div v-if="cpfValidation.newUser.isChecking" class="absolute right-3 top-2.5">
-                                        <svg class="animate-spin h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </div>
-                                    <!-- Ícone de sucesso -->
-                                    <div v-else-if="cpfValidation.newUser.isValid && newUser.employeeNumber" class="absolute right-3 top-2.5">
-                                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                    </div>
-                                    <!-- Ícone de erro -->
-                                    <div v-else-if="!cpfValidation.newUser.isValid" class="absolute right-3 top-2.5">
-                                        <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <!-- Mensagem de erro -->
-                                <div v-if="!cpfValidation.newUser.isValid && cpfValidation.newUser.errorMessage" class="mt-1 text-sm text-red-600">
-                                    @{{ cpfValidation.newUser.errorMessage }}
-                                </div>
+                                <input v-model="newUser.employeeNumber" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
@@ -421,7 +383,7 @@
 
                         <!-- Interface para ROOT: múltiplas OUs -->
                         <div v-if="isRoot">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Organizações</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in newUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
                                     <select v-model="newUser.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
@@ -434,14 +396,14 @@
                                     </select>
                                     <button v-if="index > 0" @click="newUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                                 </div>
-                                <button @click="newUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar Organização</button>
+                                <button @click="newUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
                             </div>
                         </div>
 
-                        <!-- Interface para Admin Organização: apenas dropdown de papel -->
+                        <!-- Interface para Admin OU: apenas dropdown de papel -->
                         <div v-if="isOuAdmin">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua Organização</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua OU</label>
                                 <select v-model="newUserRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="user">Usuário Comum</option>
                                     <option value="admin">Administrador</option>
@@ -467,7 +429,7 @@
                             <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
-                            Criar Nova Organização
+                            Criar Nova Unidade Organizacional
                         </h3>
                         <button @click="showCreateOuModal = false" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -478,7 +440,7 @@
                     
                     <form @submit.prevent="createOu" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Organização</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Unidade Organizacional</label>
                             <input v-model="newOu.ou" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         
@@ -489,7 +451,7 @@
 
                         <div class="flex justify-end space-x-4 pt-8 border-t border-gray-200">
                             <button @click="showCreateOuModal = false" type="button" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-medium transition-colors">Cancelar</button>
-                            <button type="submit" class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors hover:shadow-lg">Criar Organização</button>
+                            <button type="submit" class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium transition-colors hover:shadow-lg">Criar Unidade Organizacional</button>
                         </div>
                     </form>
                 </div>
@@ -527,49 +489,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">CPF @{{ isRoot ? '' : '(não editável)' }}</label>
-                                <div class="relative">
-                                    <input 
-                                        type="text" 
-                                        v-model="editUser.employeeNumber" 
-                                        @input="isRoot ? validateCpfUnique(editUser.employeeNumber, 'editUser', editUser.uid) : null"
-                                        @blur="isRoot ? validateCpfUnique(editUser.employeeNumber, 'editUser', editUser.uid) : null"
-                                        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                        :class="{
-                                            'bg-gray-100': !isRoot,
-                                            'border-gray-300': (cpfValidation.editUser.isValid && !cpfValidation.editUser.isChecking) || !isRoot,
-                                            'border-red-500': !cpfValidation.editUser.isValid && isRoot,
-                                            'border-yellow-400': cpfValidation.editUser.isChecking && isRoot
-                                        }"
-                                        :disabled="!isRoot" 
-                                        placeholder="Digite o CPF"
-                                    />
-                                    <!-- Indicadores apenas para ROOT -->
-                                    <template v-if="isRoot">
-                                        <!-- Spinner de loading -->
-                                        <div v-if="cpfValidation.editUser.isChecking" class="absolute right-3 top-2.5">
-                                            <svg class="animate-spin h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                        </div>
-                                        <!-- Ícone de sucesso -->
-                                        <div v-else-if="cpfValidation.editUser.isValid && editUser.employeeNumber" class="absolute right-3 top-2.5">
-                                            <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                        </div>
-                                        <!-- Ícone de erro -->
-                                        <div v-else-if="!cpfValidation.editUser.isValid" class="absolute right-3 top-2.5">
-                                            <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </div>
-                                    </template>
-                                </div>
-                                <!-- Mensagem de erro apenas para ROOT -->
-                                <div v-if="isRoot && !cpfValidation.editUser.isValid && cpfValidation.editUser.errorMessage" class="mt-1 text-sm text-red-600">
-                                    @{{ cpfValidation.editUser.errorMessage }}
-                                </div>
+                                <input type="text" v-model="editUser.employeeNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot ? '' : 'bg-gray-100'" :disabled="!isRoot" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
@@ -597,7 +517,7 @@
 
                         <!-- Interface para ROOT: múltiplas OUs -->
                         <div v-if="isRoot">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Organizações</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in editUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
                                     <select v-model="editUser.organizationalUnits[index].ou" class="flex-1 border rounded px-3 py-2">
@@ -610,14 +530,14 @@
                                     </select>
                                     <button v-if="index > 0" @click="editUser.organizationalUnits.splice(index,1)" class="text-red-500">✖</button>
                                 </div>
-                                <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar Organização</button>
+                                <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })" class="mt-2 text-blue-600">+ adicionar OU</button>
                             </div>
                         </div>
 
-                        <!-- Interface para Admin Organização: apenas dropdown de papel -->
+                        <!-- Interface para Admin OU: apenas dropdown de papel -->
                         <div v-if="isOuAdmin">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua Organização</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua OU</label>
                                 <select v-model="editUserRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="user">Usuário Comum</option>
                                     <option value="admin">Administrador</option>
@@ -658,7 +578,7 @@
                             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
-                            Editar Organização
+                            Editar Unidade Organizacional
                         </h3>
                         <button @click="showEditOuModal = false" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -669,7 +589,7 @@
                     
                     <form @submit.prevent="updateOu" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Organização</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Unidade Organizacional</label>
                             <input v-model="editOuData.ou" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         
@@ -751,21 +671,7 @@
                         showDeleteUserModal: false,
                         userToDelete: null,
                         showEditOuModal: false,
-                        editOuData: { ou: '', description: '', dn: '' },
-                        // Validação de CPF
-                        cpfValidation: {
-                            newUser: { 
-                                isChecking: false, 
-                                isValid: true, 
-                                errorMessage: '' 
-                            },
-                            editUser: { 
-                                isChecking: false, 
-                                isValid: true, 
-                                errorMessage: '' 
-                            }
-                        },
-                        cpfValidationTimeout: null
+                        editOuData: { ou: '', description: '', dn: '' }
                     }
                 },
                 computed: {
@@ -799,9 +705,9 @@
                         
                         const term = this.searchTerm.toLowerCase();
                         return list.filter(user => 
-                            (user.uid && user.uid.toLowerCase().includes(term)) ||
-                            (user.fullName && user.fullName.toLowerCase().includes(term)) ||
-                            (user.employeeNumber && user.employeeNumber.toLowerCase().includes(term))
+                            user.uid.toLowerCase().includes(term) ||
+                            user.fullName.toLowerCase().includes(term) ||
+                            user.employeeNumber.toLowerCase().includes(term)
                         );
                     },
                     // Paginação usuários
@@ -907,14 +813,14 @@
                     },
                     
                     async loadOrganizationalUnits() {
-                        console.log('🔄 Carregando Organizações...');
+                        console.log('🔄 Carregando Unidades Organizacionais...');
                         try {
                             const response = await fetch('/api/ldap/organizational-units');
                             const data = await response.json();
                             
                             if (data.success) {
                                 this.organizationalUnits = data.data;
-                                console.log('✅ Organizações carregadas:', data.data.length);
+                                console.log('✅ Unidades Organizacionais carregadas:', data.data.length);
                             } else {
                                 // Se for erro 403 (acesso negado), não mostrar erro de conexão LDAP
                                 if (data.message && data.message.includes('Acesso negado')) {
@@ -927,7 +833,7 @@
                             }
                         } catch (error) {
                             console.log('❌ Erro de rede Unidade Organizacional:', error);
-                            this.handleNetworkError('Erro ao carregar organizações', error);
+                            this.handleNetworkError('Erro ao carregar unidades organizacionais', error);
                         }
                     },
                     
@@ -965,26 +871,11 @@
                                 (typeof adminOuEntry === 'string' ? 'user' : adminOuEntry.role) : 'user';
                         }
                         
-                        // Resetar validação de CPF
-                        this.resetCpfValidation('editUser');
-                        
                         this.showEditUserModal = true;
                     },
                     
                     async updateUser() {
                         try {
-                            // Verificar se CPF é válido antes de enviar (apenas para ROOT que pode editar CPF)
-                            if (this.isRoot && !this.cpfValidation.editUser.isValid) {
-                                this.showNotification('Corrija os erros de validação antes de continuar', 'error');
-                                return;
-                            }
-
-                            // Se ainda está validando CPF, aguardar (apenas para ROOT)
-                            if (this.isRoot && this.cpfValidation.editUser.isChecking) {
-                                this.showNotification('Aguarde a validação do CPF...', 'warning');
-                                return;
-                            }
-
                             // Preparar dados baseado no tipo de usuário
                             let userData = { ...this.editUser };
                             
@@ -1016,18 +907,6 @@
                     
                     async createUser() {
                         try {
-                            // Verificar se CPF é válido antes de enviar
-                            if (!this.cpfValidation.newUser.isValid) {
-                                this.showNotification('Corrija os erros de validação antes de continuar', 'error');
-                                return;
-                            }
-
-                            // Se ainda está validando, aguardar
-                            if (this.cpfValidation.newUser.isChecking) {
-                                this.showNotification('Aguarde a validação do CPF...', 'warning');
-                                return;
-                            }
-
                             // Preparar dados baseado no tipo de usuário
                             let userData = { ...this.newUser };
                             
@@ -1045,7 +924,7 @@
                                     role: this.newUserRole || 'user' 
                                 }];
                                 
-                                console.log('🏢 Dados para admin Organização:', {
+                                console.log('🏢 Dados para admin OU:', {
                                     adminOu: this.adminOu,
                                     newUserRole: this.newUserRole,
                                     organizationalUnits: userData.organizationalUnits
@@ -1132,11 +1011,10 @@
                     
                     openCreateUserModal() {
                         this.resetNewUser();
-                        this.resetCpfValidation('newUser');
                         
                         // Para admin de OU, verificar se adminOu está preenchida
                         if (this.isOuAdmin) {
-                            console.log('🏢 Abrindo modal para admin Organização. AdminOU atual:', this.adminOu);
+                            console.log('🏢 Abrindo modal para admin OU. AdminOU atual:', this.adminOu);
                             
                             if (!this.adminOu || this.adminOu.trim() === '') {
                                 console.warn('⚠️  adminOu vazia, tentando recarregar...');
@@ -1179,9 +1057,6 @@
                         if (this.isOuAdmin) {
                             this.newUserRole = 'user';
                         }
-                        
-                        // Resetar validação de CPF
-                        this.resetCpfValidation('newUser');
                     },
                     
                     resetNewOu() {
@@ -1459,89 +1334,6 @@
                             this.showNotification('Erro ao carregar logs', 'error');
                         }
                     },
-
-                    /**
-                     * Valida se um CPF é único no sistema
-                     */
-                    async validateCpfUnique(cpf, context, excludeUid = null) {
-                        // Limpar validação anterior
-                        this.cpfValidation[context].isChecking = true;
-                        this.cpfValidation[context].isValid = true;
-                        this.cpfValidation[context].errorMessage = '';
-
-                        // Se CPF está vazio, não validar
-                        if (!cpf || cpf.trim() === '') {
-                            this.cpfValidation[context].isChecking = false;
-                            return;
-                        }
-
-                        try {
-                            // Usar debounce para evitar muitas requisições
-                            clearTimeout(this.cpfValidationTimeout);
-                            this.cpfValidationTimeout = setTimeout(async () => {
-                                try {
-                                    // Verificar localmente primeiro (mais rápido)
-                                    const localConflict = this.users.find(user => {
-                                        return user.employeeNumber === cpf && 
-                                               (!excludeUid || user.uid !== excludeUid);
-                                    });
-
-                                    if (localConflict) {
-                                        this.cpfValidation[context].isValid = false;
-                                        this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${localConflict.fullName} (${localConflict.uid})`;
-                                        this.cpfValidation[context].isChecking = false;
-                                        return;
-                                    }
-
-                                    // Se não encontrou localmente, fazer verificação via API
-                                    const response = await fetch('/api/ldap/users', {
-                                        method: 'GET',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                        }
-                                    });
-
-                                    if (response.ok) {
-                                        const data = await response.json();
-                                        if (data.success) {
-                                            const conflict = data.data.find(user => {
-                                                return user.employeeNumber === cpf && 
-                                                       (!excludeUid || user.uid !== excludeUid);
-                                            });
-
-                                            if (conflict) {
-                                                this.cpfValidation[context].isValid = false;
-                                                this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${conflict.fullName} (${conflict.uid})`;
-                                            }
-                                        }
-                                    }
-                                } catch (error) {
-                                    console.warn('Erro na validação de CPF:', error);
-                                    // Em caso de erro, não bloquear o usuário
-                                } finally {
-                                    this.cpfValidation[context].isChecking = false;
-                                }
-                            }, 500); // Delay de 500ms para debounce
-
-                        } catch (error) {
-                            console.warn('Erro na validação de CPF:', error);
-                            this.cpfValidation[context].isChecking = false;
-                        }
-                    },
-
-                    /**
-                     * Reseta validação de CPF
-                     */
-                    resetCpfValidation(context) {
-                        this.cpfValidation[context].isChecking = false;
-                        this.cpfValidation[context].isValid = true;
-                        this.cpfValidation[context].errorMessage = '';
-                        if (this.cpfValidationTimeout) {
-                            clearTimeout(this.cpfValidationTimeout);
-                        }
-                    },
-
                     pageNumbers(total) {
                         const current = this.activeTab === 'users' ? this.usersPage : (this.activeTab === 'organizational-units' ? this.ousPage : this.logsPage);
                         const delta = 2;

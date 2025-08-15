@@ -26,36 +26,6 @@ class LdapUserController extends Controller
     }
 
     /**
-     * Verifica se um CPF já está em uso no sistema, excluindo opcionalmente um usuário específico
-     */
-    private function isCpfAlreadyUsed(string $cpf, ?string $excludeUid = null): array
-    {
-        $existingUsers = LdapUserModel::where('employeeNumber', $cpf)->get();
-        
-        if ($excludeUid) {
-            // Filtrar para excluir o usuário que está sendo editado
-            $existingUsers = $existingUsers->reject(function($user) use ($excludeUid) {
-                return $user->getFirstAttribute('uid') === $excludeUid;
-            });
-        }
-        
-        if ($existingUsers->isEmpty()) {
-            return ['exists' => false, 'user' => null];
-        }
-        
-        $conflictUser = $existingUsers->first();
-        $conflictOus = $existingUsers->map(fn($u) => $this->extractOu($u))->filter()->unique()->values();
-        
-        return [
-            'exists' => true,
-            'user' => $conflictUser,
-            'uid' => $conflictUser->getFirstAttribute('uid'),
-            'name' => trim(($conflictUser->getFirstAttribute('givenName') ?? '') . ' ' . ($conflictUser->getFirstAttribute('sn') ?? '')),
-            'ous' => $conflictOus->toArray()
-        ];
-    }
-
-    /**
      * Safely get an attribute that might not be supported by the LDAP schema
      */
     private function safeGetAttribute($user, $attribute)
@@ -244,9 +214,9 @@ class LdapUserController extends Controller
                 
                 // Se não informou nenhuma OU ou informou OU inválida, usar a OU do admin com role user
                 if ($requestedOus->isEmpty()) {
-                    $request->merge([
+                $request->merge([
                         'organizationalUnits' => [['ou' => $adminOu, 'role' => 'user']],
-                    ]);
+            ]);
                 }
             }
 
@@ -265,17 +235,12 @@ class LdapUserController extends Controller
                 }
             }
 
-            // Verificar se o CPF já está em uso no sistema
-            $cpfCheck = $this->isCpfAlreadyUsed($request->employeeNumber);
-            if ($cpfCheck['exists']) {
-                $conflictUser = $cpfCheck['user'];
-                $conflictName = $cpfCheck['name'];
-                $conflictUid = $cpfCheck['uid'];
-                $conflictOus = implode(', ', $cpfCheck['ous']);
-                
+            // Verificar se o CPF já existe
+            $existingEmployee = LdapUserModel::where('employeeNumber', $request->employeeNumber)->first();
+            if ($existingEmployee) {
                 return response()->json([
                     'success' => false,
-                    'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}"
+                    'message' => 'CPF já cadastrado'
                 ], 422);
             }
 
@@ -417,27 +382,11 @@ class LdapUserController extends Controller
                 'givenName' => 'sometimes|required|string|max:255',
                 'sn' => 'sometimes|required|string|max:255',
                 'mail' => 'sometimes|required|email',
-                'employeeNumber' => 'sometimes|required|string|max:255',
                 'userPassword' => 'sometimes|nullable|string|min:6',
                 'organizationalUnits' => 'sometimes|array',
                 // aceitar string ou objeto {ou, role}
                 'organizationalUnits.*' => 'required',
             ]);
-
-            // Verificar se o CPF já está em uso por outro usuário (se CPF foi fornecido)
-            if ($request->has('employeeNumber')) {
-                $cpfCheck = $this->isCpfAlreadyUsed($request->employeeNumber, $uid);
-                if ($cpfCheck['exists']) {
-                    $conflictName = $cpfCheck['name'];
-                    $conflictUid = $cpfCheck['uid'];
-                    $conflictOus = implode(', ', $cpfCheck['ous']);
-                    
-                    return response()->json([
-                        'success' => false,
-                        'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}"
-                    ], 422);
-                }
-            }
 
             $users = LdapUserModel::where('uid', $uid)->get();
             $role = RoleResolver::resolve(auth()->user());
@@ -483,7 +432,7 @@ class LdapUserController extends Controller
 
             $baseDn = config('ldap.connections.default.base_dn');
 
-            // Organizações enviadas na requisição
+            // Unidades enviadas na requisição
             $units = collect($request->organizationalUnits ?? [])->map(function($i){
                 if (is_string($i)) return ['ou'=>$i,'role'=>'user'];
                 return [
@@ -492,7 +441,7 @@ class LdapUserController extends Controller
                 ];
             });
 
-            // Loop organizações solicitadas
+            // Loop unidades solicitadas
             foreach ($units as $unit) {
                 $ouLower = strtolower($unit['ou']);
                 $role     = $unit['role'];
@@ -504,7 +453,6 @@ class LdapUserController extends Controller
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
-                    if ($request->has('employeeNumber')) $user->setFirstAttribute('employeeNumber', $request->employeeNumber);
                     
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
@@ -526,8 +474,8 @@ class LdapUserController extends Controller
                     $entry->setFirstAttribute('sn', $request->get('sn', $users->first()->getFirstAttribute('sn')));
                     $entry->setFirstAttribute('cn', trim(($request->get('givenName', $users->first()->getFirstAttribute('givenName'))) . ' ' . ($request->get('sn', $users->first()->getFirstAttribute('sn')))));
                     $entry->setFirstAttribute('mail', $request->get('mail', $users->first()->getFirstAttribute('mail')));
-                    $entry->setFirstAttribute('employeeNumber', $request->get('employeeNumber', $users->first()->getFirstAttribute('employeeNumber')));
-                    if ($request->has('userPassword') && !empty($request->userPassword)) {
+                    $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
+                    if ($request->has('userPassword')) {
                         $entry->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     } else {
                         $entry->setFirstAttribute('userPassword', $users->first()->getFirstAttribute('userPassword'));
@@ -551,7 +499,6 @@ class LdapUserController extends Controller
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
                     if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
-                    if ($request->has('employeeNumber')) $user->setFirstAttribute('employeeNumber', $request->employeeNumber);
                     
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
@@ -560,7 +507,7 @@ class LdapUserController extends Controller
                     if ($request->has('givenName') || $request->has('sn')) {
                         $newCn = trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? ''));
                         $this->setSafeAttribute($user, 'cn', $newCn);
-                    }
+            }
             $user->save();
                 }
             }
@@ -671,7 +618,7 @@ class LdapUserController extends Controller
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Acesso negado: apenas usuários root podem visualizar organizações'
+                    'message' => 'Acesso negado: apenas usuários root podem visualizar unidades organizacionais'
                 ], 403);
             }
 
@@ -688,12 +635,12 @@ class LdapUserController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $formattedOus,
-                'message' => 'Organizações carregadas com sucesso'
+                'message' => 'Unidades organizacionais carregadas com sucesso'
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao carregar organizações: ' . $e->getMessage()
+                'message' => 'Erro ao carregar unidades organizacionais: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -712,7 +659,7 @@ class LdapUserController extends Controller
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Acesso negado: apenas usuários root podem criar organizações'
+                    'message' => 'Acesso negado: apenas usuários root podem criar unidades organizacionais'
                 ], 403);
             }
 
@@ -783,7 +730,7 @@ class LdapUserController extends Controller
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Acesso negado: apenas usuários root podem editar organizações'
+                    'message' => 'Acesso negado: apenas usuários root podem editar unidades organizacionais'
                 ], 403);
             }
 
@@ -841,7 +788,7 @@ class LdapUserController extends Controller
             
             // Se for ROOT, vê todos os logs
             if ($role === RoleResolver::ROLE_ROOT) {
-                $logs = OperationLog::orderBy('created_at', 'desc')->get();
+            $logs = OperationLog::orderBy('created_at', 'desc')->get();
             } else {
                 // Se for admin de OU, vê apenas logs da sua OU
                 $adminOu = RoleResolver::getUserOu(auth()->user());

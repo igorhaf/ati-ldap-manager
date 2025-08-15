@@ -76,7 +76,7 @@ curl -X POST http://localhost:8000/api/ldap/users \
 - `userPassword`: Senha (mínimo 6 caracteres)
 
 **Dados opcionais**:
-- `organizationalUnits`: Array com organizações
+- `organizationalUnits`: Array com unidades organizacionais
 
 ---
 
@@ -133,7 +133,7 @@ curl -X PUT http://localhost:8000/api/ldap/users/joao.silva \
 - `sn`: Sobrenome
 - `mail`: Array de emails
 - `userPassword`: Nova senha
-- `organizationalUnits`: Array de organizações
+- `organizationalUnits`: Array de unidades organizacionais
 
 ---
 
@@ -158,13 +158,13 @@ curl -X DELETE http://localhost:8000/api/ldap/users/joao.silva \
 
 ---
 
-### **3. API de Organizações**
+### **3. API de Unidades Organizacionais**
 
-#### **3.1 Listar Organizações**
+#### **3.1 Listar Unidades Organizacionais**
 ```
 GET /api/ldap/organizational-units
 ```
-**Descrição**: Retorna todas as organizações
+**Descrição**: Retorna todas as unidades organizacionais
 **Teste com cURL**:
 ```bash
 curl -X GET http://localhost:8000/api/ldap/organizational-units
@@ -186,7 +186,7 @@ curl -X GET http://localhost:8000/api/ldap/organizational-units
             "description": "Recursos Humanos"
         }
     ],
-    "message": "Organizações carregadas com sucesso"
+    "message": "Unidades organizacionais carregadas com sucesso"
 }
 ```
 
@@ -234,7 +234,7 @@ echo "1. Testando GET /api/ldap/users"
 curl -s -X GET "$BASE_URL/api/ldap/users" | jq '.'
 echo ""
 
-# Teste 2: Listar organizações
+# Teste 2: Listar unidades organizacionais
 echo "2. Testando GET /api/ldap/organizational-units"
 curl -s -X GET "$BASE_URL/api/ldap/organizational-units" | jq '.'
 echo ""

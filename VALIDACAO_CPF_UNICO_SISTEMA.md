@@ -68,7 +68,7 @@ if ($cpfCheck['exists']) {
     
     return response()->json([
         'success' => false,
-        'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}"
+        'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (Usuário: {$conflictUid}) na(s) Organização(ões): {$conflictOus}"
     ], 422);
 }
 ```
@@ -86,7 +86,7 @@ if ($request->has('employeeNumber')) {
         
         return response()->json([
             'success' => false,
-            'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid}) na(s) OU(s): {$conflictOus}"
+            'message' => "CPF {$request->employeeNumber} já está cadastrado para o usuário '{$conflictName}' (Usuário: {$conflictUid}) na(s) Organização(ões): {$conflictOus}"
         ], 422);
     }
 }
@@ -123,7 +123,7 @@ async validateCpfUnique(cpf, context, excludeUid = null) {
 
                 if (localConflict) {
                     this.cpfValidation[context].isValid = false;
-                    this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${localConflict.fullName} (${localConflict.uid})`;
+                    this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${localConflict.fullName} (Usuário: ${localConflict.uid})`;
                     this.cpfValidation[context].isChecking = false;
                     return;
                 }
@@ -147,7 +147,7 @@ async validateCpfUnique(cpf, context, excludeUid = null) {
 
                         if (conflict) {
                             this.cpfValidation[context].isValid = false;
-                            this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${conflict.fullName} (${conflict.uid})`;
+                            this.cpfValidation[context].errorMessage = `CPF já cadastrado para ${conflict.fullName} (Usuário: ${conflict.uid})`;
                         }
                     }
                 }
@@ -292,7 +292,7 @@ CPF: 12345678901
 ❌ Criação seria bloqueada
 
 4️⃣ Mensagem de erro que seria exibida:
-📝 "CPF 12345678901 já está cadastrado para o usuário 'João Silva' (UID: joao.silva) na(s) OU(s): TI, RH"
+📝 "CPF 12345678901 já está cadastrado para o usuário 'João Silva' (Usuário: joao.silva) na(s) Organização(ões): TI, RH"
 ```
 
 ## 📊 **Benefícios da Implementação**
@@ -352,4 +352,4 @@ O sistema agora **garante unicidade absoluta** do CPF (employeeNumber) em todo o
 **Status**: ✅ **Validação de CPF único implementada**  
 **Cobertura**: Backend + Frontend + Testes  
 **Experiência**: Validação em tempo real com feedback visual  
-**Comando de teste**: `php artisan test:cpf-unique-validation {cpf} {--exclude-uid=}` 
+**Comando de teste**: `php artisan test:cpf-unique-validation {cpf} {--exclude-usuario=}` 

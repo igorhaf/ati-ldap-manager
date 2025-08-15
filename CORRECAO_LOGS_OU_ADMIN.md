@@ -2,7 +2,7 @@
 
 ## 🔍 **Problema Identificado**
 
-Administradores de Organização não conseguiam carregar os logs de suas organizações, recebendo erro de acesso negado.
+Administradores de OU não conseguiam carregar os logs de suas unidades organizacionais, recebendo erro de acesso negado.
 
 ### **Causa Raiz**
 - Rota `/api/ldap/logs` estava protegida apenas pelo middleware `IsRootUser`

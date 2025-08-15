@@ -2,7 +2,7 @@
 
 ## 🎯 Objetivo
 
-Implementação de funcionalidade LDIF para permitir a criação do mesmo usuário em múltiplas Organizações com diferentes perfis e privilégios.
+Implementação de funcionalidade LDIF para permitir a criação do mesmo usuário em múltiplas Unidades Organizacionais (OUs) com diferentes perfis e privilégios.
 
 ## ✨ Funcionalidades
 

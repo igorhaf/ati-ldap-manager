@@ -47,7 +47,7 @@ if ($role === RoleResolver::ROLE_OU_ADMIN) {
 #### **Para ROOT (interface completa):**
 ```html
 <div v-if="isRoot">
-    <label>Organizações</label>
+    <label>Unidades Organizacionais</label>
     <!-- Múltiplas OUs com botão adicionar -->
     <select multiple>...</select>
     <button>+ adicionar OU</button>

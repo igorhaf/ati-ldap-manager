@@ -207,16 +207,12 @@ class LdifService
 
         // Verificar se o CPF já existe (se informado)
         if (isset($entry['employeeNumber'][0])) {
-            $existingUsers = LdapUserModel::where('employeeNumber', $entry['employeeNumber'][0])->get();
-            if ($existingUsers->isNotEmpty()) {
-                $conflictUser = $existingUsers->first();
-                $conflictName = trim(($conflictUser->getFirstAttribute('givenName') ?? '') . ' ' . ($conflictUser->getFirstAttribute('sn') ?? ''));
-                $conflictUid = $conflictUser->getFirstAttribute('uid');
-                
+            $existingEmployee = LdapUserModel::where('employeeNumber', $entry['employeeNumber'][0])->first();
+            if ($existingEmployee) {
                 return [
                     'success' => false,
                     'dn' => $entry['dn'],
-                    'message' => "CPF {$entry['employeeNumber'][0]} já está cadastrado para o usuário '{$conflictName}' (UID: {$conflictUid})"
+                    'message' => 'CPF já cadastrado'
                 ];
             }
         }
