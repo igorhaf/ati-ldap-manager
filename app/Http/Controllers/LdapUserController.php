@@ -142,6 +142,11 @@ class LdapUserController extends Controller
                         'mail' => $first->getFirstAttribute('mail'),
                         'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                         'organizationalUnits' => $ous,
+                        'isActive' => (function() use ($first) {
+                            $pwd = $first->getFirstAttribute('userPassword');
+                            if (!is_string($pwd)) return true;
+                            return substr($pwd, -4) !== '####';
+                        })(),
                 ];
                 })
                 ->values();
@@ -280,6 +285,7 @@ class LdapUserController extends Controller
                 $entry->setFirstAttribute('cn',         $request->givenName.' '.$request->sn);
                 $entry->setFirstAttribute('mail',       $request->mail);
                 $entry->setFirstAttribute('employeeNumber', $cpfDigits);
+                // Por padrão, criar usuário ativo (sem '####'). A desativação é feita no update
                 $entry->setFirstAttribute('userPassword',   $hashedPassword);
                 $entry->setFirstAttribute('ou',         $ou);
                 $entry->setAttribute('employeeType',    [$role]);
@@ -592,6 +598,37 @@ class LdapUserController extends Controller
                 // Não registrar valores, apenas que houve alteração
                 $changes['userPassword'] = ['changed' => true];
                 $summaryParts[] = 'Senha alterada';
+            }
+
+            // Ativação/Desativação via sufixo '####'
+            if ($request->has('isActive')) {
+                $currentlyActive = true;
+                if (!$users->isEmpty()) {
+                    $currentPwd = $users->first()->getFirstAttribute('userPassword');
+                    $currentlyActive = !is_string($currentPwd) ? true : (substr($currentPwd, -4) !== '####');
+                }
+
+                $targetActive = (bool) $request->boolean('isActive');
+                if ($targetActive !== $currentlyActive) {
+                    foreach ($users as $user) {
+                        $pwd = (string) $user->getFirstAttribute('userPassword');
+                        if ($targetActive) {
+                            // Reativar: remover '####' do final, se houver
+                            if (substr($pwd, -4) === '####') {
+                                $user->setFirstAttribute('userPassword', substr($pwd, 0, -4));
+                            }
+                        } else {
+                            // Desativar: adicionar '####' ao final, se não houver
+                            if (substr($pwd, -4) !== '####') {
+                                $user->setFirstAttribute('userPassword', $pwd . '####');
+                            }
+                        }
+                        $user->save();
+                    }
+
+                    $changes['activation'] = ['changed' => true];
+                    $summaryParts[] = $targetActive ? 'Usuário reativado' : 'Usuário desativado';
+                }
             }
             if (!$units->isEmpty()) {
                 $newUnits = $units->values();

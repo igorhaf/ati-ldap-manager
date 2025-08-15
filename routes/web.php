@@ -27,6 +27,14 @@ Route::get('/password-change', function () {
     ]);
 })->middleware(['auth'])->name('password.change');
 
+// Página Meu Perfil (edição de dados do próprio usuário)
+Route::get('/meu-perfil', function () {
+    return view('profile', [
+        'uid' => auth()->user()->getFirstAttribute('uid') ?? '',
+        'userRole' => \App\Services\RoleResolver::resolve(auth()->user()),
+    ]);
+})->middleware(['auth'])->name('profile');
+
 // Rota para phpinfo (apenas para debug)
 Route::get('/phpinfo', function () {
     return response(phpinfo(), 200, ['Content-Type' => 'text/html']);

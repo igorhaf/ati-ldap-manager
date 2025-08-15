@@ -87,23 +87,17 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.89 0 5.566.915 7.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
-                                @{{ window.USER_CN || window.USER_UID }}
+                                @{{ userCn || userUid }}
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
                             <div v-if="showProfileMenu" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
-                                <a href="#" @click.prevent="goToProfile" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                <a href="#" @click.prevent="openProfileModal" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.89 0 5.566.915 7.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                     Meu Perfil
-                                </a>
-                                <a :href="'/password-change'" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11m6 0c0 1.657 1.343 3 3 3s3-1.343 3-3m-6 0V8m0 3v3" />
-                                    </svg>
-                                    Alterar Senha
                                 </a>
                                 <form method="POST" action="/logout" class="border-t border-gray-100 mt-2">
                                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
@@ -346,8 +340,7 @@
                              </select>
                              <input v-model="logFilters.description" type="text" placeholder="Filtrar por Descrição" class="px-3 py-2 border rounded-md">
                              <input v-model="logFilters.cpf" @input="maskCpfFilter" inputmode="numeric" type="text" placeholder="Filtrar por CPF" class="px-3 py-2 border rounded-md" title="CPF">
-                             <input v-model="logFilters.whenStart" type="date" class="px-3 py-2 border rounded-md" title="Data inicial">
-                             <input v-model="logFilters.whenEnd" type="date" class="px-3 py-2 border rounded-md" title="Data final">
+                             <input v-model="logFilters.whenEnd" type="date" class="px-3 py-2 border rounded-md" title="Quando">
                          </div>
                      </div>
                      <div class="overflow-x-auto">
@@ -639,20 +632,20 @@
                     <form @submit.prevent="updateUser" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Usuário (Login) @{{ isRoot && !editUser.isRootUser ? '' : '(não editável)' }}</label>
-                                <input type="text" v-model="editUser.uid" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot && !editUser.isRootUser ? '' : 'bg-gray-100'" :disabled="!isRoot || editUser.isRootUser" />
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Usuário (Login)</label>
+                                <input type="text" v-model="editUser.uid" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="editUser.isRootUser ? 'bg-gray-100' : ''" :disabled="editUser.isRootUser" />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">CPF @{{ isRoot ? '' : '(não editável)' }}</label>
-                                <input type="text" v-model="editUser.employeeNumber" @input="maskCpf('edit')" inputmode="numeric" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot ? '' : 'bg-gray-100'" :disabled="!isRoot" placeholder="000.000.000-00" />
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                                <input type="text" v-model="editUser.employeeNumber" @input="maskCpf('edit')" inputmode="numeric" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="editUser.isRootUser ? 'bg-gray-100' : ''" :disabled="editUser.isRootUser" placeholder="000.000.000-00" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                                <input v-model="editUser.givenName" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input v-model="editUser.givenName" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="editUser.isRootUser ? 'bg-gray-100' : ''" :disabled="editUser.isRootUser">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Sobrenome</label>
-                                <input v-model="editUser.sn" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input v-model="editUser.sn" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="editUser.isRootUser ? 'bg-gray-100' : ''" :disabled="editUser.isRootUser">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Senha (deixe em branco para manter)</label>
@@ -666,12 +659,14 @@
                                     id="edit-mail"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="exemplo@empresa.com"
+                                    :class="editUser.isRootUser ? 'bg-gray-100' : ''"
+                                    :disabled="editUser.isRootUser"
                                 >
                             </div>
                         </div>
 
                         <!-- Ativação do Usuário -->
-                        <div class="mt-2">
+                        <div class="mt-2" :class="editUser.isRootUser ? 'opacity-60 pointer-events-none select-none' : ''">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Status do usuário</label>
                             <label class="inline-flex items-center cursor-pointer select-none">
                                 <input type="checkbox" v-model="editUser.isActive" class="sr-only peer">
@@ -683,7 +678,7 @@
                         </div>
 
                         <!-- Interface para ROOT: múltiplas OUs -->
-                        <div v-if="isRoot">
+                        <div v-if="isRoot" :class="editUser.isRootUser ? 'opacity-60 pointer-events-none select-none' : ''">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Unidades Organizacionais</label>
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in editUser.organizationalUnits" :key="index" class="flex items-center space-x-2 mt-1">
@@ -721,6 +716,71 @@
             </div>
         </div>
         <!-- Fim modal edição -->
+
+        <!-- Modal Meu Perfil -->
+        <div v-if="showProfileModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
+            <div class="w-11/12 md:w-3/4 lg:w-1/2 bg-white rounded-2xl shadow-2xl border border-gray-100">
+                <div class="p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.89 0 5.566.915 7.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Meu Perfil
+                        </h3>
+                        <button @click="closeProfileModal" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="saveProfile" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Usuário (Login)</label>
+                                <input v-model="profile.uid" type="text" disabled class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input v-model="profile.mail" type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot ? 'bg-gray-100' : ''" :disabled="isRoot">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                                <input v-model="profile.givenName" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot ? 'bg-gray-100' : ''" :disabled="isRoot">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Sobrenome</label>
+                                <input v-model="profile.sn" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" :class="isRoot ? 'bg-gray-100' : ''" :disabled="isRoot">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                                <input v-model="profile.employeeNumber" @input="maskCpfProfile" inputmode="numeric" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="000.000.000-00" :class="isRoot ? 'bg-gray-100' : ''" :disabled="isRoot">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nova Senha</label>
+                                <input v-model="profilePassword" type="password" minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Senha</label>
+                                <input v-model="profilePasswordConfirm" type="password" minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div v-if="profileError" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">@{{ profileError }}</div>
+                        <div v-if="profileSuccess" class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">@{{ profileSuccess }}</div>
+
+                        <div class="flex justify-end space-x-4 pt-8 border-t border-gray-200">
+                            <button @click="closeProfileModal" type="button" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-medium transition-colors">Cancelar</button>
+                            <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors hover:shadow-lg">Salvar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
         <!-- Delete User Confirmation Modal -->
         <div v-if="showDeleteUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -785,6 +845,8 @@
                 data() {
                     return {
                         userRole: window.USER_ROLE,
+                        userCn: window.USER_CN || '',
+                        userUid: window.USER_UID || '',
                         activeTab: 'users',
                         users: [],
                         organizationalUnits: [],
@@ -798,6 +860,7 @@
                         showCreateUserModal: false,
                         showProfileMenu: false,
                         showCreateOuModal: false,
+                        showProfileModal: false,
                         systemStatus: {
                             type: 'success',
                             title: 'Sistema Inicializado',
@@ -849,6 +912,11 @@
                         // Filtros de logs
                         logFilters: { actor: '', action: '', target: '', ou: '', result: '', description: '', whenStart: '', whenEnd: '', cpf: '' },
                         ouSearchTerm: '',
+                        profile: { uid: window.USER_UID || '', givenName: '', sn: '', mail: '', employeeNumber: '' },
+                        profilePassword: '',
+                        profilePasswordConfirm: '',
+                        profileError: '',
+                        profileSuccess: '',
                     }
                 },
                 computed: {
@@ -1106,6 +1174,12 @@
                                 (typeof adminOuEntry === 'string' ? 'user' : adminOuEntry.role) : 'user';
                         }
                         
+                        // Determinar status ativo pela presença do sufixo '####' na senha
+                        this.editUser.isActive = (function(pwd){
+                            if (!pwd || typeof pwd !== 'string') return true;
+                            return pwd.slice(-4) !== '####';
+                        })(user.userPassword);
+
                         // Definir se o usuário sendo editado é root
                         this.editUser.isRootUser = this.isUserRoot(user);
                         
@@ -1626,6 +1700,95 @@
                         else if (digits.length > 6) formatted = digits.replace(/(\d{3})(\d{3})(\d{0,3})/, (m,a,b,c)=> c?`${a}.${b}.${c}`:`${a}.${b}`);
                         else if (digits.length > 3) formatted = digits.replace(/(\d{3})(\d{0,3})/, (m,a,b)=> b?`${a}.${b}`:`${a}`);
                         this.logFilters.cpf = formatted;
+                    },
+
+                    openProfileModal(){
+                        this.showProfileMenu = false;
+                        this.loadProfile();
+                        this.showProfileModal = true;
+                    },
+                    closeProfileModal(){
+                        this.showProfileModal = false;
+                        this.profilePassword = this.profilePasswordConfirm = '';
+                        this.profileError = this.profileSuccess = '';
+                    },
+                    async loadProfile(){
+                        try{
+                            const resp = await fetch(`/api/ldap/users/${encodeURIComponent(this.profile.uid)}`);
+                            const data = await resp.json();
+                            if(data.success){
+                                const u = data.data;
+                                this.profile.givenName = u.givenName || '';
+                                this.profile.sn = u.sn || '';
+                                this.profile.mail = u.mail || '';
+                                this.profile.employeeNumber = this.formatCpf(u.employeeNumber || '');
+                            } else {
+                                this.profileError = data.message || 'Erro ao carregar perfil';
+                            }
+                        }catch(e){
+                            this.profileError = 'Erro de rede ao carregar perfil';
+                        }
+                    },
+                    async saveProfile(){
+                        this.profileError = this.profileSuccess = '';
+                        if(this.profilePassword || this.profilePasswordConfirm){
+                            if(this.profilePassword.length < 6){
+                                this.profileError = 'A senha deve ter pelo menos 6 caracteres';
+                                return;
+                            }
+                            if(this.profilePassword !== this.profilePasswordConfirm){
+                                this.profileError = 'As senhas não coincidem';
+                                return;
+                            }
+                        }
+                        try{
+                            const payload = {
+                                givenName: this.profile.givenName,
+                                sn: this.profile.sn,
+                                mail: this.profile.mail,
+                                employeeNumber: (this.profile.employeeNumber || '').replace(/\D+/g, '')
+                            };
+                            const resp = await fetch(`/api/ldap/users/${encodeURIComponent(this.profile.uid)}`,{
+                                method:'PUT',
+                                headers:{
+                                    'Content-Type':'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                },
+                                body: JSON.stringify(payload)
+                            });
+                            const data = await resp.json();
+                            if(!data.success){
+                                this.profileError = data.message || 'Erro ao salvar perfil';
+                                return;
+                            }
+                            if(this.profilePassword){
+                                const respPwd = await fetch(`/api/ldap/users/${encodeURIComponent(this.profile.uid)}/password`,{
+                                    method:'PUT',
+                                    headers:{
+                                        'Content-Type':'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                    },
+                                    body: JSON.stringify({ userPassword: this.profilePassword })
+                                });
+                                const dataPwd = await respPwd.json();
+                                if(!dataPwd.success){
+                                    this.profileError = dataPwd.message || 'Erro ao alterar senha';
+                                    return;
+                                }
+                            }
+                            this.profileSuccess = 'Perfil atualizado com sucesso';
+                        }catch(e){
+                            this.profileError = 'Erro de rede ao salvar perfil';
+                        }
+                    },
+                    maskCpfProfile(){
+                        let digits = (this.profile.employeeNumber || '').replace(/\D+/g, '');
+                        if (digits.length > 11) digits = digits.slice(0,11);
+                        let formatted = digits;
+                        if (digits.length > 9) formatted = digits.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, (m,a,b,c,d)=> d?`${a}.${b}.${c}-${d}`:`${a}.${b}.${c}`);
+                        else if (digits.length > 6) formatted = digits.replace(/(\d{3})(\d{3})(\d{0,3})/, (m,a,b,c)=> c?`${a}.${b}.${c}`:`${a}.${b}`);
+                        else if (digits.length > 3) formatted = digits.replace(/(\d{3})(\d{0,3})/, (m,a,b)=> b?`${a}.${b}`:`${a}`);
+                        this.profile.employeeNumber = formatted;
                     },
                     
                     isUserRoot(user) {
