@@ -18,6 +18,20 @@
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Transição suave para o drawer */
+        .slide-in-enter-active, .slide-in-leave-active {
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        .slide-in-enter-from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        .slide-in-leave-to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    </style>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
         window.USER_ROLE = "{{ $userRole ?? 'user' }}";
@@ -293,30 +307,30 @@
                          <table class="min-w-full divide-y divide-gray-200">
                              <thead class="bg-gray-50">
                                  <tr>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operação</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidade ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">OU</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Executor</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ação</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuário afetado</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Organização</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resultado</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quando</th>
                                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
-                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Hora</th>
                                  </tr>
                              </thead>
                              <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-gray-50">
-                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ log.id }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.operation }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.entity_id }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.ou || '-' }}</td>
+                                <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-gray-50 cursor-pointer" @click="openLogDrawer(log)">
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.actor }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.action }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.target }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.ou || '-' }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.result }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.when).toLocaleString() }}</td>
                                      <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
-                                     <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.created_at).toLocaleString() }}</td>
-                                 </tr>
-                                 <tr v-if="logs.length === 0">
-                                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log encontrado</td>
-                                 </tr>
-                             </tbody>
-                         </table>
+                                   </tr>
+                                   <tr v-if="logs.length === 0">
+                                      <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log encontrado</td>
+                                   </tr>
+                               </tbody>
+                           </table>
                      </div>
                     <!-- Paginação Logs -->
                     <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalLogPages > 1">
@@ -327,6 +341,88 @@
                  </div>
              </div>
          </main>
+
+        <!-- Drawer simples para logs -->
+        <transition name="slide-in">
+            <div v-if="showRightDrawer" class="fixed inset-0 z-50" @click="closeLogDrawer">
+                <div class="fixed top-0 right-0 h-full w-full md:w-80 bg-white shadow-2xl border-l border-gray-200 overflow-y-auto" @click.stop>
+                    <div class="p-4 border-b flex items-center justify-between">
+                        <h4 class="text-base font-semibold">Detalhes do Log</h4>
+                        <button class="text-gray-500 hover:text-gray-700" @click="closeLogDrawer">✕</button>
+                    </div>
+                    <div class="p-4 space-y-4" v-if="selectedLog">
+                        <!-- Executor -->
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-xs font-medium text-gray-500 uppercase mb-1">Executor</div>
+                            <div class="text-sm text-gray-900">@{{ selectedLog.actor }}</div>
+                        </div>
+
+                        <!-- Ação e Resultado -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <div class="text-xs font-medium text-gray-500 uppercase mb-1">Ação</div>
+                                <div class="text-sm text-gray-900">@{{ selectedLog.action }}</div>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <div class="text-xs font-medium text-gray-500 uppercase mb-1">Resultado</div>
+                                <div class="text-sm" :class="selectedLog.result === 'Sucesso' ? 'text-green-700 font-medium' : 'text-red-700 font-medium'">
+                                    @{{ selectedLog.result }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Usuário Afetado -->
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-xs font-medium text-gray-500 uppercase mb-1">Usuário Afetado</div>
+                            <div class="text-sm text-gray-900">@{{ selectedLog.target }}</div>
+                        </div>
+
+                        <!-- Organização -->
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-xs font-medium text-gray-500 uppercase mb-1">Organização</div>
+                            <div class="text-sm text-gray-900">@{{ selectedLog.ou || 'Não especificada' }}</div>
+                        </div>
+
+                        <!-- Data/Hora -->
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-xs font-medium text-gray-500 uppercase mb-1">Quando</div>
+                            <div class="text-sm text-gray-900">@{{ new Date(selectedLog.when).toLocaleString('pt-BR') }}</div>
+                        </div>
+
+                        <!-- Descrição -->
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-xs font-medium text-gray-500 uppercase mb-1">Descrição</div>
+                            <div class="text-sm text-gray-900">@{{ selectedLog.description || 'Sem descrição' }}</div>
+                        </div>
+
+                        <!-- Resumo das Mudanças -->
+                        <div v-if="selectedLog.changes && selectedLog.changes.length" class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                            <div class="text-xs font-medium text-blue-700 uppercase mb-2">Resumo das Mudanças</div>
+                            <ul class="list-disc list-inside space-y-1 text-sm text-blue-900">
+                                <li v-for="(chg, idx) in selectedLog.changes" :key="idx">
+                                    <template v-if="chg.note">
+                                        <span class="font-medium">@{{ chg.field }}:</span> @{{ chg.note }}
+                                    </template>
+                                    <template v-else>
+                                        <span class="font-medium">@{{ chg.field }}:</span>
+                                        <span class="text-blue-800"> de </span>
+                                        <span class="font-mono">@{{ chg.old ?? '-' }}</span>
+                                        <span class="text-blue-800"> para </span>
+                                        <span class="font-mono">@{{ chg.new ?? '-' }}</span>
+                                    </template>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- ID do Log -->
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-xs font-medium text-gray-500 uppercase mb-1">ID do Log</div>
+                            <div class="text-xs text-gray-700 font-mono">#@{{ selectedLog.id }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
         <!-- Create User Modal -->
         <div v-if="showCreateUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
@@ -671,7 +767,11 @@
                         showDeleteUserModal: false,
                         userToDelete: null,
                         showEditOuModal: false,
-                        editOuData: { ou: '', description: '', dn: '' }
+                        editOuData: { ou: '', description: '', dn: '' },
+                        // Drawer à direita
+                        showRightDrawer: false,
+                        selectedLogId: null,
+                        selectedLog: null
                     }
                 },
                 computed: {
@@ -1344,6 +1444,20 @@
                         if (range[0] > 1) range.unshift(1);
                         if (range[range.length -1] < total) range.push(total);
                         return range;
+                    },
+                    openLogDrawer(log) {
+                        // Se clicar no mesmo registro, mantém aberto
+                        if (this.selectedLogId === log.id && this.showRightDrawer) {
+                            return;
+                        }
+                        this.selectedLogId = log.id;
+                        this.selectedLog = log;
+                        this.showRightDrawer = true;
+                    },
+                    closeLogDrawer() {
+                        this.showRightDrawer = false;
+                        this.selectedLogId = null;
+                        this.selectedLog = null;
                     },
                 }
             }).mount('#app');

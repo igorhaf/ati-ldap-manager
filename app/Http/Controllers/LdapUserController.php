@@ -306,6 +306,18 @@ class LdapUserController extends Controller
                 'entity' => 'User',
                 'entity_id' => $request->uid,
                 'ou' => $units->pluck('ou')->unique()->join(','),
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'success',
+                'changes_summary' => 'Criação do usuário com OU(s) ' . $units->pluck('ou')->unique()->join(','),
+                'changes' => json_encode([
+                    'uid' => [null, $request->uid],
+                    'givenName' => [null, $request->givenName],
+                    'sn' => [null, $request->sn],
+                    'mail' => [null, $request->mail],
+                    'employeeNumber' => [null, $request->employeeNumber],
+                    'organizationalUnits' => [null, $units->toArray()],
+                ]),
                 'description' => 'Usuário ' . $request->uid . ' criado',
             ]);
 
@@ -322,6 +334,17 @@ class LdapUserController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            OperationLog::create([
+                'operation' => 'create_user',
+                'entity' => 'User',
+                'entity_id' => $request->uid ?? null,
+                'ou' => collect($request->organizationalUnits ?? [])->map(fn($i)=> is_string($i)? $i : ($i['ou'] ?? null))->filter()->unique()->join(','),
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'failure',
+                'error_message' => $e->getMessage(),
+                'description' => 'Falha ao criar usuário',
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao criar usuário: ' . $e->getMessage()
@@ -427,6 +450,20 @@ class LdapUserController extends Controller
                 ], 404);
             }
 
+            // Capturar valores originais ANTES de qualquer modificação
+            $originalFirst = $users->first();
+            $originalValues = [
+                'givenName' => $originalFirst?->getFirstAttribute('givenName'),
+                'sn' => $originalFirst?->getFirstAttribute('sn'),
+                'mail' => $originalFirst?->getFirstAttribute('mail'),
+            ];
+            $originalUnits = $users->map(function ($u) {
+                $ou = $this->extractOu($u);
+                $role = $u->getFirstAttribute('employeeType');
+                if (is_array($role)) { $role = $role[0] ?? null; }
+                return $ou ? ['ou' => $ou, 'role' => ($role ?: 'user')] : null;
+            })->filter()->values();
+
             // Mapear entradas existentes por OU (lowercase)
             $existingByOu = $users->keyBy(fn($u) => strtolower($this->extractOu($u) ?? ''));
 
@@ -512,11 +549,55 @@ class LdapUserController extends Controller
                 }
             }
 
+            // Construir resumo e diferenças (apenas campos alterados)
+            $ouList = ($units->isEmpty() ? $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(',') : $units->pluck('ou')->unique()->join(','));
+            $labelMap = [
+                'givenName' => 'Nome',
+                'sn' => 'Sobrenome',
+                'mail' => 'E-mail',
+                'userPassword' => 'Senha',
+                'organizationalUnits' => 'Organização',
+            ];
+            $changes = [];
+            $summaryParts = [];
+            foreach (['givenName','sn','mail'] as $field) {
+                if ($request->has($field)) {
+                    $old = $originalValues[$field] ?? null;
+                    $new = $request->input($field);
+                    if ($old !== $new) {
+                        $changes[$field] = ['old' => $old, 'new' => $new];
+                        $summaryParts[] = $labelMap[$field] . ": '" . ($old ?? '-') . "' → '" . ($new ?? '-') . "'";
+                    }
+                }
+            }
+            if ($request->has('userPassword') && !empty($request->userPassword)) {
+                // Não registrar valores, apenas que houve alteração
+                $changes['userPassword'] = ['changed' => true];
+                $summaryParts[] = 'Senha alterada';
+            }
+            if (!$units->isEmpty()) {
+                $newUnits = $units->values();
+                // Comparar JSON para simplificar diff
+                if (json_encode($originalUnits) !== json_encode($newUnits)) {
+                    $changes['organizationalUnits'] = [
+                        'old' => $originalUnits->toArray(),
+                        'new' => $newUnits->toArray(),
+                    ];
+                    $summaryParts[] = 'Organização atualizada';
+                }
+            }
+            $changesSummary = empty($summaryParts) ? 'Sem alterações de dados' : implode('; ', $summaryParts);
+
             OperationLog::create([
                 'operation' => 'update_user',
                 'entity' => 'User',
                 'entity_id' => $uid,
-                'ou' => ($units->isEmpty() ? $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(',') : $units->pluck('ou')->unique()->join(',')),
+                'ou' => $ouList,
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'success',
+                'changes_summary' => $changesSummary,
+                'changes' => $changes,
                 'description' => 'Usuário ' . $uid . ' atualizado',
             ]);
 
@@ -541,6 +622,17 @@ class LdapUserController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            OperationLog::create([
+                'operation' => 'update_user',
+                'entity' => 'User',
+                'entity_id' => $uid,
+                'ou' => $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(',') ?? null,
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'failure',
+                'error_message' => $e->getMessage(),
+                'description' => 'Falha ao atualizar usuário',
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao atualizar usuário: ' . $e->getMessage()
@@ -588,6 +680,10 @@ class LdapUserController extends Controller
                 'entity' => 'User',
                 'entity_id' => $uid,
                 'ou' => $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(','),
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'success',
+                'changes_summary' => 'Remoção de todas as entradas do usuário',
                 'description' => 'Usuário ' . $uid . ' excluído',
             ]);
 
@@ -597,6 +693,16 @@ class LdapUserController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            OperationLog::create([
+                'operation' => 'delete_user',
+                'entity' => 'User',
+                'entity_id' => $uid,
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'failure',
+                'error_message' => $e->getMessage(),
+                'description' => 'Falha ao excluir usuário',
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao remover usuário: ' . $e->getMessage()
@@ -696,6 +802,10 @@ class LdapUserController extends Controller
                 'entity' => 'OrganizationalUnit',
                 'entity_id' => $request->ou,
                 'ou' => $request->ou,
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'success',
+                'changes_summary' => 'Criação da OU',
                 'description' => 'Unidade organizacional ' . $request->ou . ' criada',
             ]);
 
@@ -709,6 +819,17 @@ class LdapUserController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            OperationLog::create([
+                'operation' => 'create_ou',
+                'entity' => 'OrganizationalUnit',
+                'entity_id' => $request->ou ?? null,
+                'ou' => $request->ou ?? null,
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'failure',
+                'error_message' => $e->getMessage(),
+                'description' => 'Falha ao criar unidade organizacional',
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao criar unidade organizacional: ' . $e->getMessage()
@@ -746,16 +867,34 @@ class LdapUserController extends Controller
                 ], 404);
             }
 
+            // Capturar valor antigo antes da alteração
+            $oldDescription = $ou->getFirstAttribute('description');
             if ($request->has('description')) {
                 $ou->setFirstAttribute('description', $request->description);
             }
             $ou->save();
+
+            // Preparar diff apenas se houver mudança
+            $changes = [];
+            $summary = 'Sem alterações de descrição';
+            if ($request->has('description') && $oldDescription !== $request->description) {
+                $changes['description'] = [
+                    'old' => $oldDescription,
+                    'new' => $request->description,
+                ];
+                $summary = "Descrição: '" . ($oldDescription ?? '-') . "' → '" . ($request->description ?? '-') . "'";
+            }
 
             OperationLog::create([
                 'operation' => 'update_ou',
                 'entity' => 'OrganizationalUnit',
                 'entity_id' => $ouName,
                 'ou' => $ouName,
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'success',
+                'changes_summary' => $summary,
+                'changes' => $changes,
                 'description' => 'Unidade organizacional ' . $ouName . ' atualizada',
             ]);
 
@@ -769,6 +908,17 @@ class LdapUserController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            OperationLog::create([
+                'operation' => 'update_ou',
+                'entity' => 'OrganizationalUnit',
+                'entity_id' => $ouName,
+                'ou' => $ouName,
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'failure',
+                'error_message' => $e->getMessage(),
+                'description' => 'Falha ao atualizar unidade organizacional',
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao atualizar unidade organizacional: ' . $e->getMessage()
@@ -788,7 +938,7 @@ class LdapUserController extends Controller
             
             // Se for ROOT, vê todos os logs
             if ($role === RoleResolver::ROLE_ROOT) {
-            $logs = OperationLog::orderBy('created_at', 'desc')->get();
+                $logs = OperationLog::orderBy('created_at', 'desc')->get();
             } else {
                 // Se for admin de OU, vê apenas logs da sua OU
                 $adminOu = RoleResolver::getUserOu(auth()->user());
@@ -797,9 +947,135 @@ class LdapUserController extends Controller
                     ->get();
             }
 
+            // Mapeamento de rótulos amigáveis
+            $roleLabels = [
+                'root' => 'Root',
+                'admin' => 'Administrador de Organização',
+                'user' => 'Usuário',
+            ];
+            $operationLabels = [
+                'create_user' => 'Criou usuário',
+                'update_user' => 'Atualizou usuário',
+                'delete_user' => 'Excluiu usuário',
+                'update_password' => 'Redefiniu senha',
+                'create_organizational_unit' => 'Criou organização',
+                'update_organizational_unit' => 'Atualizou organização',
+                'create_ou' => 'Criou organização',
+                'update_ou' => 'Atualizou organização',
+                'apply_ldif' => 'Aplicou LDIF',
+            ];
+
+            $formatted = $logs->map(function ($log) use ($roleLabels, $operationLabels) {
+                $operationKey = (string) ($log->operation ?? '');
+                $action = $operationLabels[$operationKey] ?? ucfirst(str_replace('_', ' ', $operationKey));
+                $actorRoleKey = $log->actor_role ?? null;
+                $actorRole = $roleLabels[$actorRoleKey] ?? ($actorRoleKey ?: null);
+                $actorUid = $log->actor_uid ?? '-';
+                $actor = $actorRole ? ($actorUid . ' (' . $actorRole . ')') : $actorUid;
+
+                $entity = (string) ($log->entity ?? '-');
+                $entityId = (string) ($log->entity_id ?? '-');
+                if ($entity === 'User') {
+                    $target = ($entityId !== '' ? $entityId : '-');
+                } elseif ($entity === 'OrganizationalUnit') {
+                    $target = 'Organização: ' . ($entityId !== '' ? $entityId : '-');
+                } else {
+                    $target = ($entity !== '' ? $entity : 'Entidade') . ': ' . ($entityId !== '' ? $entityId : '-');
+                }
+
+                $result = (string) ($log->result ?? 'success');
+                $resultLabel = $result === 'failure' ? 'Falha' : 'Sucesso';
+
+                // Normalizar mudanças (antes/depois) com rótulos amigáveis
+                $labelMap = [
+                    'uid' => 'UID (Login)',
+                    'givenName' => 'Nome',
+                    'sn' => 'Sobrenome',
+                    'cn' => 'Nome completo',
+                    'mail' => 'E-mail',
+                    'employeeNumber' => 'CPF',
+                    'employeeType' => 'Papel',
+                    'organizationalUnits' => 'Organização',
+                    'ou' => 'Organização',
+                    'description' => 'Descrição',
+                    'userPassword' => 'Senha',
+                ];
+
+                $rawChanges = $log->changes ?? null;
+                if (is_string($rawChanges)) {
+                    $decoded = json_decode($rawChanges, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $rawChanges = $decoded;
+                    }
+                }
+
+                $normalizedChanges = [];
+                if (is_array($rawChanges)) {
+                    foreach ($rawChanges as $attr => $change) {
+                        $label = $labelMap[$attr] ?? ucfirst(str_replace('_', ' ', (string) $attr));
+                        if ($attr === 'userPassword') {
+                            $normalizedChanges[] = [
+                                'field' => $label,
+                                'note' => 'Senha alterada',
+                            ];
+                            continue;
+                        }
+
+                        $oldRaw = null;
+                        $newRaw = null;
+                        if (is_array($change) && array_key_exists('old', $change)) {
+                            $oldRaw = $change['old'];
+                        }
+                        if (is_array($change) && array_key_exists('new', $change)) {
+                            $newRaw = $change['new'];
+                        }
+                        // Caso tenha vindo apenas valor simples
+                        if ($oldRaw === null && $newRaw === null && !is_array($change)) {
+                            $newRaw = $change;
+                        }
+
+                        // Se old e new existem e são iguais, ignorar (não exibir)
+                        $bothDefined = ($oldRaw !== null && $newRaw !== null);
+                        $areEqual = $bothDefined && (json_encode($oldRaw, JSON_UNESCAPED_UNICODE) === json_encode($newRaw, JSON_UNESCAPED_UNICODE));
+                        if ($areEqual) {
+                            continue;
+                        }
+                        // Se ambos nulos, ignorar
+                        if ($oldRaw === null && $newRaw === null) {
+                            continue;
+                        }
+
+                        // Converter para string legível
+                        $toString = function ($value) {
+                            if (is_null($value)) return null;
+                            if (is_scalar($value)) return (string) $value;
+                            return json_encode($value, JSON_UNESCAPED_UNICODE);
+                        };
+                        $normalizedChanges[] = [
+                            'field' => $label,
+                            'old' => $toString($oldRaw),
+                            'new' => $toString($newRaw),
+                        ];
+                    }
+                }
+
+                return [
+                    'id' => $log->id,
+                    'actor' => $actor, // Quem fez
+                    'action' => $action, // O que fez
+                    'target' => $target, // Em quem fez
+                    'ou' => $log->ou ?? null,
+                    'result' => $resultLabel,
+                    'when' => optional($log->created_at)->toIso8601String(),
+                    'description' => $log->description ?? null,
+                    'changes_summary' => $log->changes_summary ?? null,
+                    'changes' => $normalizedChanges,
+                ];
+            });
+
             return response()->json([
                 'success' => true,
-                'data' => $logs,
+                'data' => $formatted,
                 'message' => 'Logs carregados com sucesso'
             ]);
         } catch (\Exception $e) {
@@ -840,6 +1116,10 @@ class LdapUserController extends Controller
                 'entity' => 'User',
                 'entity_id' => $uid,
                 'ou' => $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(','),
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'success',
+                'changes_summary' => 'Senha redefinida',
                 'description' => 'Senha do usuário ' . $uid . ' alterada',
             ]);
 
@@ -849,6 +1129,16 @@ class LdapUserController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            OperationLog::create([
+                'operation' => 'update_password',
+                'entity' => 'User',
+                'entity_id' => $uid,
+                'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                'result' => 'failure',
+                'error_message' => $e->getMessage(),
+                'description' => 'Falha ao alterar senha',
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao alterar senha: ' . $e->getMessage()

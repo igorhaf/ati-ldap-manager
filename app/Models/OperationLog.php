@@ -15,7 +15,22 @@ class OperationLog extends Model
         'operation',
         'entity',
         'entity_id',
-        'description',
         'ou',
+        'actor_uid',
+        'actor_role',
+        'result',
+        'error_message',
+        'changes_summary',
+        'changes',
+        'description',
+    ];
+
+    /**
+     * Attribute casting configuration.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'changes' => 'array',
     ];
 } 

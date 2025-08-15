@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             LdapRichSeeder::class,
+            CreateGravataOuSeeder::class,
+            GravataUsersSeeder::class,
         ]);
     }
 }
