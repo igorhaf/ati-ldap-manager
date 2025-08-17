@@ -132,6 +132,21 @@ class LdapUserController extends Controller
                     ->unique('ou')
                     ->values();
 
+                    // Ocultar usuários com papel 'root' da grid
+                    // Considera também entradas sem OU (ex.: root sob o baseDn)
+                    $hasRootRole = $entries->contains(function ($e) {
+                        $roleAttr = $e->getAttribute('employeeType') ?? [];
+                        if (is_array($roleAttr)) {
+                            $role = strtolower($roleAttr[0] ?? '');
+                        } else {
+                            $role = strtolower($roleAttr ?: '');
+                        }
+                        return $role === 'root';
+                    });
+                    if ($hasRootRole) {
+                        return null;
+                    }
+
                 return [
                         'dn' => $first->getDn(),
                         'uid' => $first->getFirstAttribute('uid'),
@@ -149,6 +164,7 @@ class LdapUserController extends Controller
                         })(),
                 ];
                 })
+                ->filter()
                 ->values();
 
             return response()->json([
@@ -265,6 +281,11 @@ class LdapUserController extends Controller
 
             // Hash da senha uma única vez para reutilizar
             $hashedPassword = LdapUtils::hashSsha($request->userPassword);
+            // Se criação já vier com isActive = false, concatenar '####' ao final do hash (sem re-hash)
+            $isActive = $request->has('isActive') ? (bool) $request->boolean('isActive') : true;
+            if (!$isActive) {
+                $hashedPassword = $hashedPassword . '####';
+            }
 
             foreach ($units as $unit) {
                 $ou = $unit['ou'];

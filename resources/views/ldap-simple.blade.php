@@ -1174,11 +1174,8 @@
                                 (typeof adminOuEntry === 'string' ? 'user' : adminOuEntry.role) : 'user';
                         }
                         
-                        // Determinar status ativo pela presença do sufixo '####' na senha
-                        this.editUser.isActive = (function(pwd){
-                            if (!pwd || typeof pwd !== 'string') return true;
-                            return pwd.slice(-4) !== '####';
-                        })(user.userPassword);
+                        // Determinar status ativo a partir do backend (campo isActive)
+                        this.editUser.isActive = !!user.isActive;
 
                         // Definir se o usuário sendo editado é root
                         this.editUser.isRootUser = this.isUserRoot(user);
