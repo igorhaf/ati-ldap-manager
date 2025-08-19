@@ -154,7 +154,9 @@ class LdapUserController extends Controller
                         'sn' => $first->getFirstAttribute('sn'),
                         'cn' => $first->getFirstAttribute('cn'),
                         'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
-                        'mail' => $first->getFirstAttribute('mail'),
+                        'mail' => is_array($first->getFirstAttribute('mail')) ? 
+                                     ($first->getFirstAttribute('mail')[0] ?? '') : 
+                                     $first->getFirstAttribute('mail'),
                         'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                         'organizationalUnits' => $ous,
                         'isActive' => (function() use ($first) {
@@ -304,7 +306,9 @@ class LdapUserController extends Controller
                 $entry->setFirstAttribute('givenName',  $request->givenName);
                 $entry->setFirstAttribute('sn',         $request->sn);
                 $entry->setFirstAttribute('cn',         $request->givenName.' '.$request->sn);
-                $entry->setFirstAttribute('mail',       $request->mail);
+                $entry->setFirstAttribute('mail',       is_array($request->mail) ? 
+                                                                      ($request->mail[0] ?? '') : 
+                                                                      $request->mail);
                 $entry->setFirstAttribute('employeeNumber', $cpfDigits);
                 // Por padrão, criar usuário ativo (sem '####'). A desativação é feita no update
                 $entry->setFirstAttribute('userPassword',   $hashedPassword);
@@ -409,7 +413,9 @@ class LdapUserController extends Controller
                     'sn' => $user->getFirstAttribute('sn'),
                     'cn' => $user->getFirstAttribute('cn'),
                     'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
-                    'mail' => $user->getFirstAttribute('mail'),
+                    'mail' => is_array($user->getFirstAttribute('mail')) ? 
+                                 ($user->getFirstAttribute('mail')[0] ?? '') : 
+                                 $user->getFirstAttribute('mail'),
                     'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
                     'organizationalUnits' => $user->getAttribute('ou') ?? [],
                 ],
@@ -520,7 +526,9 @@ class LdapUserController extends Controller
 
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
-                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
+                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     is_array($request->mail) ? 
+                                                                                           ($request->mail[0] ?? '') : 
+                                                                                           $request->mail);
                     
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
@@ -541,7 +549,8 @@ class LdapUserController extends Controller
                     $entry->setFirstAttribute('givenName', $request->get('givenName', $users->first()->getFirstAttribute('givenName')));
                     $entry->setFirstAttribute('sn', $request->get('sn', $users->first()->getFirstAttribute('sn')));
                     $entry->setFirstAttribute('cn', trim(($request->get('givenName', $users->first()->getFirstAttribute('givenName'))) . ' ' . ($request->get('sn', $users->first()->getFirstAttribute('sn')))));
-                    $entry->setFirstAttribute('mail', $request->get('mail', $users->first()->getFirstAttribute('mail')));
+                    $mailValue = $request->get('mail', $users->first()->getFirstAttribute('mail'));
+                    $entry->setFirstAttribute('mail', is_array($mailValue) ? ($mailValue[0] ?? '') : $mailValue);
                     $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $entry->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
@@ -580,7 +589,9 @@ class LdapUserController extends Controller
                 foreach ($users as $user) {
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
-                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     $request->mail);
+                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     is_array($request->mail) ? 
+                                                                                           ($request->mail[0] ?? '') : 
+                                                                                           $request->mail);
                     
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
@@ -704,7 +715,9 @@ class LdapUserController extends Controller
                     'sn' => $first->getFirstAttribute('sn'),
                     'cn' => $first->getFirstAttribute('cn'),
                     'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
-                    'mail' => $first->getFirstAttribute('mail'),
+                    'mail' => is_array($first->getFirstAttribute('mail')) ? 
+                                 ($first->getFirstAttribute('mail')[0] ?? '') : 
+                                 $first->getFirstAttribute('mail'),
                     'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                     'organizationalUnits' => $ous,
                 ],
