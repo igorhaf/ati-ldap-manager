@@ -64,7 +64,7 @@ class LdapUserController extends Controller
 
         // Extrair o RDN (primeira parte do DN)
         $rdnPart = explode(',', $dn)[0];
-        
+
         // Verificar se o atributo está no RDN
         return preg_match("/^{$attributeName}=/i", trim($rdnPart));
     }
@@ -93,12 +93,12 @@ class LdapUserController extends Controller
     public function index(): JsonResponse
     {
         $this->checkRootAccess(request());
-        
+
         try {
             $role = RoleResolver::resolve(auth()->user());
 
             $users = LdapUserModel::all();
-            
+
             // Se admin de OU, filtrar apenas entradas da sua OU
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
@@ -107,9 +107,9 @@ class LdapUserController extends Controller
                     return $ouName && strtolower($ouName) === strtolower($adminOu);
                 });
             }
-            
+
             // Agrupar por UID e consolidar as OUs para evitar duplicação de usuários na grid
-            $formattedUsers = $users->groupBy(fn ($u) => $u->getFirstAttribute('uid'))
+            $formattedUsers = $users->groupBy(fn($u) => $u->getFirstAttribute('uid'))
                 ->map(function ($entries) {
                     $first = $entries->first();
                     // Para cada entrada, extrai a OU e o papel (employeeType) do usuário
@@ -128,9 +128,9 @@ class LdapUserController extends Controller
                             'role' => $role,
                         ];
                     })
-                    ->filter(fn ($i) => !empty($i['ou']))
-                    ->unique('ou')
-                    ->values();
+                        ->filter(fn($i) => !empty($i['ou']))
+                        ->unique('ou')
+                        ->values();
 
                     // Ocultar usuários com papel 'root' da grid
                     // Considera também entradas sem OU (ex.: root sob o baseDn)
@@ -147,24 +147,24 @@ class LdapUserController extends Controller
                         return null;
                     }
 
-                return [
+                    return [
                         'dn' => $first->getDn(),
                         'uid' => $first->getFirstAttribute('uid'),
                         'givenName' => $first->getFirstAttribute('givenName'),
                         'sn' => $first->getFirstAttribute('sn'),
                         'cn' => $first->getFirstAttribute('cn'),
                         'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
-                        'mail' => is_array($first->getFirstAttribute('mail')) ? 
-                                     ($first->getFirstAttribute('mail')[0] ?? '') : 
-                                     $first->getFirstAttribute('mail'),
+                        'mail' => is_array($first->getFirstAttribute('mail')) ?
+                            ($first->getFirstAttribute('mail')[0] ?? '') :
+                            $first->getFirstAttribute('mail'),
                         'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                         'organizationalUnits' => $ous,
-                        'isActive' => (function() use ($first) {
+                        'isActive' => (function () use ($first) {
                             $pwd = $first->getFirstAttribute('userPassword');
                             if (!is_string($pwd)) return true;
                             return substr($pwd, -4) !== '####';
                         })(),
-                ];
+                    ];
                 })
                 ->filter()
                 ->values();
@@ -188,7 +188,7 @@ class LdapUserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $this->checkRootAccess($request);
-        
+
         try {
             $request->validate([
                 'uid' => 'required|string|max:255|regex:/^[a-zA-Z0-9._-]+$/',
@@ -220,12 +220,12 @@ class LdapUserController extends Controller
             $role = RoleResolver::resolve(auth()->user());
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
-                
+
                 // Validar se alguma OU especificada não é a do admin
-                $requestedOus = collect($request->organizationalUnits)->map(function($i) {
+                $requestedOus = collect($request->organizationalUnits)->map(function ($i) {
                     return is_string($i) ? $i : ($i['ou'] ?? null);
                 })->filter();
-                
+
                 foreach ($requestedOus as $requestedOu) {
                     if (strtolower($requestedOu) !== strtolower($adminOu)) {
                         return response()->json([
@@ -234,27 +234,29 @@ class LdapUserController extends Controller
                         ], 403);
                     }
                 }
-                
+
                 // Se não informou nenhuma OU ou informou OU inválida, usar a OU do admin com role user
                 if ($requestedOus->isEmpty()) {
-                $request->merge([
+                    $request->merge([
                         'organizationalUnits' => [['ou' => $adminOu, 'role' => 'user']],
-            ]);
+                    ]);
                 }
             }
 
             // Verificar se já existem entradas com UID e mesma OU
             $existingEntries = LdapUserModel::where('uid', $request->uid)->get();
 
-            $unitsInput = collect($request->organizationalUnits)->map(function($i){return is_string($i)? $i : ($i['ou'] ?? null);})->filter();
+            $unitsInput = collect($request->organizationalUnits)->map(function ($i) {
+                return is_string($i) ? $i : ($i['ou'] ?? null);
+            })->filter();
 
-            foreach ($existingEntries as $entry){
+            foreach ($existingEntries as $entry) {
                 $existingOu = strtolower($this->extractOu($entry) ?? '');
-                if ($unitsInput->contains(fn($ou)=> strtolower($ou) === $existingOu)){
-                return response()->json([
-                    'success' => false,
+                if ($unitsInput->contains(fn($ou) => strtolower($ou) === $existingOu)) {
+                    return response()->json([
+                        'success' => false,
                         'message' => "Usuário já existe na OU {$existingOu}"
-                ], 422);
+                    ], 422);
                 }
             }
 
@@ -305,10 +307,10 @@ class LdapUserController extends Controller
                 $entry->setFirstAttribute('uid', $request->uid);
                 $entry->setFirstAttribute('givenName',  $request->givenName);
                 $entry->setFirstAttribute('sn',         $request->sn);
-                $entry->setFirstAttribute('cn',         $request->givenName.' '.$request->sn);
-                $entry->setFirstAttribute('mail',       is_array($request->mail) ? 
-                                                                      ($request->mail[0] ?? '') : 
-                                                                      $request->mail);
+                $entry->setFirstAttribute('cn',         $request->givenName . ' ' . $request->sn);
+                $entry->setFirstAttribute('mail',       is_array($request->mail) ?
+                    ($request->mail[0] ?? '') :
+                    $request->mail);
                 $entry->setFirstAttribute('employeeNumber', $cpfDigits);
                 // Por padrão, criar usuário ativo (sem '####'). A desativação é feita no update
                 $entry->setFirstAttribute('userPassword',   $hashedPassword);
@@ -330,7 +332,7 @@ class LdapUserController extends Controller
                     'ou' => $ou,
                     'dn' => $safeDn
                 ]);
-                
+
                 $entry->setDn($safeDn);
                 $entry->save();
                 //var_dump($entry);             // 1ª operação: cria a entrada
@@ -367,13 +369,12 @@ class LdapUserController extends Controller
                 ],
                 'message' => 'Usuário criado com sucesso'
             ], 201);
-
         } catch (\Exception $e) {
             OperationLog::create([
                 'operation' => 'create_user',
                 'entity' => 'User',
                 'entity_id' => $request->uid ?? null,
-                'ou' => collect($request->organizationalUnits ?? [])->map(fn($i)=> is_string($i)? $i : ($i['ou'] ?? null))->filter()->unique()->join(','),
+                'ou' => collect($request->organizationalUnits ?? [])->map(fn($i) => is_string($i) ? $i : ($i['ou'] ?? null))->filter()->unique()->join(','),
                 'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
                 'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
                 'result' => 'failure',
@@ -393,10 +394,10 @@ class LdapUserController extends Controller
     public function show(string $uid): JsonResponse
     {
         $this->checkRootAccess(request());
-        
+
         try {
             $user = LdapUserModel::where('uid', $uid)->first();
-            
+
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -413,15 +414,14 @@ class LdapUserController extends Controller
                     'sn' => $user->getFirstAttribute('sn'),
                     'cn' => $user->getFirstAttribute('cn'),
                     'fullName' => trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? '')),
-                    'mail' => is_array($user->getFirstAttribute('mail')) ? 
-                                 ($user->getFirstAttribute('mail')[0] ?? '') : 
-                                 $user->getFirstAttribute('mail'),
+                    'mail' => is_array($user->getFirstAttribute('mail')) ?
+                        ($user->getFirstAttribute('mail')[0] ?? '') :
+                        $user->getFirstAttribute('mail'),
                     'employeeNumber' => $user->getFirstAttribute('employeeNumber'),
                     'organizationalUnits' => $user->getAttribute('ou') ?? [],
                 ],
                 'message' => 'Usuário encontrado com sucesso'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -436,7 +436,7 @@ class LdapUserController extends Controller
     public function update(Request $request, string $uid): JsonResponse
     {
         $this->checkRootAccess($request);
-        
+
         try {
             $request->validate([
                 'givenName' => 'sometimes|required|string|max:255',
@@ -453,7 +453,7 @@ class LdapUserController extends Controller
 
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
-                $belongs = $users->every(function($u) use ($adminOu){
+                $belongs = $users->every(function ($u) use ($adminOu) {
                     return strtolower($this->extractOu($u) ?? '') === strtolower($adminOu);
                 });
                 if (!$belongs) {
@@ -462,13 +462,13 @@ class LdapUserController extends Controller
                         'message' => 'Acesso negado: usuário fora da sua OU'
                     ], 403);
                 }
-                
+
                 // Validar se alguma OU especificada na atualização não é a do admin
                 if ($request->has('organizationalUnits')) {
-                    $requestedOus = collect($request->organizationalUnits)->map(function($i) {
+                    $requestedOus = collect($request->organizationalUnits)->map(function ($i) {
                         return is_string($i) ? $i : ($i['ou'] ?? null);
                     })->filter();
-                    
+
                     foreach ($requestedOus as $requestedOu) {
                         if (strtolower($requestedOu) !== strtolower($adminOu)) {
                             return response()->json([
@@ -497,7 +497,9 @@ class LdapUserController extends Controller
             $originalUnits = $users->map(function ($u) {
                 $ou = $this->extractOu($u);
                 $role = $u->getFirstAttribute('employeeType');
-                if (is_array($role)) { $role = $role[0] ?? null; }
+                if (is_array($role)) {
+                    $role = $role[0] ?? null;
+                }
                 return $ou ? ['ou' => $ou, 'role' => ($role ?: 'user')] : null;
             })->filter()->values();
 
@@ -507,8 +509,8 @@ class LdapUserController extends Controller
             $baseDn = config('ldap.connections.default.base_dn');
 
             // Unidades enviadas na requisição
-            $units = collect($request->organizationalUnits ?? [])->map(function($i){
-                if (is_string($i)) return ['ou'=>$i,'role'=>'user'];
+            $units = collect($request->organizationalUnits ?? [])->map(function ($i) {
+                if (is_string($i)) return ['ou' => $i, 'role' => 'user'];
                 return [
                     'ou' => $i['ou'],
                     'role' => $i['role'] ?? 'user'
@@ -526,10 +528,10 @@ class LdapUserController extends Controller
 
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
-                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     is_array($request->mail) ? 
-                                                                                           ($request->mail[0] ?? '') : 
-                                                                                           $request->mail);
-                    
+                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     is_array($request->mail) ?
+                        ($request->mail[0] ?? '') :
+                        $request->mail);
+
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     }
@@ -589,10 +591,10 @@ class LdapUserController extends Controller
                 foreach ($users as $user) {
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
                     if ($request->has('sn'))       $user->setFirstAttribute('sn',       $request->sn);
-                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     is_array($request->mail) ? 
-                                                                                           ($request->mail[0] ?? '') : 
-                                                                                           $request->mail);
-                    
+                    if ($request->has('mail'))     $user->setFirstAttribute('mail',     is_array($request->mail) ?
+                        ($request->mail[0] ?? '') :
+                        $request->mail);
+
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     }
@@ -600,13 +602,13 @@ class LdapUserController extends Controller
                     if ($request->has('givenName') || $request->has('sn')) {
                         $newCn = trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? ''));
                         $this->setSafeAttribute($user, 'cn', $newCn);
-            }
-            $user->save();
+                    }
+                    $user->save();
                 }
             }
 
             // Construir resumo e diferenças (apenas campos alterados)
-            $ouList = ($units->isEmpty() ? $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(',') : $units->pluck('ou')->unique()->join(','));
+            $ouList = ($units->isEmpty() ? $users->map(fn($u) => $this->extractOu($u))->filter()->unique()->join(',') : $units->pluck('ou')->unique()->join(','));
             $labelMap = [
                 'givenName' => 'Nome',
                 'sn' => 'Sobrenome',
@@ -616,7 +618,7 @@ class LdapUserController extends Controller
             ];
             $changes = [];
             $summaryParts = [];
-            foreach (['givenName','sn','mail'] as $field) {
+            foreach (['givenName', 'sn', 'mail'] as $field) {
                 if ($request->has($field)) {
                     $old = $originalValues[$field] ?? null;
                     $new = $request->input($field);
@@ -669,7 +671,7 @@ class LdapUserController extends Controller
                 $newOUs = $newUnits->pluck('ou')->join(', ');
                 $oldRoles = $originalUnits->pluck('role')->join(', ');
                 $newRoles = $newUnits->pluck('role')->join(', ');
-                
+
                 if ($oldOUs !== $newOUs) {
                     $changes['ou'] = [
                         'old' => $oldOUs,
@@ -677,7 +679,7 @@ class LdapUserController extends Controller
                     ];
                     $summaryParts[] = 'Organização: \'' . $oldOUs . '\' → \'' . $newOUs . '\'';
                 }
-                
+
                 if ($oldRoles !== $newRoles) {
                     $changes['employeeType'] = [
                         'old' => $oldRoles,
@@ -704,7 +706,7 @@ class LdapUserController extends Controller
             // Recarregar e retornar primeira entrada consolidada após alterações
             $updatedUsers = LdapUserModel::where('uid', $uid)->get();
             $first = $updatedUsers->first();
-            $ous = $updatedUsers->map(fn ($e) => $this->extractOu($e))->filter()->unique()->values();
+            $ous = $updatedUsers->map(fn($e) => $this->extractOu($e))->filter()->unique()->values();
 
             return response()->json([
                 'success' => true,
@@ -715,21 +717,20 @@ class LdapUserController extends Controller
                     'sn' => $first->getFirstAttribute('sn'),
                     'cn' => $first->getFirstAttribute('cn'),
                     'fullName' => trim(($first->getFirstAttribute('givenName') ?? '') . ' ' . ($first->getFirstAttribute('sn') ?? '')),
-                    'mail' => is_array($first->getFirstAttribute('mail')) ? 
-                                 ($first->getFirstAttribute('mail')[0] ?? '') : 
-                                 $first->getFirstAttribute('mail'),
+                    'mail' => is_array($first->getFirstAttribute('mail')) ?
+                        ($first->getFirstAttribute('mail')[0] ?? '') :
+                        $first->getFirstAttribute('mail'),
                     'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
                     'organizationalUnits' => $ous,
                 ],
                 'message' => 'Usuário atualizado com sucesso'
             ]);
-
         } catch (\Exception $e) {
             OperationLog::create([
                 'operation' => 'update_user',
                 'entity' => 'User',
                 'entity_id' => $uid,
-                'ou' => $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(',') ?? null,
+                'ou' => $users->map(fn($u) => $this->extractOu($u))->filter()->unique()->join(',') ?? null,
                 'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
                 'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
                 'result' => 'failure',
@@ -749,14 +750,14 @@ class LdapUserController extends Controller
     public function destroy(string $uid): JsonResponse
     {
         $this->checkRootAccess(request());
-        
+
         try {
             $users = LdapUserModel::where('uid', $uid)->get();
             $role = RoleResolver::resolve(auth()->user());
 
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
-                $belongs = $users->every(function($u) use ($adminOu){
+                $belongs = $users->every(function ($u) use ($adminOu) {
                     return strtolower($this->extractOu($u) ?? '') === strtolower($adminOu);
                 });
                 if (!$belongs) {
@@ -775,14 +776,14 @@ class LdapUserController extends Controller
             }
 
             foreach ($users as $user) {
-            $user->delete();
+                $user->delete();
             }
 
             OperationLog::create([
                 'operation' => 'delete_user',
                 'entity' => 'User',
                 'entity_id' => $uid,
-                'ou' => $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(','),
+                'ou' => $users->map(fn($u) => $this->extractOu($u))->filter()->unique()->join(','),
                 'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
                 'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
                 'result' => 'success',
@@ -794,7 +795,6 @@ class LdapUserController extends Controller
                 'success' => true,
                 'message' => 'Usuário removido com sucesso de todas as OUs'
             ]);
-
         } catch (\Exception $e) {
             OperationLog::create([
                 'operation' => 'delete_user',
@@ -819,10 +819,10 @@ class LdapUserController extends Controller
     public function getOrganizationalUnits(): JsonResponse
     {
         $this->checkRootAccess(request());
-        
+
         try {
             $role = RoleResolver::resolve(auth()->user());
-            
+
             // Apenas usuários root podem visualizar OUs
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
@@ -860,10 +860,10 @@ class LdapUserController extends Controller
     public function createOrganizationalUnit(Request $request): JsonResponse
     {
         $this->checkRootAccess($request);
-        
+
         try {
             $role = RoleResolver::resolve(auth()->user());
-            
+
             // Apenas usuários root podem criar OUs
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
@@ -920,7 +920,6 @@ class LdapUserController extends Controller
                 ],
                 'message' => 'Unidade organizacional criada com sucesso'
             ], 201);
-
         } catch (\Exception $e) {
             OperationLog::create([
                 'operation' => 'create_ou',
@@ -946,10 +945,10 @@ class LdapUserController extends Controller
     public function updateOrganizationalUnit(Request $request, string $ouName): JsonResponse
     {
         $this->checkRootAccess($request);
-        
+
         try {
             $role = RoleResolver::resolve(auth()->user());
-            
+
             // Apenas usuários root podem editar OUs
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
@@ -1009,7 +1008,6 @@ class LdapUserController extends Controller
                 ],
                 'message' => 'Unidade organizacional atualizada com sucesso'
             ]);
-
         } catch (\Exception $e) {
             OperationLog::create([
                 'operation' => 'update_ou',
@@ -1035,10 +1033,10 @@ class LdapUserController extends Controller
     public function getOperationLogs(): JsonResponse
     {
         $this->checkRootAccess(request());
-        
+
         try {
             $role = RoleResolver::resolve(auth()->user());
-            
+
             // Se for ROOT, vê todos os logs
             if ($role === RoleResolver::ROLE_ROOT) {
                 $logs = OperationLog::orderBy('created_at', 'desc')->get();
@@ -1198,7 +1196,7 @@ class LdapUserController extends Controller
     public function updatePassword(Request $request, string $uid): JsonResponse
     {
         $this->checkRootAccess($request);
-        
+
         try {
             $request->validate([
                 'userPassword' => 'required|string|min:6',
@@ -1221,7 +1219,7 @@ class LdapUserController extends Controller
                 'operation' => 'update_password',
                 'entity' => 'User',
                 'entity_id' => $uid,
-                'ou' => $users->map(fn($u)=>$this->extractOu($u))->filter()->unique()->join(','),
+                'ou' => $users->map(fn($u) => $this->extractOu($u))->filter()->unique()->join(','),
                 'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
                 'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
                 'result' => 'success',
@@ -1233,7 +1231,6 @@ class LdapUserController extends Controller
                 'success' => true,
                 'message' => 'Senha alterada com sucesso'
             ]);
-
         } catch (\Exception $e) {
             OperationLog::create([
                 'operation' => 'update_password',
@@ -1293,7 +1290,7 @@ class LdapUserController extends Controller
             // Se solicitado download, retornar arquivo
             if ($request->get('download', false)) {
                 $filename = "usuario_{$request->uid}_" . now()->format('Y-m-d_H-i-s') . ".ldif";
-                
+
                 return Response::make($ldifContent, 200, [
                     'Content-Type' => 'text/plain',
                     'Content-Disposition' => "attachment; filename=\"{$filename}\"",
@@ -1309,7 +1306,6 @@ class LdapUserController extends Controller
                 ],
                 'message' => 'LDIF gerado com sucesso'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -1345,7 +1341,7 @@ class LdapUserController extends Controller
                         'errors' => $errorCount,
                     ]
                 ],
-                'message' => $errorCount === 0 
+                'message' => $errorCount === 0
                     ? "LDIF aplicado com sucesso ({$successCount} entradas processadas)"
                     : "LDIF aplicado com {$errorCount} erro(s) de {$successCount} entradas"
             ], $errorCount === 0 ? 200 : 207); // 207 Multi-Status para respostas parciais
@@ -1396,11 +1392,10 @@ class LdapUserController extends Controller
                         'errors' => $errorCount,
                     ]
                 ],
-                'message' => $errorCount === 0 
+                'message' => $errorCount === 0
                     ? "Arquivo LDIF processado com sucesso ({$successCount} entradas)"
                     : "Arquivo LDIF processado com {$errorCount} erro(s) de {$successCount} entradas"
             ], $errorCount === 0 ? 200 : 207);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
