@@ -733,6 +733,7 @@
                                     </label>
                                     <button v-if="index > 0" @click="newUser.organizationalUnits.splice(index,1)"
                                         class="text-red-500">✖</button>
+                                    <span v-else class="opacity-0 pointer-events-none select-none">✖</span>
                                 </div>
                                 <button @click="newUser.organizationalUnits.push({ ou: '', role: 'user' })"
                                     class="mt-2 text-blue-600">+ adicionar OU</button>
@@ -930,6 +931,7 @@
                                     </select>
                                     <button v-if="index > 0" @click="editUser.organizationalUnits.splice(index,1)"
                                         class="text-red-500">✖</button>
+                                    <span v-else class="opacity-0 pointer-events-none select-none">✖</span>
                                 </div>
                                 <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })"
                                     class="mt-2 text-blue-600">+ adicionar OU</button>
