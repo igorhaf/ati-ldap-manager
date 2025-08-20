@@ -877,14 +877,7 @@
                                 <input v-model="editUser.userPassword" type="password" minlength="6"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
-                            <div v-if="!editUser.isRootUser">
-                                <label for="edit-mail"
-                                    class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input v-model="editUser.mail" type="email" id="edit-mail"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="exemplo@empresa.com"
-                                    :class="editUser.isRootUser ? 'bg-gray-100' : ''" :disabled="editUser.isRootUser">
-                            </div>
+                            
                             <div>
                                 <label for="edit-redirect-mail"
                                     class="block text-sm font-medium text-gray-700 mb-1">E-mail de
@@ -999,12 +992,7 @@
                                 <input v-model="profile.uid" type="text" disabled
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
                             </div>
-                            <div v-if="!isRoot">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input v-model="profile.mail" type="email"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    :class="isRoot ? 'bg-gray-100' : ''" :disabled="isRoot">
-                            </div>
+                            
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
                                 <input v-model="profile.givenName" type="text"
