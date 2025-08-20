@@ -123,9 +123,14 @@ class LdapUserController extends Controller
                             $role = strtolower($roleAttr ?: 'user');
                         }
 
+                        // Status por entrada (OU) baseado na regra do sufixo '####' na senha
+                        $pwd = $e->getFirstAttribute('userPassword');
+                        $isActive = !is_string($pwd) ? true : (substr($pwd, -4) !== '####');
+
                         return [
                             'ou'   => $ouName,
                             'role' => $role,
+                            'isActive' => $isActive,
                         ];
                     })
                         ->filter(fn($i) => !empty($i['ou']))
@@ -158,6 +163,7 @@ class LdapUserController extends Controller
                             ($first->getFirstAttribute('mail')[0] ?? '') :
                             $first->getFirstAttribute('mail'),
                         'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
+                        'description' => $first->getFirstAttribute('description'),
                         'organizationalUnits' => $ous,
                         'isActive' => (function () use ($first) {
                             $pwd = $first->getFirstAttribute('userPassword');
@@ -196,10 +202,14 @@ class LdapUserController extends Controller
                 'sn' => 'required|string|max:255',
                 'employeeNumber' => 'required|string|max:255',
                 'mail' => 'required|email',
+                'description' => 'nullable|email|max:255',
                 'userPassword' => 'required|string|min:6',
                 'organizationalUnits' => 'array',
                 // Cada item pode ser string (OU) ou objeto {ou, role}
                 'organizationalUnits.*' => 'required',
+                'organizationalUnits.*.ou' => 'sometimes|required|string',
+                'organizationalUnits.*.role' => 'sometimes|in:user,admin',
+                'organizationalUnits.*.isActive' => 'sometimes|boolean',
             ]);
 
             // Validação adicional para DN seguro
@@ -294,6 +304,7 @@ class LdapUserController extends Controller
             foreach ($units as $unit) {
                 $ou = $unit['ou'];
                 $role = $unit['role'] ?? 'user';
+                $isActive = array_key_exists('isActive', $unit) ? (bool) $unit['isActive'] : true;
 
                 // Validar OU
                 if (!LdapDnUtils::isValidDnValue($ou)) {
@@ -312,8 +323,15 @@ class LdapUserController extends Controller
                     ($request->mail[0] ?? '') :
                     $request->mail);
                 $entry->setFirstAttribute('employeeNumber', $cpfDigits);
-                // Por padrão, criar usuário ativo (sem '####'). A desativação é feita no update
-                $entry->setFirstAttribute('userPassword',   $hashedPassword);
+                if ($request->filled('description')) {
+                    $entry->setFirstAttribute('description', $request->description);
+                }
+                // Senha por OU: ativo (hash puro) / inativo (hash + '####')
+                $unitPassword = $hashedPassword;
+                if ($isActive === false) {
+                    $unitPassword = $unitPassword . '####';
+                }
+                $entry->setFirstAttribute('userPassword', $unitPassword);
                 $entry->setFirstAttribute('ou',         $ou);
                 $entry->setAttribute('employeeType',    [$role]);
 
@@ -353,10 +371,28 @@ class LdapUserController extends Controller
                     'sn' => [null, $request->sn],
                     'mail' => [null, $request->mail],
                     'employeeNumber' => [null, $request->employeeNumber],
+                    'description' => [null, $request->description],
                     'organizationalUnits' => [null, $units->toArray()],
                 ]),
                 'description' => 'Usuário ' . $request->uid . ' criado',
             ]);
+
+            if ($request->filled('description')) {
+                OperationLog::create([
+                    'operation' => 'set_redirect_email',
+                    'entity' => 'User',
+                    'entity_id' => $request->uid,
+                    'ou' => $units->pluck('ou')->unique()->join(','),
+                    'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                    'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                    'result' => 'success',
+                    'changes_summary' => "E-mail de redirecionamento definido",
+                    'changes' => json_encode([
+                        'description' => [null, $request->description],
+                    ]),
+                    'description' => 'E-mail de redirecionamento definido para o usuário ' . $request->uid,
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -366,6 +402,7 @@ class LdapUserController extends Controller
                     'sn' => $request->sn,
                     'employeeNumber' => $request->employeeNumber,
                     'mail' => $request->mail,
+                    'description' => $request->description,
                 ],
                 'message' => 'Usuário criado com sucesso'
             ], 201);
@@ -442,6 +479,7 @@ class LdapUserController extends Controller
                 'givenName' => 'sometimes|required|string|max:255',
                 'sn' => 'sometimes|required|string|max:255',
                 'mail' => 'sometimes|required|email',
+                'description' => 'sometimes|nullable|email|max:255',
                 'userPassword' => 'sometimes|nullable|string|min:6',
                 'organizationalUnits' => 'sometimes|array',
                 // aceitar string ou objeto {ou, role}
@@ -493,6 +531,7 @@ class LdapUserController extends Controller
                 'givenName' => $originalFirst?->getFirstAttribute('givenName'),
                 'sn' => $originalFirst?->getFirstAttribute('sn'),
                 'mail' => $originalFirst?->getFirstAttribute('mail'),
+                'description' => $originalFirst?->getFirstAttribute('description'),
             ];
             $originalUnits = $users->map(function ($u) {
                 $ou = $this->extractOu($u);
@@ -535,6 +574,9 @@ class LdapUserController extends Controller
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     }
+                    if ($request->has('description')) {
+                        $user->setFirstAttribute('description', $request->description);
+                    }
 
                     // Nome completo (só atualiza se cn não faz parte do RDN)
                     $newCn = trim(($request->givenName ?? $user->getFirstAttribute('givenName')) . ' ' . ($request->sn ?? $user->getFirstAttribute('sn')));
@@ -554,6 +596,9 @@ class LdapUserController extends Controller
                     $mailValue = $request->get('mail', $users->first()->getFirstAttribute('mail'));
                     $entry->setFirstAttribute('mail', is_array($mailValue) ? ($mailValue[0] ?? '') : $mailValue);
                     $entry->setFirstAttribute('employeeNumber', $users->first()->getFirstAttribute('employeeNumber'));
+                    if ($request->has('description')) {
+                        $entry->setFirstAttribute('description', $request->get('description', $users->first()->getFirstAttribute('description')));
+                    }
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $entry->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     } else {
@@ -598,6 +643,9 @@ class LdapUserController extends Controller
                     if ($request->has('userPassword') && !empty($request->userPassword)) {
                         $user->setFirstAttribute('userPassword', LdapUtils::hashSsha($request->userPassword));
                     }
+                    if ($request->has('description')) {
+                        $user->setFirstAttribute('description', $request->description);
+                    }
 
                     if ($request->has('givenName') || $request->has('sn')) {
                         $newCn = trim(($user->getFirstAttribute('givenName') ?? '') . ' ' . ($user->getFirstAttribute('sn') ?? ''));
@@ -613,12 +661,13 @@ class LdapUserController extends Controller
                 'givenName' => 'Nome',
                 'sn' => 'Sobrenome',
                 'mail' => 'E-mail',
+                'description' => 'E-mail de redirecionamento',
                 'userPassword' => 'Senha',
                 'organizationalUnits' => 'Organização',
             ];
             $changes = [];
             $summaryParts = [];
-            foreach (['givenName', 'sn', 'mail'] as $field) {
+            foreach (['givenName', 'sn', 'mail', 'description'] as $field) {
                 if ($request->has($field)) {
                     $old = $originalValues[$field] ?? null;
                     $new = $request->input($field);
@@ -690,6 +739,24 @@ class LdapUserController extends Controller
             }
             $changesSummary = empty($summaryParts) ? 'Sem alterações de dados' : implode('; ', $summaryParts);
 
+            // Log dedicado quando o e-mail de redirecionamento (description) muda
+            if (array_key_exists('description', $changes)) {
+                OperationLog::create([
+                    'operation' => 'set_redirect_email',
+                    'entity' => 'User',
+                    'entity_id' => $uid,
+                    'ou' => $ouList,
+                    'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
+                    'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
+                    'result' => 'success',
+                    'changes_summary' => "E-mail de redirecionamento atualizado",
+                    'changes' => json_encode([
+                        'description' => $changes['description']
+                    ]),
+                    'description' => 'E-mail de redirecionamento atualizado para o usuário ' . $uid,
+                ]);
+            }
+
             OperationLog::create([
                 'operation' => 'update_user',
                 'entity' => 'User',
@@ -721,6 +788,7 @@ class LdapUserController extends Controller
                         ($first->getFirstAttribute('mail')[0] ?? '') :
                         $first->getFirstAttribute('mail'),
                     'employeeNumber' => $first->getFirstAttribute('employeeNumber'),
+                    'description' => $first->getFirstAttribute('description'),
                     'organizationalUnits' => $ous,
                 ],
                 'message' => 'Usuário atualizado com sucesso'
