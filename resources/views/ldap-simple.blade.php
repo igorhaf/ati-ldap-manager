@@ -877,7 +877,7 @@
                                 <input v-model="editUser.userPassword" type="password" minlength="6"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
-                            <div>
+                            <div v-if="!editUser.isRootUser">
                                 <label for="edit-mail"
                                     class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                 <input v-model="editUser.mail" type="email" id="edit-mail"
@@ -995,7 +995,7 @@
                                 <input v-model="profile.uid" type="text" disabled
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
                             </div>
-                            <div>
+                            <div v-if="!isRoot">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                 <input v-model="profile.mail" type="email"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
