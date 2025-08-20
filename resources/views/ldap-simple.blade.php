@@ -899,7 +899,7 @@
                         <!-- Ativação do Usuário -->
                         <div class="mt-2"
                             :class="editUser.isRootUser ? 'opacity-60 pointer-events-none select-none' : ''">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status do usuário</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status do usuário em todas as organizações</label>
                             <label class="inline-flex items-center cursor-pointer select-none">
                                 <input type="checkbox" v-model="editUser.isActive" class="sr-only peer">
                                 <div
@@ -920,12 +920,16 @@
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in editUser.organizationalUnits" :key="index"
                                     class="flex items-center space-x-2 mt-1">
-                                    <select v-model="editUser.organizationalUnits[index].ou"
-                                        class="flex-1 border rounded px-3 py-2">
-                                        <option value="" disabled>Selecione OU...</option>
-                                        <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">
-                                            @{{ ouOpt.ou }}</option>
-                                    </select>
+                                    <div class="relative flex-1">
+                                        <select v-model="editUser.organizationalUnits[index].ou"
+                                            class="w-full border rounded px-3 py-2 pr-40">
+                                            <option value="" disabled>Selecione OU...</option>
+                                            <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">
+                                                @{{ ouOpt.ou }}</option>
+                                        </select>
+                                        <span v-if="editUser.mail"
+                                            class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400 text-sm">@{{ editUser.mail }}</span>
+                                    </div>
                                     <select v-model="editUser.organizationalUnits[index].role"
                                         class="border rounded px-2 py-2">
                                         <option value="user">Usuário</option>
