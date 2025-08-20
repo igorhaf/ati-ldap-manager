@@ -713,8 +713,8 @@
                                             <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">
                                                 @{{ ouOpt.ou }}</option>
                                         </select>
-                                        <span v-if="newUser.mail"
-                                            class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400 text-sm">@{{ newUser.mail }}</span>
+                                        <span v-if="newUser.uid && newUser.organizationalUnits[index].ou"
+                                            class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400 text-sm">@{{ institutionalEmail(newUser.uid, newUser.organizationalUnits[index].ou) }}</span>
                                     </div>
                                     <select v-model="newUser.organizationalUnits[index].role"
                                         class="border rounded px-2 py-2">
@@ -920,8 +920,8 @@
                                             <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">
                                                 @{{ ouOpt.ou }}</option>
                                         </select>
-                                        <span v-if="editUser.mail"
-                                            class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400 text-sm">@{{ editUser.mail }}</span>
+                                        <span v-if="editUser.uid && editUser.organizationalUnits[index].ou"
+                                            class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400 text-sm">@{{ institutionalEmail(editUser.uid, editUser.organizationalUnits[index].ou) }}</span>
                                     </div>
                                     <select v-model="editUser.organizationalUnits[index].role"
                                         class="border rounded px-2 py-2">
@@ -1393,6 +1393,14 @@
                     }
                 },
                 methods: {
+                    institutionalEmail(uid, ou) {
+                        const sanitizedUid = (uid || '').trim().toLowerCase();
+                        if (!sanitizedUid) return '';
+                        // Regra de domínio por OU: "<ou>.pe.gov.br" se existir OU; fallback para domínio padrão do usuário atual
+                        const normalizedOu = (ou || '').toString().trim().toLowerCase();
+                        const baseDomain = normalizedOu ? `${normalizedOu}.pe.gov.br` : (this.defaultEmailDomain || 'example.com');
+                        return `${sanitizedUid}@${baseDomain}`;
+                    },
                     suggestUidAndMail() {
                         const given = (this.newUser.givenName || '').trim().toLowerCase();
                         const sn = (this.newUser.sn || '').trim().toLowerCase();
