@@ -45,7 +45,15 @@
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Senha</label>
-                <input type="password" name="password" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                <div class="relative">
+                    <input id="login-password" type="password" name="password" required class="w-full pr-10 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <button type="button" onclick="(function(){var i=document.getElementById('login-password');var t=i.getAttribute('type')==='password'?'text':'password';i.setAttribute('type',t); var b=document.getElementById('toggle-login-eye'); b.setAttribute('data-show', t==='text');})()" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700">
+                        <svg id="toggle-login-eye" data-show="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             <div class="flex items-center">
                 <input type="checkbox" name="remember" id="remember" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mr-3" />

@@ -46,11 +46,33 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nova Senha</label>
-                        <input v-model="password" type="password" minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <div class="relative">
+                            <input v-model="password" :type="showNew ? 'text' : 'password'" minlength="6" class="w-full pr-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button type="button" @click="showNew=!showNew" class="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">
+                                <svg v-if="!showNew" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.664 20.664 0 0 1 5.06-5.94m3.02-1.51A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a20.72 20.72 0 0 1-3.22 4.31M1 1l22 22"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Confirmar Senha</label>
-                        <input v-model="passwordConfirm" type="password" minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <div class="relative">
+                            <input v-model="passwordConfirm" :type="showConfirm ? 'text' : 'password'" minlength="6" class="w-full pr-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button type="button" @click="showConfirm=!showConfirm" class="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700">
+                                <svg v-if="!showConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.664 20.664 0 0 1 5.06-5.94m3.02-1.51A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a20.72 20.72 0 0 1-3.22 4.31M1 1l22 22"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -79,6 +101,8 @@
                     },
                     password: '',
                     passwordConfirm: '',
+                    showNew: false,
+                    showConfirm: false,
                     error: '',
                     success: ''
                 }
