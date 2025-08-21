@@ -73,7 +73,7 @@
                             </svg>
                             SEI LDAP Admin
                         </h1>
-                        <p class="text-blue-100">Gerenciamento de Usuários e Unidades Organizacionais</p>
+                        <p class="text-blue-100">Gerenciamento de Usuários e Organizações</p>
                     </div>
                     <div class="flex items-center space-x-3">
                         <button v-if="canManageUsers" @click="openCreateUserModal"
@@ -277,7 +277,7 @@
                                         :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">
                                         @{{ user.fullName }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
-                                        <!-- Para usuários root: mostrar todas as OUs -->
+                                        <!-- Para usuários root: mostrar todas as organizações -->
                                         <div v-if="isRoot" v-for="unit in user.organizationalUnits"
                                             :key="unit.ou ?? unit"
                                             @click="setOuFilter(typeof unit==='string'?unit:unit.ou)"
@@ -302,7 +302,7 @@
                                             </span>
                                         </div>
 
-                                        <!-- Para admins de OU: mostrar apenas o perfil -->
+                                        <!-- Para administradores de organização: mostrar apenas o perfil -->
                                         <div v-else v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit"
                                             @click="setRoleFilter(unit.role ?? 'user')"
                                             :class="['inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full mr-2 mb-1 border cursor-pointer select-none',
@@ -388,7 +388,7 @@
             <div v-if="activeTab === 'organizational-units' && isRoot" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Unidades Organizacionais
+                        <h3 class="text-lg font-medium text-gray-900">Organizações
                             (@{{ filteredOus.length }})</h3>
                         <div class="mt-3">
                             <input v-model="ouSearchTerm" type="text"
@@ -435,7 +435,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <!-- Paginação OUs -->
+                    <!-- Paginação de organizações -->
                     <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalOusPages > 1">
                         <button @click="prevPage('ous')" :disabled="ousPage === 1"
                             class="px-2 py-1 border rounded disabled:opacity-50">«</button>
@@ -699,17 +699,16 @@
                             </div>
                         </div>
 
-                        <!-- Interface para ROOT: múltiplas OUs -->
+                        <!-- Interface para ROOT: múltiplas organizações -->
                         <div v-if="isRoot">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidades
-                                Organizacionais</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Organizações</label>
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in newUser.organizationalUnits" :key="index"
                                     class="flex items-center space-x-2 mt-1">
                                     <div class="relative flex-1">
                                         <select v-model="newUser.organizationalUnits[index].ou"
                                             class="w-full border rounded px-3 py-2 pr-40">
-                                            <option value="" disabled>Selecione OU...</option>
+                                            <option value="" disabled>Selecione organização...</option>
                                             <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">
                                                 @{{ ouOpt.ou }}</option>
                                         </select>
@@ -736,15 +735,15 @@
                                     <span v-else class="opacity-0 pointer-events-none select-none">✖</span>
                                 </div>
                                 <button @click="newUser.organizationalUnits.push({ ou: '', role: 'user' })"
-                                    class="mt-2 text-blue-600">+ adicionar OU</button>
+                                    class="mt-2 text-blue-600">+ adicionar organização</button>
                             </div>
                         </div>
 
-                        <!-- Interface para Admin OU: apenas dropdown de papel -->
+                        <!-- Interface para Admin de organização: apenas dropdown de papel -->
                         <div v-if="isOuAdmin">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua
-                                    OU</label>
+                                    organização</label>
                                 <select v-model="newUserRole"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="user">Usuário Comum</option>
@@ -906,18 +905,17 @@
                             </label>
                         </div>
 
-                        <!-- Interface para ROOT: múltiplas OUs -->
+                        <!-- Interface para ROOT: múltiplas organizações -->
                         <div v-if="isRoot"
                             :class="editUser.isRootUser ? 'opacity-60 pointer-events-none select-none' : ''">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Unidades
-                                Organizacionais</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Organizações</label>
                             <div class="space-y-2">
                                 <div v-for="(unit, index) in editUser.organizationalUnits" :key="index"
                                     class="flex items-center space-x-2 mt-1">
                                     <div class="relative flex-1">
                                         <select v-model="editUser.organizationalUnits[index].ou"
                                             class="w-full border rounded px-3 py-2 pr-40">
-                                            <option value="" disabled>Selecione OU...</option>
+                                            <option value="" disabled>Selecione organização...</option>
                                             <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">
                                                 @{{ ouOpt.ou }}</option>
                                         </select>
@@ -940,15 +938,15 @@
                                     <span v-else class="opacity-0 pointer-events-none select-none">✖</span>
                                 </div>
                                 <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user', isActive: true })"
-                                    class="mt-2 text-blue-600">+ adicionar OU</button>
+                                    class="mt-2 text-blue-600">+ adicionar organização</button>
                             </div>
                         </div>
 
-                        <!-- Interface para Admin OU: apenas dropdown de papel -->
+                        <!-- Interface para Admin de organização: apenas dropdown de papel -->
                         <div v-if="isOuAdmin">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Papel do usuário na sua
-                                    OU</label>
+                                    organização</label>
                                 <select v-model="editUserRole"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="user">Usuário Comum</option>
@@ -1259,7 +1257,7 @@
                     filteredUsers() {
                         let list = this.users;
 
-                        // Aplica filtro de OU se selecionado (apenas para root)
+                        // Aplica filtro de organização se selecionado (apenas para root)
                         if (this.activeOuFilter && this.isRoot) {
                             list = list.filter(u => {
                                 return (u.organizationalUnits || []).some(unit => {
@@ -1301,7 +1299,7 @@
                     totalUsersPages() {
                         return Math.ceil(this.filteredUsers.length / this.itemsPerPage) || 1;
                     },
-                    // Filtro e Paginação OUs
+                    // Filtro e Paginação de organizações
                     filteredOus() {
                         if (!this.ouSearchTerm) return this.organizationalUnits;
                         const term = this.ouSearchTerm.toLowerCase();
@@ -1376,11 +1374,11 @@
                 mounted() {
                     console.log('✅ LDAP Manager montado com sucesso!');
                     this.loadUsers();
-                    // Só carregar OUs se for root
+                    // Só carregar organizações se for root
                     if (this.isRoot) {
                         this.loadOrganizationalUnits();
                     }
-                    // Se for admin de OU, obter a OU do usuário
+                    // Se for admin de organização, obter a organização do usuário
                     if (this.isOuAdmin) {
                         this.getAdminOu();
                     }
@@ -1408,7 +1406,7 @@
                     institutionalEmail(uid, ou) {
                         const sanitizedUid = (uid || '').trim().toLowerCase();
                         if (!sanitizedUid) return '';
-                        // Regra de domínio por OU: "<ou>.pe.gov.br" se existir OU; fallback para domínio padrão do usuário atual
+                        // Regra de domínio por organização: "<ou>.pe.gov.br" se existir organização; fallback para domínio padrão do usuário atual
                         const normalizedOu = (ou || '').toString().trim().toLowerCase();
                         const baseDomain = normalizedOu ? `${normalizedOu}.pe.gov.br` : (this.defaultEmailDomain || 'example.com');
                         return `${sanitizedUid}@${baseDomain}`;
@@ -1488,7 +1486,7 @@
                                 this.systemStatus = null;
                                 console.log('✅ Usuários carregados:', data.data.length);
 
-                                // Se for admin de OU e ainda não obteve a OU, obter agora
+                                // Se for admin de organização e ainda não obteve a organização, obter agora
                                 if (this.isOuAdmin && !this.adminOu) {
                                     this.getAdminOu();
                                 }
@@ -1503,18 +1501,18 @@
                     },
 
                     async loadOrganizationalUnits() {
-                        console.log('🔄 Carregando Unidades Organizacionais...');
+                        console.log('🔄 Carregando Organizações...');
                         try {
                             const response = await fetch('/api/ldap/organizational-units');
                             const data = await response.json();
 
                             if (data.success) {
                                 this.organizationalUnits = data.data;
-                                console.log('✅ Unidades Organizacionais carregadas:', data.data.length);
+                                console.log('✅ Organizações carregadas:', data.data.length);
                             } else {
                                 // Se for erro 403 (acesso negado), não mostrar erro de conexão LDAP
                                 if (data.message && data.message.includes('Acesso negado')) {
-                                    console.log('ℹ️ Acesso negado para carregar OUs (usuário não é root)');
+                                    console.log('ℹ️ Acesso negado para carregar organizações (usuário não é root)');
                                     this.organizationalUnits = []; // Array vazio para não quebrar formulários
                                     return;
                                 }
@@ -1562,7 +1560,7 @@
                             }];
                         }
 
-                        // Para admin de OU, definir o papel atual do usuário na OU do admin
+                        // Para admin de organização, definir o papel atual do usuário na organização do admin
                         if (this.isOuAdmin) {
                             const adminOuEntry = user.organizationalUnits.find(unit =>
                                 (typeof unit === 'string' ? unit : unit.ou) === this.adminOu

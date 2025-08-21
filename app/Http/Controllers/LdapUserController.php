@@ -36,7 +36,7 @@ class LdapUserController extends Controller
 
 
     /**
-     * Extrai o nome da OU a partir do atributo 'ou' ou, em fallback,
+     * Extrai o nome da organização a partir do atributo 'ou' ou, em fallback,
      * do próprio DN da entrada.
      */
     private function extractOu($entry): ?string
@@ -99,7 +99,7 @@ class LdapUserController extends Controller
 
             $users = LdapUserModel::all();
 
-            // Se admin de OU, filtrar apenas entradas da sua OU
+            // Se admin de organização, filtrar apenas entradas da sua organização
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
                 $users = $users->filter(function ($u) use ($adminOu) {
@@ -108,11 +108,11 @@ class LdapUserController extends Controller
                 });
             }
 
-            // Agrupar por UID e consolidar as OUs para evitar duplicação de usuários na grid
+            // Agrupar por UID e consolidar as organizações para evitar duplicação de usuários na grid
             $formattedUsers = $users->groupBy(fn($u) => $u->getFirstAttribute('uid'))
                 ->map(function ($entries) {
                     $first = $entries->first();
-                    // Para cada entrada, extrai a OU e o papel (employeeType) do usuário
+                    // Para cada entrada, extrai a organização e o papel (employeeType) do usuário
                     $ous = $entries->map(function ($e) {
                         $ouName = $this->extractOu($e);
                         $roleAttr = $e->getAttribute('employeeType') ?? [];
@@ -123,7 +123,7 @@ class LdapUserController extends Controller
                             $role = strtolower($roleAttr ?: 'user');
                         }
 
-                        // Status por entrada (OU) baseado na regra do sufixo '####' na senha
+                        // Status por entrada (organização) baseado na regra do sufixo '####' na senha
                         $pwd = $e->getFirstAttribute('userPassword');
                         $isActive = !is_string($pwd) ? true : (substr($pwd, -4) !== '####');
 
@@ -205,7 +205,7 @@ class LdapUserController extends Controller
                 'description' => 'nullable|email|max:255',
                 'userPassword' => 'required|string|min:6',
                 'organizationalUnits' => 'array',
-                // Cada item pode ser string (OU) ou objeto {ou, role}
+                // Cada item pode ser string (organização) ou objeto {ou, role}
                 'organizationalUnits.*' => 'required',
                 'organizationalUnits.*.ou' => 'sometimes|required|string',
                 'organizationalUnits.*.role' => 'sometimes|in:user,admin',
@@ -231,7 +231,7 @@ class LdapUserController extends Controller
             if ($role === RoleResolver::ROLE_OU_ADMIN) {
                 $adminOu = RoleResolver::getUserOu(auth()->user());
 
-                // Validar se alguma OU especificada não é a do admin
+                // Validar se alguma organização especificada não é a do admin
                 $requestedOus = collect($request->organizationalUnits)->map(function ($i) {
                     return is_string($i) ? $i : ($i['ou'] ?? null);
                 })->filter();
@@ -240,12 +240,12 @@ class LdapUserController extends Controller
                     if (strtolower($requestedOu) !== strtolower($adminOu)) {
                         return response()->json([
                             'success' => false,
-                            'message' => "Acesso negado: você só pode criar usuários na OU '{$adminOu}'"
+                            'message' => "Acesso negado: você só pode criar usuários na organização '{$adminOu}'"
                         ], 403);
                     }
                 }
 
-                // Se não informou nenhuma OU ou informou OU inválida, usar a OU do admin com role user
+                // Se não informou nenhuma organização ou informou organização inválida, usar a organização do admin com role user
                 if ($requestedOus->isEmpty()) {
                     $request->merge([
                         'organizationalUnits' => [['ou' => $adminOu, 'role' => 'user']],
@@ -253,7 +253,7 @@ class LdapUserController extends Controller
                 }
             }
 
-            // Verificar se já existem entradas com UID e mesma OU
+            // Verificar se já existem entradas com UID e mesma organização
             $existingEntries = LdapUserModel::where('uid', $request->uid)->get();
 
             $unitsInput = collect($request->organizationalUnits)->map(function ($i) {
@@ -265,7 +265,7 @@ class LdapUserController extends Controller
                 if ($unitsInput->contains(fn($ou) => strtolower($ou) === $existingOu)) {
                     return response()->json([
                         'success' => false,
-                        'message' => "Usuário já existe na OU {$existingOu}"
+                        'message' => "Usuário já existe na organização {$existingOu}"
                     ], 422);
                 }
             }
@@ -306,11 +306,11 @@ class LdapUserController extends Controller
                 $role = $unit['role'] ?? 'user';
                 $isActive = array_key_exists('isActive', $unit) ? (bool) $unit['isActive'] : true;
 
-                // Validar OU
+                // Validar organização
                 if (!LdapDnUtils::isValidDnValue($ou)) {
                     return response()->json([
                         'success' => false,
-                        'message' => "OU '{$ou}' contém caracteres inválidos para LDAP"
+                        'message' => "Organização '{$ou}' contém caracteres inválidos para LDAP"
                     ], 422);
                 }
 
@@ -326,7 +326,7 @@ class LdapUserController extends Controller
                 if ($request->filled('description')) {
                     $entry->setFirstAttribute('description', $request->description);
                 }
-                // Senha por OU: ativo (hash puro) / inativo (hash + '####')
+                // Senha por organização: ativo (hash puro) / inativo (hash + '####')
                 $unitPassword = $hashedPassword;
                 if ($isActive === false) {
                     $unitPassword = $unitPassword . '####';
@@ -364,7 +364,7 @@ class LdapUserController extends Controller
                 'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
                 'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
                 'result' => 'success',
-                'changes_summary' => 'Criação do usuário com OU(s) ' . $units->pluck('ou')->unique()->join(','),
+                'changes_summary' => 'Criação do usuário com organização(ões) ' . $units->pluck('ou')->unique()->join(','),
                 'changes' => json_encode([
                     'uid' => [null, $request->uid],
                     'givenName' => [null, $request->givenName],
@@ -497,11 +497,11 @@ class LdapUserController extends Controller
                 if (!$belongs) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Acesso negado: usuário fora da sua OU'
+                        'message' => 'Acesso negado: usuário fora da sua organização'
                     ], 403);
                 }
 
-                // Validar se alguma OU especificada na atualização não é a do admin
+                // Validar se alguma organização especificada na atualização não é a do admin
                 if ($request->has('organizationalUnits')) {
                     $requestedOus = collect($request->organizationalUnits)->map(function ($i) {
                         return is_string($i) ? $i : ($i['ou'] ?? null);
@@ -511,7 +511,7 @@ class LdapUserController extends Controller
                         if (strtolower($requestedOu) !== strtolower($adminOu)) {
                             return response()->json([
                                 'success' => false,
-                                'message' => "Acesso negado: você só pode editar usuários na OU '{$adminOu}'"
+                                'message' => "Acesso negado: você só pode editar usuários na organização '{$adminOu}'"
                             ], 403);
                         }
                     }
@@ -542,7 +542,7 @@ class LdapUserController extends Controller
                 return $ou ? ['ou' => $ou, 'role' => ($role ?: 'user')] : null;
             })->filter()->values();
 
-            // Mapear entradas existentes por OU (lowercase)
+            // Mapear entradas existentes por organização (lowercase)
             $existingByOu = $users->keyBy(fn($u) => strtolower($this->extractOu($u) ?? ''));
 
             $baseDn = config('ldap.connections.default.base_dn');
@@ -587,7 +587,7 @@ class LdapUserController extends Controller
 
                     $user->save();
                 } else {
-                    // Criar nova entrada nessa OU apenas se não existir
+                    // Criar nova entrada nessa organização apenas se não existir
                     $entry = new LdapUserModel();
                     $entry->setFirstAttribute('uid', $uid);
                     $entry->setFirstAttribute('givenName', $request->get('givenName', $users->first()->getFirstAttribute('givenName')));
@@ -617,7 +617,7 @@ class LdapUserController extends Controller
                 }
             }
 
-            // Se houve mudança de OU, remover efetivamente as entradas das OUs que saíram
+            // Se houve mudança de organização, remover efetivamente as entradas das organizações que saíram
             if (!$units->isEmpty()) {
                 $newOuSet = collect($units)->map(fn($u) => strtolower($u['ou']))->values()->all();
                 $removedOus = $existingByOu->keys()->filter(function ($ou) use ($newOuSet) {
@@ -631,7 +631,7 @@ class LdapUserController extends Controller
                 }
             }
 
-            // Atualizar atributos comuns nos casos em que nenhuma OU informada (apenas email, nome etc.)
+            // Atualizar atributos comuns nos casos em que nenhuma organização informada (apenas email, nome etc.)
             if ($units->isEmpty()) {
                 foreach ($users as $user) {
                     if ($request->has('givenName')) $user->setFirstAttribute('givenName', $request->givenName);
@@ -715,7 +715,7 @@ class LdapUserController extends Controller
             }
             if (!$units->isEmpty()) {
                 $newUnits = $units->values();
-                // Separar comparações por OU e Role
+                // Separar comparações por organização e Role
                 $oldOUs = $originalUnits->pluck('ou')->join(', ');
                 $newOUs = $newUnits->pluck('ou')->join(', ');
                 $oldRoles = $originalUnits->pluck('role')->join(', ');
@@ -831,7 +831,7 @@ class LdapUserController extends Controller
                 if (!$belongs) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Acesso negado: usuário fora da sua OU'
+                        'message' => 'Acesso negado: usuário fora da sua organização'
                     ], 403);
                 }
             }
@@ -861,7 +861,7 @@ class LdapUserController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Usuário removido com sucesso de todas as OUs'
+                'message' => 'Usuário removido com sucesso de todas as organizações'
             ]);
         } catch (\Exception $e) {
             OperationLog::create([
@@ -891,7 +891,7 @@ class LdapUserController extends Controller
         try {
             $role = RoleResolver::resolve(auth()->user());
 
-            // Apenas usuários root podem visualizar OUs (master não gerencia OUs)
+            // Apenas usuários root podem visualizar organizações (master não gerencia organizações)
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
@@ -932,7 +932,7 @@ class LdapUserController extends Controller
         try {
             $role = RoleResolver::resolve(auth()->user());
 
-            // Apenas usuários root podem criar OUs (master não gerencia OUs)
+            // Apenas usuários root podem criar organizações (master não gerencia organizações)
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
@@ -945,7 +945,7 @@ class LdapUserController extends Controller
                 'description' => 'nullable|string|max:255',
             ]);
 
-            // Verificar se a OU já existe
+            // Verificar se a organização já existe
             $existingOu = OrganizationalUnit::where('ou', $request->ou)->first();
             if ($existingOu) {
                 return response()->json([
@@ -976,8 +976,8 @@ class LdapUserController extends Controller
                 'actor_uid' => auth()->user()?->getFirstAttribute('uid'),
                 'actor_role' => \App\Services\RoleResolver::resolve(auth()->user()),
                 'result' => 'success',
-                'changes_summary' => 'Criação da OU',
-                'description' => 'Unidade organizacional ' . $request->ou . ' criada',
+                'changes_summary' => 'Criação da organização',
+                'description' => 'Organização ' . $request->ou . ' criada',
             ]);
 
             return response()->json([
@@ -1017,7 +1017,7 @@ class LdapUserController extends Controller
         try {
             $role = RoleResolver::resolve(auth()->user());
 
-            // Apenas usuários root podem editar OUs (master não gerencia OUs)
+            // Apenas usuários root podem editar organizações (master não gerencia organizações)
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
@@ -1109,7 +1109,7 @@ class LdapUserController extends Controller
             if ($role === RoleResolver::ROLE_ROOT || $role === RoleResolver::ROLE_MASTER) {
                 $logs = OperationLog::orderBy('created_at', 'desc')->get();
             } else {
-                // Se for admin de OU, vê apenas logs da sua OU
+                // Se for admin de organização, vê apenas logs da sua organização
                 $adminOu = RoleResolver::getUserOu(auth()->user());
                 $logs = OperationLog::where('ou', $adminOu)
                     ->orderBy('created_at', 'desc')
@@ -1318,7 +1318,7 @@ class LdapUserController extends Controller
     }
 
     /**
-     * Gera um LDIF para criação de usuário em múltiplas OUs
+     * Gera um LDIF para criação de usuário em múltiplas organizações
      */
     public function generateUserLdif(Request $request): JsonResponse|\Illuminate\Http\Response
     {

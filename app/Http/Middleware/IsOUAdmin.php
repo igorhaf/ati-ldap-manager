@@ -20,13 +20,13 @@ class IsOUAdmin
         }
 
         if ($role !== RoleResolver::ROLE_OU_ADMIN) {
-            throw new HttpException(403, 'Acesso restrito a administradores de OU');
+            throw new HttpException(403, 'Acesso restrito a administradores de organização');
         }
 
         // Se a rota especificar uma OU (ex: route parameter ou query), validar que é a mesma do admin
         $targetOu = $request->route('ou') ?? $request->query('ou');
         if ($targetOu && $targetOu !== RoleResolver::getUserOu($user)) {
-            throw new HttpException(403, 'Você só pode acessar recursos da sua própria OU');
+            throw new HttpException(403, 'Você só pode acessar recursos da sua própria organização');
         }
 
         return $next($request);
