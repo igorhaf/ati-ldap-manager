@@ -13,9 +13,9 @@ class IsOUAdmin
     {
         $user = $request->user();
 
-        // Usuário root também passa
+        // Usuário root e master também passam
         $role = $user ? RoleResolver::resolve($user) : null;
-        if ($role === RoleResolver::ROLE_ROOT) {
+        if ($role === RoleResolver::ROLE_ROOT || $role === RoleResolver::ROLE_MASTER) {
             return $next($request);
         }
 

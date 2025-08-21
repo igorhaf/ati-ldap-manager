@@ -62,6 +62,7 @@ class Kernel extends HttpKernel
         'root.user' => \App\Http\Middleware\IsRootUser::class,
         'ou.admin' => \App\Http\Middleware\IsOUAdmin::class,
         'self.access' => \App\Http\Middleware\IsSelfAccess::class,
+        'root.or.master' => \App\Http\Middleware\IsRootOrMaster::class,
         'restrict.root' => \App\Http\Middleware\RestrictRootAccess::class,
     ];
 

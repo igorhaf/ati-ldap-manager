@@ -6,6 +6,7 @@ use App\Http\Controllers\LdapUserController;
 use App\Http\Middleware\IsRootUser;
 use App\Http\Middleware\IsOUAdmin;
 use App\Http\Middleware\IsSelfAccess;
+use App\Http\Middleware\IsRootOrMaster;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -35,8 +36,8 @@ Route::middleware(['web','auth'])->prefix('ldap')->group(function () {
     Route::delete('/users/{uid}', [LdapUserController::class, 'destroy']);
     });
     
-    // Rotas LDIF (apenas ROOT)
-    Route::middleware(IsRootUser::class)->group(function () {
+    // Rotas LDIF (ROOT e MASTER)
+    Route::middleware(IsRootOrMaster::class)->group(function () {
         Route::post('/users/generate-ldif', [LdapUserController::class, 'generateUserLdif']);
         Route::post('/ldif/apply', [LdapUserController::class, 'applyLdif']);
         Route::post('/ldif/upload', [LdapUserController::class, 'uploadLdif']);

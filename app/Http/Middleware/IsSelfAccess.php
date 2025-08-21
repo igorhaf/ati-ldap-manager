@@ -18,8 +18,8 @@ class IsSelfAccess
 
         $role = RoleResolver::resolve($user);
 
-        // Root e OU Admin têm acesso ilimitado
-        if (in_array($role, [RoleResolver::ROLE_ROOT, RoleResolver::ROLE_OU_ADMIN])) {
+        // Root, Master e OU Admin têm acesso ilimitado
+        if (in_array($role, [RoleResolver::ROLE_ROOT, RoleResolver::ROLE_MASTER, RoleResolver::ROLE_OU_ADMIN])) {
             return $next($request);
         }
 

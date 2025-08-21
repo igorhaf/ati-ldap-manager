@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 class RoleResolver
 {
     public const ROLE_ROOT = 'root';
+    public const ROLE_MASTER = 'master';
     public const ROLE_OU_ADMIN = 'admin';
     public const ROLE_USER = 'user';
 
@@ -23,6 +24,10 @@ class RoleResolver
             return self::ROLE_ROOT;
         }
 
+        if ($roles->contains(self::ROLE_MASTER)) {
+            return self::ROLE_MASTER;
+        }
+
         if ($roles->contains('admin')) {
             return self::ROLE_OU_ADMIN;
         }
@@ -35,6 +40,9 @@ class RoleResolver
                     $entryRoles = collect((array) ($entry->getAttribute('employeeType') ?? []))->map(fn ($v) => strtolower($v));
                     if ($entryRoles->contains(self::ROLE_ROOT)) {
                         return self::ROLE_ROOT;
+                    }
+                    if ($entryRoles->contains(self::ROLE_MASTER)) {
+                        return self::ROLE_MASTER;
                     }
                     if ($entryRoles->contains('admin')) {
                         return self::ROLE_OU_ADMIN;

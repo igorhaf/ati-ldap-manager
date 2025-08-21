@@ -929,11 +929,17 @@
                                         <option value="user">Usuário</option>
                                         <option value="admin">Admin</option>
                                     </select>
+                                    <label class="inline-flex items-center cursor-pointer select-none ml-2">
+                                        <input type="checkbox" v-model="editUser.organizationalUnits[index].isActive" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-500 transition-colors relative">
+                                            <div class="absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                                        </div>
+                                    </label>
                                     <button v-if="index > 0" @click="editUser.organizationalUnits.splice(index,1)"
                                         class="text-red-500">✖</button>
                                     <span v-else class="opacity-0 pointer-events-none select-none">✖</span>
                                 </div>
-                                <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user' })"
+                                <button @click="editUser.organizationalUnits.push({ ou: '', role: 'user', isActive: true })"
                                     class="mt-2 text-blue-600">+ adicionar OU</button>
                             </div>
                         </div>
@@ -1175,7 +1181,8 @@
                             userPassword: '',
                             organizationalUnits: [{
                                 ou: '',
-                                role: 'user'
+                                role: 'user',
+                                isActive: true
                             }],
                             isActive: true
                         },
@@ -1240,11 +1247,14 @@
                     isRoot() {
                         return this.userRole === 'root';
                     },
+                    isMaster() {
+                        return this.userRole === 'master';
+                    },
                     isOuAdmin() {
                         return this.userRole === 'admin';
                     },
                     canManageUsers() {
-                        return this.isRoot || this.isOuAdmin;
+                        return this.isRoot || this.isMaster || this.isOuAdmin;
                     },
                     filteredUsers() {
                         let list = this.users;
@@ -1563,6 +1573,16 @@
 
                         // Determinar status ativo a partir do backend (campo isActive)
                         this.editUser.isActive = !!user.isActive;
+                        // Mapear status por OU (se vier do backend) preservando papel
+                        if (Array.isArray(user.organizationalUnits)) {
+                            this.editUser.organizationalUnits = this.editUser.organizationalUnits.map((u) => {
+                                const target = user.organizationalUnits.find((x) => (typeof x === 'string' ? x : x.ou) === u.ou);
+                                if (target && typeof target !== 'string') {
+                                    return { ...u, isActive: !!target.isActive };
+                                }
+                                return u;
+                            });
+                        }
 
                         // Definir se o usuário sendo editado é root
                         this.editUser.isRootUser = this.isUserRoot(user);

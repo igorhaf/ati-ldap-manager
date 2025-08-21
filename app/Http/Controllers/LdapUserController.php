@@ -891,7 +891,7 @@ class LdapUserController extends Controller
         try {
             $role = RoleResolver::resolve(auth()->user());
 
-            // Apenas usuários root podem visualizar OUs
+            // Apenas usuários root podem visualizar OUs (master não gerencia OUs)
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
@@ -932,7 +932,7 @@ class LdapUserController extends Controller
         try {
             $role = RoleResolver::resolve(auth()->user());
 
-            // Apenas usuários root podem criar OUs
+            // Apenas usuários root podem criar OUs (master não gerencia OUs)
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
@@ -1017,7 +1017,7 @@ class LdapUserController extends Controller
         try {
             $role = RoleResolver::resolve(auth()->user());
 
-            // Apenas usuários root podem editar OUs
+            // Apenas usuários root podem editar OUs (master não gerencia OUs)
             if ($role !== RoleResolver::ROLE_ROOT) {
                 return response()->json([
                     'success' => false,
@@ -1105,8 +1105,8 @@ class LdapUserController extends Controller
         try {
             $role = RoleResolver::resolve(auth()->user());
 
-            // Se for ROOT, vê todos os logs
-            if ($role === RoleResolver::ROLE_ROOT) {
+            // Se for ROOT ou MASTER, vê todos os logs
+            if ($role === RoleResolver::ROLE_ROOT || $role === RoleResolver::ROLE_MASTER) {
                 $logs = OperationLog::orderBy('created_at', 'desc')->get();
             } else {
                 // Se for admin de OU, vê apenas logs da sua OU
