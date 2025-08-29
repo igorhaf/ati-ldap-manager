@@ -11,8 +11,12 @@ use App\Http\Middleware\IsOUAdmin;
 Route::domain('contas.trocasenha.sei.pe.gov.br')->group(function () {
     Route::get('/', [ForgotPasswordController::class, 'showRequestForm'])->name('password.forgot');
     Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink'])->name('password.forgot.submit');
-    Route::get('/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset.form');
-    Route::post('/{token}', [ResetPasswordController::class, 'reset'])->name('password.reset.submit');
+    Route::get('/{token}', [ResetPasswordController::class, 'showResetForm'])
+        ->where('token', '[A-Za-z0-9]{64}')
+        ->name('password.reset.form');
+    Route::post('/{token}', [ResetPasswordController::class, 'reset'])
+        ->where('token', '[A-Za-z0-9]{64}')
+        ->name('password.reset.submit');
     Route::get('/sucesso', [ResetPasswordController::class, 'success'])->name('password.reset.success');
 });
 
