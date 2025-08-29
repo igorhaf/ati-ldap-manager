@@ -29,15 +29,14 @@ class ForgotPasswordController extends Controller
 
         // Verificar existência do e-mail no LDAP
         $user = \App\Ldap\LdapUserModel::where('mail', strtolower($validated['email']))->first();
-        if (!$user) {
-            return back()->withErrors(['email' => 'E-mail não encontrado.'])->withInput();
+
+        if ($user) {
+            $plainToken = $service->createTokenForEmail($validated['email']);
+            $resetUrl = 'https://contas.trocasenha.pe.gov.br/' . $plainToken;
+            Mail::to($validated['email'])->send(new PasswordResetLink($resetUrl));
         }
 
-        $plainToken = $service->createTokenForEmail($validated['email']);
-        $resetUrl = 'https://contas.trocasenha.pe.gov.br/' . $plainToken;
-
-        Mail::to($validated['email'])->send(new PasswordResetLink($resetUrl));
-
+        // Mensagem genérica para evitar enumeração de usuários
         return back()->with('status', 'Se o e-mail existir, enviamos um link para redefinição.');
     }
 }
