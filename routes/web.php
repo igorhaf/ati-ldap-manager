@@ -7,6 +7,15 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Middleware\IsOUAdmin;
 
+// Fluxo de redefinição de senha - domínio dedicado (precisa vir antes da rota '/')
+Route::domain('contas.trocasenha.sei.pe.gov.br')->group(function () {
+    Route::get('/', [ForgotPasswordController::class, 'showRequestForm'])->name('password.forgot');
+    Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink'])->name('password.forgot.submit');
+    Route::get('/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset.form');
+    Route::post('/{token}', [ResetPasswordController::class, 'reset'])->name('password.reset.submit');
+    Route::get('/sucesso', [ResetPasswordController::class, 'success'])->name('password.reset.success');
+});
+
 Route::get('/', function () {
     return redirect()->route('ldap.manager');
 });
@@ -62,11 +71,4 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Fluxo de redefinição de senha - domínio dedicado
-Route::domain('contas.trocasenha.pe.gov.br')->group(function () {
-    Route::get('/', [ForgotPasswordController::class, 'showRequestForm'])->name('password.forgot');
-    Route::post('/forgot', [ForgotPasswordController::class, 'sendResetLink'])->name('password.forgot.submit');
-    Route::get('/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset.form');
-    Route::post('/{token}', [ResetPasswordController::class, 'reset'])->name('password.reset.submit');
-    Route::get('/sucesso', [ResetPasswordController::class, 'success'])->name('password.reset.success');
-});
+ 
