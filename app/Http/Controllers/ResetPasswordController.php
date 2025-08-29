@@ -29,12 +29,14 @@ class ResetPasswordController extends Controller
         }
         $validated = $request->validate([
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'g-recaptcha-response' => ['required', 'string'],
+            'g-recaptcha-response' => ['nullable', 'string'],
         ]);
 
-        $captchaOk = $captcha->verify($validated['g-recaptcha-response'], $request->ip());
-        if (!$captchaOk) {
-            return back()->withErrors(['password' => 'Falha na verificação do reCAPTCHA.'])->withInput();
+        if (env('RECAPTCHA_SECRET_KEY')) {
+            $captchaOk = $captcha->verify($validated['g-recaptcha-response'] ?? '', $request->ip());
+            if (!$captchaOk) {
+                return back()->withErrors(['password' => 'Falha na verificação do reCAPTCHA.'])->withInput();
+            }
         }
 
         $record = $service->findValidByToken($token);

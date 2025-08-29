@@ -19,12 +19,14 @@ class ForgotPasswordController extends Controller
     {
         $validated = $request->validate([
             'email' => ['required', 'email'],
-            'g-recaptcha-response' => ['required', 'string'],
+            'g-recaptcha-response' => ['nullable', 'string'],
         ]);
 
-        $captchaOk = $captcha->verify($validated['g-recaptcha-response'], $request->ip());
-        if (!$captchaOk) {
-            return back()->withErrors(['email' => 'Falha na verificação do reCAPTCHA.'])->withInput();
+        if (env('RECAPTCHA_SECRET_KEY')) {
+            $captchaOk = $captcha->verify($validated['g-recaptcha-response'] ?? '', $request->ip());
+            if (!$captchaOk) {
+                return back()->withErrors(['email' => 'Falha na verificação do reCAPTCHA.'])->withInput();
+            }
         }
 
         // Verificar existência do e-mail no LDAP
@@ -32,7 +34,7 @@ class ForgotPasswordController extends Controller
 
         if ($user) {
             $plainToken = $service->createTokenForEmail($validated['email']);
-            $resetUrl = 'https://contas.trocasenha.pe.gov.br/' . $plainToken;
+            $resetUrl = 'https://contas.trocasenha.sei.pe.gov.br/' . $plainToken;
             Mail::to($validated['email'])->send(new PasswordResetLink($resetUrl));
         }
 
@@ -40,5 +42,3 @@ class ForgotPasswordController extends Controller
         return back()->with('status', 'Se o e-mail existir, enviamos um link para redefinição.');
     }
 }
-
-

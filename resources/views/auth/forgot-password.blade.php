@@ -30,14 +30,27 @@
                 <input type="email" name="email" value="{{ old('email') }}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
-                <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}"></div>
+                @if (env('RECAPTCHA_SITE_KEY'))
+                    <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}"></div>
+                @else
+                    <div class="border border-gray-300 rounded p-3 text-sm text-gray-600 bg-gray-50">
+                        reCAPTCHA de exemplo (dev): marque a caixa para continuar
+                    </div>
+                    <label class="mt-2 flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" class="h-4 w-4 border-gray-300 rounded" required>
+                        Não sou um robô (exemplo)
+                    </label>
+                    <input type="hidden" name="g-recaptcha-response" value="mock">
+                @endif
             </div>
             <button type="submit" class="w-full py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700">Enviar link</button>
         </form>
         <p class="text-xs text-gray-500 mt-4">Você receberá um link para redefinir sua senha, caso o e-mail exista.</p>
     </div>
 
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @if (env('RECAPTCHA_SITE_KEY'))
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
 </body>
 </html>
 
