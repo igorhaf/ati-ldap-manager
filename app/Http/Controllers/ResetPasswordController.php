@@ -63,5 +63,3 @@ class ResetPasswordController extends Controller
         return view('auth.reset-success');
     }
 }
-
-

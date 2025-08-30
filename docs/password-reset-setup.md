@@ -1,6 +1,6 @@
 # Configuração do Fluxo de Redefinição de Senha
 
-Fluxo hospedado em `contas.trocasenha.pe.gov.br`.
+Fluxo hospedado em `contas.trocasenha.sei.pe.gov.br`.
 
 ## Variáveis de Ambiente
 
@@ -24,8 +24,8 @@ RECAPTCHA_SECRET_KEY=SEU_SECRET_KEY
 
 ## DNS e Domínio
 
-- Aponte `contas.trocasenha.pe.gov.br` para a aplicação.
-- Rotas definidas com `Route::domain('contas.trocasenha.pe.gov.br')`.
+- Aponte `contas.trocasenha.sei.pe.gov.br` para a aplicação.
+- Rotas definidas com `Route::domain('contas.trocasenha.sei.pe.gov.br')`.
 
 ## Migrações
 
@@ -37,9 +37,9 @@ php artisan migrate
 
 ## Fluxo
 
-1. `https://contas.trocasenha.pe.gov.br/` → formulário de e-mail + reCAPTCHA.
+1. `https://contas.trocasenha.sei.pe.gov.br/` → formulário de e-mail + reCAPTCHA.
 2. Envio gera token único (hash salvo, expira) e e-mail com link.
-3. `https://contas.trocasenha.pe.gov.br/{token}` → definir nova senha + reCAPTCHA.
+3. `https://contas.trocasenha.sei.pe.gov.br/{token}` → definir nova senha + reCAPTCHA.
 4. Senha atualizada no LDAP, token invalidado, tela de sucesso.
 
 ## Segurança

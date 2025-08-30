@@ -42,7 +42,7 @@
         window.USER_UID = "{{ auth()->user()->getFirstAttribute('uid') ?? '' }}";
         window.USER_CN = "{{ auth()->user()->getFirstAttribute('cn') ?? '' }}";
         window.USER_MAIL = "{{ auth()->user()->getFirstAttribute('mail') ?? '' }}";
-
+        
         // Debug do usuário autenticado
         console.log('🔐 Usuário autenticado:', {
             role: window.USER_ROLE,
@@ -50,7 +50,7 @@
             cn: window.USER_CN,
             mail: window.USER_MAIL
         });
-
+        
         // Verificar se UID está vazio
         if (!window.USER_UID || window.USER_UID.trim() === '') {
             console.error('❌ CRITICAL: window.USER_UID está vazio!');
@@ -134,50 +134,50 @@
             </div>
         </header>
 
-        <!-- Status Panel -->
-        <main class="max-w-full mx-auto px-6 xl:px-12 py-8">
-            <div v-if="systemStatus" class="mb-8">
+                 <!-- Status Panel -->
+         <main class="max-w-full mx-auto px-6 xl:px-12 py-8">
+             <div v-if="systemStatus" class="mb-8">
                 <div :class="systemStatus.type === 'error' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'"
                     class="border rounded-lg p-4">
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0">
-                            <span v-if="systemStatus.type === 'error'" class="text-red-400 text-xl">❌</span>
-                            <span v-else class="text-green-400 text-xl">✅</span>
-                        </div>
-                        <div class="ml-3 flex-1">
+                     <div class="flex items-start">
+                         <div class="flex-shrink-0">
+                             <span v-if="systemStatus.type === 'error'" class="text-red-400 text-xl">❌</span>
+                             <span v-else class="text-green-400 text-xl">✅</span>
+                         </div>
+                         <div class="ml-3 flex-1">
                             <h3 :class="systemStatus.type === 'error' ? 'text-red-800' : 'text-green-800'"
                                 class="text-sm font-medium">
-                                @{{ systemStatus.title }}
-                            </h3>
+                                 @{{ systemStatus.title }}
+                             </h3>
                             <div :class="systemStatus.type === 'error' ? 'text-red-700' : 'text-green-700'"
                                 class="mt-1 text-sm">
-                                <p>@{{ systemStatus.message }}</p>
-                                <div v-if="systemStatus.details" class="mt-2">
-                                    <p class="font-medium">Detalhes:</p>
-                                    <ul class="mt-1 list-disc list-inside space-y-1">
+                                 <p>@{{ systemStatus.message }}</p>
+                                 <div v-if="systemStatus.details" class="mt-2">
+                                     <p class="font-medium">Detalhes:</p>
+                                     <ul class="mt-1 list-disc list-inside space-y-1">
                                         <li v-for="detail in systemStatus.details" :key="detail">
                                             @{{ detail }}</li>
-                                    </ul>
-                                </div>
-                                <div v-if="systemStatus.suggestions" class="mt-3">
-                                    <p class="font-medium">Sugestões:</p>
-                                    <ul class="mt-1 list-disc list-inside space-y-1">
+                                     </ul>
+                                 </div>
+                                 <div v-if="systemStatus.suggestions" class="mt-3">
+                                     <p class="font-medium">Sugestões:</p>
+                                     <ul class="mt-1 list-disc list-inside space-y-1">
                                         <li v-for="suggestion in systemStatus.suggestions" :key="suggestion">
                                             @{{ suggestion }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ml-auto pl-3">
-                            <button @click="systemStatus = null" class="text-gray-500 hover:text-gray-700">✖️</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                                     </ul>
+                                 </div>
+                             </div>
+                         </div>
+                         <div class="ml-auto pl-3">
+                             <button @click="systemStatus = null" class="text-gray-500 hover:text-gray-700">✖️</button>
+                         </div>
+                     </div>
+                 </div>
+             </div>
 
-            <!-- Tabs -->
-            <div class="border-b border-gray-200 mb-8">
-                <nav class="-mb-px inline-flex bg-white rounded-2xl p-2 gap-1 shadow-lg border border-gray-200">
+             <!-- Tabs -->
+             <div class="border-b border-gray-200 mb-8">
+                 <nav class="-mb-px inline-flex bg-white rounded-2xl p-2 gap-1 shadow-lg border border-gray-200">
                     <button @click="activeTab = 'users'"
                         :class="activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' :
                             'text-gray-600 hover:text-blue-600 hover:bg-gray-50'"
@@ -187,7 +187,7 @@
                                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         Usuários
-                    </button>
+                     </button>
                     <button v-if="isRoot" @click="activeTab = 'organizational-units'"
                         :class="activeTab === 'organizational-units' ? 'bg-blue-600 text-white shadow-md' :
                             'text-gray-600 hover:text-blue-600 hover:bg-gray-50'"
@@ -197,7 +197,7 @@
                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         Unidades
-                    </button>
+                     </button>
                     <button v-if="canManageUsers" @click="activeTab = 'logs'"
                         :class="activeTab === 'logs' ? 'bg-blue-600 text-white shadow-md' :
                             'text-gray-600 hover:text-blue-600 hover:bg-gray-50'"
@@ -207,23 +207,23 @@
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         Logs
-                    </button>
-                </nav>
-            </div>
+                     </button>
+                 </nav>
+             </div>
 
-            <!-- Users Tab -->
-            <div v-if="activeTab === 'users'" class="space-y-6">
-                <!-- Search and Filters -->
-                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <div class="flex-1">
+             <!-- Users Tab -->
+             <div v-if="activeTab === 'users'" class="space-y-6">
+                 <!-- Search and Filters -->
+                 <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                     <div class="flex flex-col sm:flex-row gap-4">
+                         <div class="flex-1">
                             <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar
                                 Usuários</label>
                             <input v-model="searchTerm" type="text" id="search"
                                 placeholder="Buscar por nome, usuário ou CPF..."
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div class="flex items-end">
+                         </div>
+                         <div class="flex items-end">
                             <button @click="loadUsers"
                                 class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,20 +231,20 @@
                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                                 Atualizar
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                             </button>
+                         </div>
+                     </div>
+                 </div>
 
-                <!-- Users Table -->
+                 <!-- Users Table -->
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Lista de Usuários (@{{ filteredUsers.length }})</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
+                     <div class="px-6 py-4 border-b border-gray-200">
+                         <h3 class="text-lg font-medium text-gray-900">Lista de Usuários (@{{ filteredUsers.length }})</h3>
+                     </div>
+                     <div class="overflow-x-auto">
+                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50 sticky top-0 z-10">
-                                <tr>
+                                 <tr>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Usuário</th>
@@ -263,9 +263,9 @@
                                     <th v-if="canManageUsers"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                                 </tr>
+                             </thead>
+                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="user in paginatedUsers" :key="user.uid"
                                     :class="[user.uid === 'root' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' :
                                         'hover:bg-gray-50 odd:bg-gray-50'
@@ -276,7 +276,7 @@
                                     <td class="px-6 py-4 text-sm"
                                         :class="user.uid === 'root' ? 'text-gray-500' : 'text-gray-900'">
                                         @{{ user.fullName }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">
+                                     <td class="px-6 py-4 text-sm text-gray-900">
                                         <!-- Para usuários root: mostrar todas as organizações -->
                                         <div v-if="isRoot" v-for="unit in user.organizationalUnits"
                                             :key="unit.ou ?? unit"
@@ -301,7 +301,7 @@
                                                 @{{ unit.isActive ? 'Ativo' : 'Desativado' }}
                                             </span>
                                         </div>
-
+                                        
                                         <!-- Para administradores de organização: mostrar apenas o perfil -->
                                         <div v-else v-for="unit in user.organizationalUnits" :key="unit.ou ?? unit"
                                             @click="setRoleFilter(unit.role ?? 'user')"
@@ -328,7 +328,7 @@
                                                 @{{ unit.isActive ? 'Ativo' : 'Desativado' }}
                                             </span>
                                         </div>
-                                    </td>
+                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         <div class="text-sm font-medium text-gray-900">@{{ user.mail }}</div>
                                     </td>
@@ -358,17 +358,17 @@
                                                 Excluir
                                             </button>
                                         </template>
-                                    </td>
-                                </tr>
-                                <tr v-if="filteredUsers.length === 0">
-                                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
-                                        <div v-if="users.length === 0">📭 Nenhum usuário encontrado</div>
-                                        <div v-else>🔍 Nenhum usuário corresponde à busca</div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                     </td>
+                                 </tr>
+                                 <tr v-if="filteredUsers.length === 0">
+                                     <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                         <div v-if="users.length === 0">📭 Nenhum usuário encontrado</div>
+                                         <div v-else>🔍 Nenhum usuário corresponde à busca</div>
+                                     </td>
+                                 </tr>
+                             </tbody>
+                         </table>
+                     </div>
                     <!-- Controles de paginação Usuários -->
                     <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalUsersPages > 1">
                         <button @click="prevPage('users')" :disabled="usersPage === 1"
@@ -381,41 +381,41 @@
                         <button @click="nextPage('users')" :disabled="usersPage === totalUsersPages"
                             class="px-2 py-1 border rounded disabled:opacity-50">»</button>
                     </div>
-                </div>
-            </div>
+                 </div>
+             </div>
 
-            <!-- Organizational Units Tab -->
-            <div v-if="activeTab === 'organizational-units' && isRoot" class="space-y-6">
+             <!-- Organizational Units Tab -->
+             <div v-if="activeTab === 'organizational-units' && isRoot" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
+                     <div class="px-6 py-4 border-b border-gray-200">
                         <h3 class="text-lg font-medium text-gray-900">Organizações
                             (@{{ filteredOus.length }})</h3>
-                        <div class="mt-3">
+                         <div class="mt-3">
                             <input v-model="ouSearchTerm" type="text"
                                 placeholder="Buscar por organização, descrição ou DN..."
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
+                         </div>
+                     </div>
+                     <div class="overflow-x-auto">
+                         <table class="min-w-full divide-y divide-gray-200">
+                             <thead class="bg-gray-50">
+                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                         Descrição</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DN</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DN</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações
                                     </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                                 </tr>
+                             </thead>
+                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="ou in paginatedOus" :key="ou.dn" class="hover:bg-gray-50">
                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">@{{ ou.ou }}
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ ou.description || '-' }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-500 font-mono">@{{ ou.dn }}</td>
-                                    <td class="px-6 py-4 text-sm font-medium">
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ ou.description || '-' }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-500 font-mono">@{{ ou.dn }}</td>
+                                     <td class="px-6 py-4 text-sm font-medium">
                                         <button @click="editOu(ou)"
                                             class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900 transition-colors">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -425,16 +425,16 @@
                                             </svg>
                                             Editar
                                         </button>
-                                    </td>
-                                </tr>
-                                <tr v-if="filteredOus.length === 0">
-                                    <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
-                                        📁 Nenhuma unidade organizacional encontrada
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                     </td>
+                                 </tr>
+                                 <tr v-if="filteredOus.length === 0">
+                                     <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                                         📁 Nenhuma unidade organizacional encontrada
+                                     </td>
+                                 </tr>
+                             </tbody>
+                         </table>
+                     </div>
                     <!-- Paginação de organizações -->
                     <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalOusPages > 1">
                         <button @click="prevPage('ous')" :disabled="ousPage === 1"
@@ -447,15 +447,15 @@
                         <button @click="nextPage('ous')" :disabled="ousPage === totalOusPages"
                             class="px-2 py-1 border rounded disabled:opacity-50">»</button>
                     </div>
-                </div>
-            </div>
+                 </div>
+             </div>
 
-            <!-- Logs Tab -->
-            <div v-if="activeTab === 'logs' && canManageUsers" class="space-y-6">
+             <!-- Logs Tab -->
+             <div v-if="activeTab === 'logs' && canManageUsers" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Logs de Operações (@{{ filteredLogs.length }})</h3>
-                        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                     <div class="px-6 py-4 border-b border-gray-200">
+                         <h3 class="text-lg font-medium text-gray-900">Logs de Operações (@{{ filteredLogs.length }})</h3>
+                         <div class="mt-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             <input v-model="logFilters.actor" type="text" placeholder="Filtrar por Executor"
                                 class="px-3 py-2 border rounded-md">
                             <input v-model="logFilters.action" type="text" placeholder="Filtrar por Ação"
@@ -464,11 +464,11 @@
                                 placeholder="Filtrar por Usuário afetado" class="px-3 py-2 border rounded-md">
                             <input v-model="logFilters.ou" type="text" placeholder="Filtrar por Organização"
                                 class="px-3 py-2 border rounded-md">
-                            <select v-model="logFilters.result" class="px-3 py-2 border rounded-md">
-                                <option value="">Resultado (todos)</option>
-                                <option>Sucesso</option>
-                                <option>Falha</option>
-                            </select>
+                             <select v-model="logFilters.result" class="px-3 py-2 border rounded-md">
+                                 <option value="">Resultado (todos)</option>
+                                 <option>Sucesso</option>
+                                 <option>Falha</option>
+                             </select>
                             <input v-model="logFilters.description" type="text"
                                 placeholder="Filtrar por Descrição" class="px-3 py-2 border rounded-md">
                             <input v-model="logFilters.cpf" @input="maskCpfFilter" inputmode="numeric"
@@ -476,12 +476,12 @@
                                 title="CPF">
                             <input v-model="logFilters.whenEnd" type="date" class="px-3 py-2 border rounded-md"
                                 title="Quando">
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
+                         </div>
+                     </div>
+                     <div class="overflow-x-auto">
+                         <table class="min-w-full divide-y divide-gray-200">
+                             <thead class="bg-gray-50">
+                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                         Executor</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ação
@@ -496,26 +496,26 @@
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                         Descrição</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                                 </tr>
+                             </thead>
+                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="log in paginatedLogs" :key="log.id"
                                     class="hover:bg-gray-50 cursor-pointer" @click="openLogDrawer(log)">
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.actor }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.action }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.target }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.ou || '-' }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.result }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.when).toLocaleString() }}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
-                                </tr>
-                                <tr v-if="filteredLogs.length === 0">
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.actor }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.action }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.target }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.ou || '-' }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.result }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-500">@{{ new Date(log.when).toLocaleString() }}</td>
+                                     <td class="px-6 py-4 text-sm text-gray-900">@{{ log.description }}</td>
+                                   </tr>
+                                   <tr v-if="filteredLogs.length === 0">
                                     <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum log
                                         encontrado</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                   </tr>
+                               </tbody>
+                           </table>
+                     </div>
                     <!-- Paginação Logs -->
                     <div class="flex justify-center items-center mt-4 mb-8 space-x-1" v-if="totalLogPages > 1">
                         <button @click="prevPage('logs')" :disabled="logsPage === 1"
@@ -528,9 +528,9 @@
                         <button @click="nextPage('logs')" :disabled="logsPage === totalLogPages"
                             class="px-2 py-1 border rounded disabled:opacity-50">»</button>
                     </div>
-                </div>
-            </div>
-        </main>
+                 </div>
+             </div>
+         </main>
 
         <!-- Drawer simples para logs -->
         <transition name="slide-in">
@@ -641,7 +641,7 @@
                             </svg>
                         </button>
                     </div>
-
+                    
                     <form @submit.prevent="createUser" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -668,8 +668,8 @@
                                     placeholder="000.000.000-00">
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
                                     <div class="relative">
                                         <input v-model="newUser.userPassword" :type="showNewUserPassword ? 'text' : 'password'" required minlength="6"
                                             class="w-full pr-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -684,30 +684,30 @@
                                             </svg>
                                         </button>
                                     </div>
-                                </div>
-                                <div>
+                            </div>
+                            <div>
                                     <label for="redirect-mail"
                                         class="block text-sm font-medium text-gray-700 mb-2">E-mail
                                         de redirecionamento</label>
                                     <input v-model="newUser.description" type="email" id="redirect-mail"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="Ex: meuemail@gmail.com">
-                                </div>
                             </div>
+                        </div>
 
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Status do usuário em todas
                                     as organizações</label>
-                                <label class="inline-flex items-center cursor-pointer select-none">
-                                    <input type="checkbox" v-model="newUser.isActive" class="sr-only peer">
+                            <label class="inline-flex items-center cursor-pointer select-none">
+                                <input type="checkbox" v-model="newUser.isActive" class="sr-only peer">
                                     <div
                                         class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-colors relative">
                                         <div
                                             class="absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform peer-checked:translate-x-5">
                                         </div>
-                                    </div>
-                                    <span class="ml-3 text-sm text-gray-700">@{{ newUser.isActive ? 'Ativo' : 'Desativado' }}</span>
-                                </label>
+                                </div>
+                                <span class="ml-3 text-sm text-gray-700">@{{ newUser.isActive ? 'Ativo' : 'Desativado' }}</span>
+                            </label>
                             </div>
                         </div>
 
@@ -723,7 +723,7 @@
                                             <option value="" disabled>Selecione organização...</option>
                                             <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">
                                                 @{{ ouOpt.ou }}</option>
-                                        </select>
+                                    </select>
                                         <span v-if="newUser.uid && newUser.organizationalUnits[index].ou"
                                             class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400 text-sm">@{{ institutionalEmail(newUser.uid, newUser.organizationalUnits[index].ou) }}</span>
                                     </div>
@@ -739,7 +739,7 @@
                                             class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-500 transition-colors relative">
                                             <div
                                                 class="absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform peer-checked:translate-x-5">
-                                            </div>
+                                </div>
                                         </div>
                                     </label>
                                     <button v-if="index > 0" @click="newUser.organizationalUnits.splice(index,1)"
@@ -798,7 +798,7 @@
                             </svg>
                         </button>
                     </div>
-
+                    
                     <form @submit.prevent="createOu" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Unidade
@@ -806,7 +806,7 @@
                             <input v-model="newOu.ou" type="text" required
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
-
+                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                             <textarea v-model="newOu.description" rows="3"
@@ -853,7 +853,7 @@
                             </svg>
                         </button>
                     </div>
-
+                    
                     <form @submit.prevent="updateUser" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -899,7 +899,7 @@
                                             <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.664 20.664 0 0 1 5.06-5.94m3.02-1.51A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a20.72 20.72 0 0 1-3.22 4.31M1 1l22 22"/>
                                         </svg>
                                     </button>
-                                </div>
+                            </div>
                             </div>
                             
                             <div>
@@ -942,7 +942,7 @@
                                             <option value="" disabled>Selecione organização...</option>
                                             <option v-for="ouOpt in organizationalUnits" :value="ouOpt.ou">
                                                 @{{ ouOpt.ou }}</option>
-                                        </select>
+                                    </select>
                                         <span v-if="editUser.uid && editUser.organizationalUnits[index].ou"
                                             class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400 text-sm">@{{ institutionalEmail(editUser.uid, editUser.organizationalUnits[index].ou) }}</span>
                                     </div>
@@ -955,7 +955,7 @@
                                         <input type="checkbox" v-model="editUser.organizationalUnits[index].isActive" class="sr-only peer">
                                         <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-green-500 transition-colors relative">
                                             <div class="absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                                        </div>
+                                </div>
                                     </label>
                                     <button v-if="index > 0" @click="editUser.organizationalUnits.splice(index,1)"
                                         class="text-red-500">✖</button>
@@ -1142,7 +1142,7 @@
                             </svg>
                         </button>
                     </div>
-
+                    
                     <form @submit.prevent="updateOu" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Unidade
@@ -1150,7 +1150,7 @@
                             <input v-model="editOuData.ou" type="text" required
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
-
+                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                             <textarea v-model="editOuData.description" rows="3"
@@ -1172,12 +1172,12 @@
 
     <script>
         console.log('Vue disponível:', typeof window.Vue);
-
+        
         if (window.Vue) {
             const {
                 createApp
             } = window.Vue;
-
+            
             createApp({
                 data() {
                     return {
@@ -1332,7 +1332,7 @@
                         }
 
                         if (!this.searchTerm) return list;
-
+                        
                         const term = this.searchTerm.toLowerCase();
                         return list.filter(user => {
                             const mail = (user.mail || '').toLowerCase();
@@ -1522,7 +1522,7 @@
                         try {
                             const response = await fetch('/api/ldap/users');
                             const data = await response.json();
-
+                            
                             if (data.success) {
                                 // Garantir que organizationalUnits esteja no formato de objetos {ou, role}
                                 this.users = data.data.map(u => {
@@ -1537,7 +1537,7 @@
                                 });
                                 this.systemStatus = null;
                                 console.log('✅ Usuários carregados:', data.data.length);
-
+                                
                                 // Se for admin de organização e ainda não obteve a organização, obter agora
                                 if (this.isOuAdmin && !this.adminOu) {
                                     this.getAdminOu();
@@ -1551,13 +1551,13 @@
                             this.handleNetworkError('Erro ao carregar usuários', error);
                         }
                     },
-
+                    
                     async loadOrganizationalUnits() {
                         console.log('🔄 Carregando Organizações...');
                         try {
                             const response = await fetch('/api/ldap/organizational-units');
                             const data = await response.json();
-
+                            
                             if (data.success) {
                                 this.organizationalUnits = data.data;
                                 console.log('✅ Organizações carregadas:', data.data.length);
@@ -1576,13 +1576,13 @@
                             this.handleNetworkError('Erro ao carregar unidades organizacionais', error);
                         }
                     },
-
+                    
                     async deleteUser(uid) {
                         const user = this.users.find(u => u.uid === uid);
                         this.userToDelete = user;
                         this.showDeleteUserModal = true;
                     },
-
+                    
                     openEditUserModal(user) {
                         this.editUser.uid = user.uid;
                         this.editUser.givenName = user.givenName;
@@ -1593,7 +1593,7 @@
                         this.editUser.mail = user.mail;
                         this.editUser.description = user.description || '';
                         this.editUser.userPassword = '';
-
+                        
                         // Garantir que organizationalUnits seja um array de objetos
                         if (Array.isArray(user.organizationalUnits)) {
                             if (typeof user.organizationalUnits[0] === 'string') {
@@ -1611,16 +1611,16 @@
                                 role: 'user'
                             }];
                         }
-
+                        
                         // Para admin de organização, definir o papel atual do usuário na organização do admin
                         if (this.isOuAdmin) {
-                            const adminOuEntry = user.organizationalUnits.find(unit =>
+                            const adminOuEntry = user.organizationalUnits.find(unit => 
                                 (typeof unit === 'string' ? unit : unit.ou) === this.adminOu
                             );
-                            this.editUserRole = adminOuEntry ?
+                            this.editUserRole = adminOuEntry ? 
                                 (typeof adminOuEntry === 'string' ? 'user' : adminOuEntry.role) : 'user';
                         }
-
+                        
                         // Determinar status ativo a partir do backend (campo isActive)
                         this.editUser.isActive = !!user.isActive;
                         // Mapear status por OU (se vier do backend) preservando papel
@@ -1636,10 +1636,10 @@
 
                         // Definir se o usuário sendo editado é root
                         this.editUser.isRootUser = this.isUserRoot(user);
-
+                        
                         this.showEditUserModal = true;
                     },
-
+                    
                     async updateUser() {
                         try {
                             // Preparar dados baseado no tipo de usuário
@@ -1655,7 +1655,7 @@
                                 this.showNotification('E-mail de redirecionamento inválido', 'error');
                                 return;
                             }
-
+                            
                             if (this.isOuAdmin) {
                                 // Para admin de OU: usar apenas sua OU com o papel selecionado
                                 userData.organizationalUnits = [{
@@ -1663,7 +1663,7 @@
                                     role: this.editUserRole
                                 }];
                             }
-
+                            
                             const response = await fetch(`/api/ldap/users/${this.editUser.uid}`, {
                                 method: 'PUT',
                                 headers: {
@@ -1685,7 +1685,7 @@
                             this.showNotification('Erro ao atualizar usuário', 'error');
                         }
                     },
-
+                    
                     async createUser() {
                         try {
                             // Preparar dados baseado no tipo de usuário
@@ -1699,7 +1699,7 @@
                                 this.showNotification('E-mail de redirecionamento inválido', 'error');
                                 return;
                             }
-
+                            
                             if (this.isOuAdmin) {
                                 // Validar se adminOu está preenchida
                                 if (!this.adminOu || this.adminOu.trim() === '') {
@@ -1709,13 +1709,13 @@
                                     console.error('❌ adminOu vazia:', this.adminOu);
                                     return;
                                 }
-
+                                
                                 // Para admin de OU: usar apenas sua OU com o papel selecionado
-                                userData.organizationalUnits = [{
-                                    ou: this.adminOu.trim(),
-                                    role: this.newUserRole || 'user'
+                                userData.organizationalUnits = [{ 
+                                    ou: this.adminOu.trim(), 
+                                    role: this.newUserRole || 'user' 
                                 }];
-
+                                
                                 console.log('🏢 Dados para admin OU:', {
                                     adminOu: this.adminOu,
                                     newUserRole: this.newUserRole,
@@ -1731,9 +1731,9 @@
                                     return;
                                 }
                             }
-
+                            
                             console.log('📤 Enviando dados:', userData);
-
+                            
                             const response = await fetch('/api/ldap/users', {
                                 method: 'POST',
                                 headers: {
@@ -1743,9 +1743,9 @@
                                 },
                                 body: JSON.stringify(userData)
                             });
-
+                            
                             const data = await response.json();
-
+                            
                             if (data.success) {
                                 this.showNotification('Usuário criado com sucesso', 'success');
                                 this.showCreateUserModal = false;
@@ -1759,7 +1759,7 @@
                             this.showNotification('Erro ao criar usuário', 'error');
                         }
                     },
-
+                    
                     async createOu() {
                         try {
                             const response = await fetch('/api/ldap/organizational-units', {
@@ -1771,9 +1771,9 @@
                                 },
                                 body: JSON.stringify(this.newOu)
                             });
-
+                            
                             const data = await response.json();
-
+                            
                             if (data.success) {
                                 this.showNotification('Unidade organizacional criada com sucesso', 'success');
                                 this.showCreateOuModal = false;
@@ -1789,7 +1789,7 @@
                             this.showNotification('Erro ao criar unidade organizacional', 'error');
                         }
                     },
-
+                    
                     async logout() {
                         try {
                             await fetch('/logout', {
@@ -1805,22 +1805,22 @@
                             window.location.href = '/login';
                         }
                     },
-
+                    
                     openCreateUserModal() {
                         this.resetNewUser();
-
+                        
                         // Para admin de OU, verificar se adminOu está preenchida
                         if (this.isOuAdmin) {
                             console.log('🏢 Abrindo modal para admin OU. AdminOU atual:', this.adminOu);
-
+                            
                             if (!this.adminOu || this.adminOu.trim() === '') {
                                 console.warn('⚠️  adminOu vazia, tentando recarregar...');
-
+                                
                                 // Recarregar usuários e obter OU do admin
                                 this.loadUsers().then(async () => {
                                     await this.getAdminOu();
                                     console.log('🔄 Após recarregar, adminOu:', this.adminOu);
-
+                                    
                                     if (!this.adminOu || this.adminOu.trim() === '') {
                                         this.showNotification(
                                             'Erro: Não foi possível determinar sua OU. Recarregue a página.',
@@ -1841,7 +1841,7 @@
                             this.showCreateUserModal = true;
                         }
                     },
-
+                    
                     resetNewUser() {
                         this.newUser = {
                             uid: '',
@@ -1856,27 +1856,27 @@
                                 role: 'user'
                             }]
                         };
-
+                        
                         // Para admin de OU, resetar também o papel selecionado
                         if (this.isOuAdmin) {
                             this.newUserRole = 'user';
                         }
                     },
-
+                    
                     resetNewOu() {
                         this.newOu = {
                             ou: '',
                             description: ''
                         };
                     },
-
+                    
                     showNotification(message, type = 'success') {
                         this.notification = {
                             show: true,
                             message,
                             type
                         };
-
+                        
                         setTimeout(() => {
                             this.notification.show = false;
                         }, 3000);
@@ -1984,17 +1984,17 @@
                         try {
                             const response = await fetch(
                                 `/api/ldap/organizational-units/${encodeURIComponent(this.editOuData.ou)}`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Content-Type': 'application/json',
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
                                             .getAttribute('content')
-                                    },
-                                    body: JSON.stringify({
-                                        ou: this.editOuData.ou,
-                                        description: this.editOuData.description
-                                    })
-                                });
+                                },
+                                body: JSON.stringify({
+                                    ou: this.editOuData.ou,
+                                    description: this.editOuData.description
+                                })
+                            });
                             const data = await response.json();
                             if (data.success) {
                                 this.showNotification('Unidade organizacional atualizada com sucesso',
@@ -2020,20 +2020,20 @@
                             console.log('🔍 Iniciando getAdminOu...');
                             console.log('📋 Total de usuários carregados:', this.users.length);
                             console.log('🔑 USER_UID atual:', window.USER_UID);
-
+                            
                             // Resetar adminOu no início
                             this.adminOu = '';
-
+                            
                             // Verificar se USER_UID está definido
                             if (!window.USER_UID) {
                                 console.error('❌ window.USER_UID não está definido!');
                                 return;
                             }
-
+                            
                             // Obtém a OU do admin a partir dos usuários carregados
                             const currentUser = this.users.find(u => u.uid === window.USER_UID);
                             console.log('👤 Usuário atual encontrado:', currentUser ? 'Sim' : 'Não');
-
+                            
                             if (!currentUser) {
                                 console.warn(
                                     '⚠️  Usuário atual não encontrado na lista. Tentando buscar direto na API...'
@@ -2041,15 +2041,15 @@
                                 await this.loadCurrentUserFromApi();
                                 return;
                             }
-
+                            
                             console.log('🏢 OUs do usuário:', currentUser.organizationalUnits);
-
+                            
                             if (!currentUser.organizationalUnits || currentUser.organizationalUnits.length ===
                                 0) {
                                 console.error('❌ Usuário não tem OUs definidas!');
                                 return;
                             }
-
+                            
                             // Buscar OU com role admin
                             const adminOuEntry = currentUser.organizationalUnits.find(unit => {
                                 const role = typeof unit === 'string' ? 'user' : (unit.role || 'user');
@@ -2058,7 +2058,7 @@
                                 );
                                 return role === 'admin';
                             });
-
+                            
                             if (adminOuEntry) {
                                 this.adminOu = typeof adminOuEntry === 'string' ? adminOuEntry : adminOuEntry
                                     .ou;
@@ -2070,26 +2070,26 @@
                                 this.adminOu = typeof firstOu === 'string' ? firstOu : firstOu.ou;
                                 console.log('🔄 Usando primeira OU como fallback:', this.adminOu);
                             }
-
+                            
                             // Validação final
                             if (!this.adminOu || this.adminOu.trim() === '') {
                                 console.error('❌ adminOu continua vazia após processamento!');
                             } else {
                                 console.log('✅ OU do Admin definida com sucesso:', this.adminOu);
                             }
-
+                            
                         } catch (error) {
                             console.error('❌ Erro ao obter OU do admin:', error);
                         }
                     },
-
+                    
                     /**
                      * Busca dados do usuário atual diretamente da API
                      */
                     async loadCurrentUserFromApi() {
                         try {
                             console.log('🌐 Buscando usuário atual na API...');
-
+                            
                             const response = await fetch('/api/ldap/users', {
                                 method: 'GET',
                                 headers: {
@@ -2098,14 +2098,14 @@
                                         .getAttribute('content')
                                 }
                             });
-
+                            
                             if (!response.ok) {
                                 throw new Error(`HTTP ${response.status}`);
                             }
-
+                            
                             const data = await response.json();
                             console.log('📥 Dados recebidos da API:', data);
-
+                            
                             if (data.success && data.users) {
                                 const currentUser = data.users.find(u => u.uid === window.USER_UID);
                                 if (currentUser && currentUser.organizationalUnits && currentUser
@@ -2115,7 +2115,7 @@
                                             'user');
                                         return role === 'admin';
                                     });
-
+                                    
                                     if (adminOuEntry) {
                                         this.adminOu = typeof adminOuEntry === 'string' ? adminOuEntry :
                                             adminOuEntry.ou;
@@ -2266,9 +2266,9 @@
                                         'Content-Type': 'application/json',
                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
                                             .getAttribute('content')
-                                    },
-                                    body: JSON.stringify(payload)
-                                });
+                                },
+                                body: JSON.stringify(payload)
+                            });
                             const data = await resp.json();
                             if (!data.success) {
                                 this.profileError = data.message || 'Erro ao salvar perfil';
@@ -2286,7 +2286,7 @@
                                         body: JSON.stringify({
                                             userPassword: this.profilePassword
                                         })
-                                    });
+                                });
                                 const dataPwd = await respPwd.json();
                                 if (!dataPwd.success) {
                                     this.profileError = dataPwd.message || 'Erro ao alterar senha';
@@ -2310,7 +2310,7 @@
                             `${a}.${b}` : `${a}`);
                         this.profile.employeeNumber = formatted;
                     },
-
+                    
                     isUserRoot(user) {
                         // Verifica se o usuário tem employeeType 'root' em alguma de suas organizationalUnits
                         if (Array.isArray(user.organizationalUnits)) {
