@@ -260,27 +260,17 @@ class LdapUserController extends Controller
                 return is_string($i) ? $i : ($i['ou'] ?? null);
             })->filter();
 
-            // Debug: Log para entender o problema
-            \Log::info('Verificando duplicatas de usuário', [
-                'uid' => $request->uid,
-                'existing_entries_count' => $existingEntries->count(),
-                'units_input' => $unitsInput->toArray(),
-                'existing_ous' => $existingEntries->map(fn($e) => $this->extractOu($e))->toArray()
-            ]);
-
             foreach ($existingEntries as $entry) {
                 $existingOu = strtolower($this->extractOu($entry) ?? '');
-                \Log::info('Comparando organizações', [
-                    'existing_ou' => $existingOu,
-                    'input_ous' => $unitsInput->map(fn($ou) => strtolower($ou))->toArray(),
-                    'contains' => $unitsInput->contains(fn($ou) => strtolower($ou) === $existingOu)
-                ]);
                 
-                if ($unitsInput->contains(fn($ou) => strtolower($ou) === $existingOu)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "Usuário já existe na organização {$existingOu}"
-                    ], 422);
+                // Verificar se alguma das organizações solicitadas já tem esse usuário
+                foreach ($unitsInput as $inputOu) {
+                    if (strtolower($inputOu) === $existingOu) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Usuário já existe na organização {$existingOu}"
+                        ], 422);
+                    }
                 }
             }
 
@@ -288,12 +278,14 @@ class LdapUserController extends Controller
             $cpfDigits = preg_replace('/\D+/', '', (string) $request->employeeNumber);
             $request->merge(['employeeNumber' => $cpfDigits]);
 
-            // Verificar se o CPF já existe
-            $existingEmployee = LdapUserModel::where('employeeNumber', $cpfDigits)->first();
+            // Verificar se o CPF já existe para um usuário diferente
+            $existingEmployee = LdapUserModel::where('employeeNumber', $cpfDigits)
+                ->where('uid', '!=', $request->uid)
+                ->first();
             if ($existingEmployee) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'CPF já cadastrado'
+                    'message' => 'CPF já cadastrado para outro usuário'
                 ], 422);
             }
 
