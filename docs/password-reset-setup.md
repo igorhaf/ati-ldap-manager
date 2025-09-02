@@ -7,14 +7,14 @@ Fluxo hospedado em `contas.trocasenha.sei.pe.gov.br`.
 Adicione ao `.env`:
 
 ```env
-# SMTP para envio de e-mails de redefinição
+# SMTP para envio de e-mails de redefinição (Produção)
 MAIL_MAILER=smtp
-MAIL_HOST=smtp.seu_provedor.com
-MAIL_PORT=587
-MAIL_USERNAME=usuario
-MAIL_PASSWORD=senha
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="nao-responder@sei.pe.gov.br"
+MAIL_HOST=200.238.112.200
+MAIL_PORT=25
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="noreply@sei.pe.gov.br"
 MAIL_FROM_NAME="SEI Contas"
 
 # Captcha (mews/captcha - local, sem dependências externas)
