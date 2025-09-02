@@ -37,8 +37,8 @@ class ResetPasswordController extends Controller
             return redirect()->route('password.forgot')->withErrors(['email' => 'Link inválido ou expirado.']);
         }
 
-        // Encontrar usuário no LDAP pelo e-mail salvo
-        $user = \App\Ldap\LdapUserModel::where('mail', strtolower($record->email))->first();
+        // Encontrar usuário no LDAP pelo e-mail de redirecionamento salvo (campo description)
+        $user = \App\Ldap\LdapUserModel::where('description', strtolower($record->email))->first();
         if (!$user) {
             return redirect()->route('password.forgot')->withErrors(['email' => 'E-mail não encontrado.']);
         }

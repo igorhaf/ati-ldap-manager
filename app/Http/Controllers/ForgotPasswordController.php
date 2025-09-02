@@ -22,8 +22,8 @@ class ForgotPasswordController extends Controller
             'captcha' => ['required', 'captcha'],
         ]);
 
-        // Verificar existência do e-mail no LDAP
-        $user = \App\Ldap\LdapUserModel::where('mail', strtolower($validated['email']))->first();
+        // Verificar existência do e-mail de redirecionamento no LDAP (campo description)
+        $user = \App\Ldap\LdapUserModel::where('description', strtolower($validated['email']))->first();
 
         if ($user) {
             $plainToken = $service->createTokenForEmail($validated['email']);
