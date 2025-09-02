@@ -17,9 +17,8 @@ MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS="nao-responder@sei.pe.gov.br"
 MAIL_FROM_NAME="SEI Contas"
 
-# reCAPTCHA (Google)
-RECAPTCHA_SITE_KEY=SEU_SITE_KEY
-RECAPTCHA_SECRET_KEY=SEU_SECRET_KEY
+# Captcha (mews/captcha - local, sem dependências externas)
+CAPTCHA_DISABLE=false
 ```
 
 ## DNS e Domínio
@@ -37,9 +36,9 @@ php artisan migrate
 
 ## Fluxo
 
-1. `https://contas.trocasenha.sei.pe.gov.br/` → formulário de e-mail + reCAPTCHA.
+1. `https://contas.trocasenha.sei.pe.gov.br/` → formulário de e-mail + captcha.
 2. Envio gera token único (hash salvo, expira) e e-mail com link.
-3. `https://contas.trocasenha.sei.pe.gov.br/{token}` → definir nova senha + reCAPTCHA.
+3. `https://contas.trocasenha.sei.pe.gov.br/{token}` → definir nova senha + captcha.
 4. Senha atualizada no LDAP, token invalidado, tela de sucesso.
 
 ## Segurança

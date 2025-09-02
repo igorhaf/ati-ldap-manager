@@ -31,26 +31,21 @@
                 <input type="password" name="password_confirmation" minlength="8" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
-                @if (env('RECAPTCHA_SITE_KEY'))
-                    <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}"></div>
-                @else
-                    <div class="border border-gray-300 rounded p-3 text-sm text-gray-600 bg-gray-50">
-                        reCAPTCHA de exemplo (dev): marque a caixa para continuar
+                <label class="block text-sm font-medium text-gray-700 mb-1">Código de verificação</label>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <input type="text" name="captcha" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Digite o código">
                     </div>
-                    <label class="mt-2 flex items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" class="h-4 w-4 border-gray-300 rounded" required>
-                        Não sou um robô (exemplo)
-                    </label>
-                    <input type="hidden" name="g-recaptcha-response" value="mock">
-                @endif
+                    <div class="flex-shrink-0">
+                        {!! captcha_img('flat') !!}
+                    </div>
+                </div>
             </div>
             <button type="submit" class="w-full py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700">Salvar nova senha</button>
         </form>
     </div>
 
-    @if (env('RECAPTCHA_SITE_KEY'))
-        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    @endif
+
 </body>
 </html>
 

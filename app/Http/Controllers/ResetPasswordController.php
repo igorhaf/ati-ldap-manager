@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\PasswordResetService;
-use App\Services\RecaptchaVerifier;
+
 use App\Utils\LdapUtils;
 
 class ResetPasswordController extends Controller
@@ -22,22 +22,15 @@ class ResetPasswordController extends Controller
         return view('auth.reset-password', ['token' => $token]);
     }
 
-    public function reset(Request $request, PasswordResetService $service, RecaptchaVerifier $captcha, string $token)
+    public function reset(Request $request, PasswordResetService $service, string $token)
     {
         if (!$this->isValidTokenFormat($token)) {
             return redirect()->route('password.forgot')->withErrors(['email' => 'Link inválido ou expirado.']);
         }
         $validated = $request->validate([
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'g-recaptcha-response' => ['nullable', 'string'],
+            'captcha' => ['required', 'captcha'],
         ]);
-
-        if (env('RECAPTCHA_SECRET_KEY')) {
-            $captchaOk = $captcha->verify($validated['g-recaptcha-response'] ?? '', $request->ip());
-            if (!$captchaOk) {
-                return back()->withErrors(['password' => 'Falha na verificação do reCAPTCHA.'])->withInput();
-            }
-        }
 
         $record = $service->findValidByToken($token);
         if (!$record) {
