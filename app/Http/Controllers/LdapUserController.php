@@ -260,8 +260,22 @@ class LdapUserController extends Controller
                 return is_string($i) ? $i : ($i['ou'] ?? null);
             })->filter();
 
+            // Debug: Log para entender o problema
+            \Log::info('Verificando duplicatas de usuário', [
+                'uid' => $request->uid,
+                'existing_entries_count' => $existingEntries->count(),
+                'units_input' => $unitsInput->toArray(),
+                'existing_ous' => $existingEntries->map(fn($e) => $this->extractOu($e))->toArray()
+            ]);
+
             foreach ($existingEntries as $entry) {
                 $existingOu = strtolower($this->extractOu($entry) ?? '');
+                \Log::info('Comparando organizações', [
+                    'existing_ou' => $existingOu,
+                    'input_ous' => $unitsInput->map(fn($ou) => strtolower($ou))->toArray(),
+                    'contains' => $unitsInput->contains(fn($ou) => strtolower($ou) === $existingOu)
+                ]);
+                
                 if ($unitsInput->contains(fn($ou) => strtolower($ou) === $existingOu)) {
                     return response()->json([
                         'success' => false,
