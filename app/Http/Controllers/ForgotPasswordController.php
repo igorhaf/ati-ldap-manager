@@ -24,12 +24,12 @@ class ForgotPasswordController extends Controller
 
         \Log::info('Password Reset - Iniciando processo', [
             'email' => $validated['email'],
-            'mailer' => config('mail.default'),
-            'smtp_host' => config('mail.mailers.smtp.host'),
-            'smtp_port' => config('mail.mailers.smtp.port'),
-            'smtp_encryption' => config('mail.mailers.smtp.encryption'),
-            'from_address' => config('mail.from.address'),
-            'from_name' => config('mail.from.name')
+            'mailer' => env('MAIL_MAILER'),
+            'smtp_host' => env('MAIL_HOST'),
+            'smtp_port' => env('MAIL_PORT'),
+            'smtp_encryption' => env('MAIL_ENCRYPTION'),
+            'from_address' => env('MAIL_FROM_ADDRESS'),
+            'from_name' => env('MAIL_FROM_NAME')
         ]);
 
         // Verificar existência do e-mail de redirecionamento no LDAP (campo description)
@@ -85,18 +85,18 @@ class ForgotPasswordController extends Controller
             $result = "✅ E-mail enviado com sucesso para {$validated['test_email']}";
             \Log::info('Teste de e-mail realizado', [
                 'email' => $validated['test_email'],
-                'mailer' => config('mail.default'),
-                'smtp_host' => config('mail.mailers.smtp.host'),
-                'smtp_port' => config('mail.mailers.smtp.port')
+                'mailer' => env('MAIL_MAILER'),
+                'smtp_host' => env('MAIL_HOST'),
+                'smtp_port' => env('MAIL_PORT')
             ]);
         } catch (\Exception $e) {
             $result = "❌ Erro ao enviar e-mail: " . $e->getMessage();
             \Log::error('Erro no teste de e-mail', [
                 'email' => $validated['test_email'],
                 'error' => $e->getMessage(),
-                'mailer' => config('mail.default'),
-                'smtp_host' => config('mail.mailers.smtp.host'),
-                'smtp_port' => config('mail.mailers.smtp.port')
+                'mailer' => env('MAIL_MAILER'),
+                'smtp_host' => env('MAIL_HOST'),
+                'smtp_port' => env('MAIL_PORT')
             ]);
         }
 

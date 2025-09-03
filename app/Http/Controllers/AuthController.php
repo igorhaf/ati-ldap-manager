@@ -269,8 +269,8 @@ class AuthController extends Controller
                 'uid' => $credentials['uid'],
                 'uid_length' => strlen($credentials['uid']),
                 'uid_type' => gettype($credentials['uid']),
-                'ldap_host' => config('ldap.connections.default.hosts.0'),
-                'ldap_base_dn' => config('ldap.connections.default.base_dn')
+                'ldap_host' => env('LDAP_HOST'),
+                'ldap_base_dn' => env('LDAP_BASE_DN')
             ]);
 
             // Garantir conexão LDAP inicializada no contexto web
@@ -279,8 +279,8 @@ class AuthController extends Controller
                 $defaultConn = \LdapRecord\Container::getDefaultConnection();
                 \Log::info('Login Web - Conexão LDAP', [
                     'connected' => $defaultConn ? $defaultConn->isConnected() : false,
-                    'host' => config('ldap.connections.default.hosts.0'),
-                    'base_dn' => config('ldap.connections.default.base_dn')
+                    'host' => env('LDAP_HOST'),
+                    'base_dn' => env('LDAP_BASE_DN')
                 ]);
             } catch (\Exception $e) {
                 \Log::warning('Login Web - Falha ao obter conexão LDAP', ['error' => $e->getMessage()]);
