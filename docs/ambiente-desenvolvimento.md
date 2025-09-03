@@ -59,13 +59,13 @@ docker-compose up -d
 - **PostgreSQL** - Servidor de produção
 
 **Serviços Remotos:**
-- **LDAP** - Servidor remoto (200.238.112.200)
+- **LDAP** - Servidor remoto (10.238.124.3)
 - **Email** - Servidor SMTP remoto (200.238.112.200:25)
 
 ### Configuração `.env.prod`:
 ```env
 # LDAP Remoto
-LDAP_HOST=200.238.112.200
+LDAP_HOST=10.238.124.3
 LDAP_USERNAME=cn=admin,dc=sei,dc=pe,dc=gov,dc=br
 LDAP_PASSWORD=admin
 LDAP_BASE_DN=dc=sei,dc=pe,dc=gov,dc=br
