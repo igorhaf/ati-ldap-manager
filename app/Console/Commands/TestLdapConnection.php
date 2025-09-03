@@ -56,7 +56,7 @@ class TestLdapConnection extends Command
         $this->info("─────────────────────────");
 
         $config = config('ldap.connections.default');
-        
+
         $this->line("🌐 Host: " . ($config['hosts'][0] ?? 'não definido'));
         $this->line("🔌 Porta: " . ($config['port'] ?? 'não definido'));
         $this->line("👤 Username: " . ($config['username'] ?? 'não definido'));
@@ -69,8 +69,14 @@ class TestLdapConnection extends Command
         // Verificar variáveis de ambiente
         $this->line("\n📋 Variáveis de Ambiente:");
         $envVars = [
-            'LDAP_HOST', 'LDAP_PORT', 'LDAP_USERNAME', 'LDAP_PASSWORD',
-            'LDAP_BASE_DN', 'LDAP_SSL', 'LDAP_TLS', 'LDAP_TIMEOUT'
+            'LDAP_HOST',
+            'LDAP_PORT',
+            'LDAP_USERNAME',
+            'LDAP_PASSWORD',
+            'LDAP_BASE_DN',
+            'LDAP_SSL',
+            'LDAP_TLS',
+            'LDAP_TIMEOUT'
         ];
 
         foreach ($envVars as $var) {
@@ -124,7 +130,7 @@ class TestLdapConnection extends Command
         // Se SSL/TLS habilitado, testar porta segura
         $useSSL = config('ldap.connections.default.use_ssl', false);
         $useTLS = config('ldap.connections.default.use_tls', false);
-        
+
         if ($useSSL && $port !== 636) {
             $this->warn("⚠️  SSL habilitado mas porta não é 636 (padrão LDAPS)");
         }
@@ -138,9 +144,9 @@ class TestLdapConnection extends Command
         try {
             // Tentar estabelecer conexão
             $this->line("🔗 Tentando estabelecer conexão LDAP...");
-            
+
             $connection = Container::getDefaultConnection();
-            
+
             // Teste básico de conexão
             if ($connection->isConnected()) {
                 $this->info("✅ Conexão LDAP estabelecida com sucesso");
@@ -155,7 +161,7 @@ class TestLdapConnection extends Command
             $this->line("🔐 Testando autenticação...");
             $username = config('ldap.connections.default.username');
             $password = config('ldap.connections.default.password');
-            
+
             if ($connection->auth()->attempt($username, $password)) {
                 $this->info("✅ Autenticação bem-sucedida");
             } else {
@@ -166,30 +172,28 @@ class TestLdapConnection extends Command
             // Teste básico de busca
             $this->line("🔍 Testando busca básica...");
             $baseDn = config('ldap.connections.default.base_dn');
-            
+
             $results = $connection->query()
                 ->setDn($baseDn)
                 ->whereEquals('objectClass', '*')
                 ->limit(1)
                 ->get();
 
-            if ($results->count() > 0) {
+            $count = is_array($results) ? count($results) : $results->count();
+            if ($count > 0) {
                 $this->info("✅ Busca básica funcionando");
-                $this->line("   Encontrados: " . $results->count() . " resultado(s)");
+                $this->line("   Encontrados: " . $count . " resultado(s)");
             } else {
                 $this->warn("⚠️  Busca retornou 0 resultados (pode ser normal)");
             }
-
         } catch (\LdapRecord\Auth\BindException $e) {
             $this->error("❌ Erro de autenticação LDAP:");
             $this->error("   " . $e->getMessage());
             $this->line("💡 Verifique username e password no .env");
-            
         } catch (\LdapRecord\ConnectionException $e) {
             $this->error("❌ Erro de conexão LDAP:");
             $this->error("   " . $e->getMessage());
             $this->line("💡 Verifique host, porta, SSL/TLS");
-            
         } catch (\Exception $e) {
             $this->error("❌ Erro geral:");
             $this->error("   " . $e->getMessage());
@@ -222,12 +226,12 @@ class TestLdapConnection extends Command
         // Verificar certificados SSL (se SSL/TLS habilitado)
         $useSSL = config('ldap.connections.default.use_ssl', false);
         $useTLS = config('ldap.connections.default.use_tls', false);
-        
+
         if ($useSSL || $useTLS) {
             $this->line("\n🔒 Verificação SSL/TLS:");
             $host = config('ldap.connections.default.hosts')[0];
             $port = $useSSL ? 636 : 389;
-            
+
             $context = stream_context_create([
                 "ssl" => [
                     "capture_peer_cert" => true,
@@ -235,7 +239,7 @@ class TestLdapConnection extends Command
                     "verify_peer_name" => false,
                 ]
             ]);
-            
+
             $stream = @stream_socket_client("ssl://{$host}:{$port}", $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $context);
             if ($stream) {
                 $this->info("   ✅ Conexão SSL/TLS estabelecida");
@@ -261,4 +265,4 @@ class TestLdapConnection extends Command
         $this->line("• Verifique logs do servidor LDAP");
         $this->line("• Considere aumentar LDAP_TIMEOUT se a rede for lenta");
     }
-} 
+}
