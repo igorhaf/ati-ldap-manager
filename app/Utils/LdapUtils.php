@@ -28,16 +28,30 @@ class LdapUtils
      */
     public static function verifySsha(string $password, string $hash): bool
     {
+        // Debug temporário
+        \Log::info('SSHA Debug', [
+            'password_length' => strlen($password),
+            'hash' => $hash,
+            'hash_length' => strlen($hash)
+        ]);
+
         // Verificar se é um hash SSHA
         if (!preg_match('/^\{SSHA\}(.+)$/', $hash, $matches)) {
+            \Log::warning('SSHA: Hash não está no formato SSHA', ['hash' => $hash]);
             return false;
         }
 
         // Decodificar o hash
         $decoded = base64_decode($matches[1]);
         if ($decoded === false) {
+            \Log::warning('SSHA: Falha ao decodificar base64');
             return false;
         }
+
+        \Log::info('SSHA: Hash decodificado', [
+            'decoded_length' => strlen($decoded),
+            'expected_length' => 24 // 20 bytes SHA1 + 4 bytes salt
+        ]);
 
         // Extrair o salt (últimos 4 bytes)
         $salt = substr($decoded, -4);
@@ -46,7 +60,15 @@ class LdapUtils
         // Calcular o hash da senha + salt
         $calculatedHash = sha1($password . $salt, true);
 
+        // Debug da comparação
+        \Log::info('SSHA: Comparação de hashes', [
+            'stored_hash_hex' => bin2hex($hashWithoutSalt),
+            'calculated_hash_hex' => bin2hex($calculatedHash),
+            'salt_hex' => bin2hex($salt),
+            'match' => hash_equals($hashWithoutSalt, $calculatedHash)
+        ]);
+
         // Comparar os hashes
         return hash_equals($hashWithoutSalt, $calculatedHash);
     }
-} 
+}
