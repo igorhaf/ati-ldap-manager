@@ -1444,9 +1444,16 @@
                     },
                     'newUser.uid'(val) {
                         /* edição manual */
+                        this.updateMailForSelectedOu();
                     },
                     'newUser.mail'(val) {
                         /* edição manual */
+                    },
+                    'newUser.organizationalUnits': {
+                        handler() {
+                            this.updateMailForSelectedOu();
+                        },
+                        deep: true
                     },
                     activeTab(newVal) {
                         if (newVal === 'logs' && this.canManageUsers) {
@@ -1458,9 +1465,9 @@
                     institutionalEmail(uid, ou) {
                         const sanitizedUid = (uid || '').trim().toLowerCase();
                         if (!sanitizedUid) return '';
-                        // Regra de domínio por organização: "<ou>.pe.gov.br" se existir organização; fallback para domínio padrão do usuário atual
+                        // Regra de domínio por organização: "<ou>.sei.pe.gov.br"
                         const normalizedOu = (ou || '').toString().trim().toLowerCase();
-                        const baseDomain = normalizedOu ? `${normalizedOu}.pe.gov.br` : (this.defaultEmailDomain || 'example.com');
+                        const baseDomain = normalizedOu ? `${normalizedOu}.sei.pe.gov.br` : 'sei.pe.gov.br';
                         return `${sanitizedUid}@${baseDomain}`;
                     },
                     suggestUidAndMail() {
@@ -1481,8 +1488,16 @@
                             this.newUser.uid = suggestedUser;
                         }
                         if (!this.mailManuallyEdited) {
-                            const domain = this.defaultEmailDomain || 'example.com';
-                            this.newUser.mail = `${suggestedUser}@${domain}`;
+                            // O campo mail será definido automaticamente quando uma OU for selecionada
+                            // através do método updateMailForSelectedOu()
+                            this.newUser.mail = '';
+                        }
+                    },
+                    updateMailForSelectedOu() {
+                        // Atualizar o campo mail baseado na primeira OU selecionada
+                        const firstSelectedOu = this.newUser.organizationalUnits.find(unit => unit.ou);
+                        if (firstSelectedOu && this.newUser.uid && !this.mailManuallyEdited) {
+                            this.newUser.mail = this.institutionalEmail(this.newUser.uid, firstSelectedOu.ou);
                         }
                     },
                     setOuFilter(ou) {

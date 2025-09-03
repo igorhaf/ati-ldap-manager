@@ -202,7 +202,7 @@ class LdapUserController extends Controller
                 'sn' => 'required|string|max:255',
                 'employeeNumber' => 'required|string|max:255',
                 'mail' => 'required|email',
-                'description' => 'nullable|email|max:255',
+                'description' => 'required|email|max:255',
                 'userPassword' => 'required|string|min:6',
                 'organizationalUnits' => 'array',
                 // Cada item pode ser string (organização) ou objeto {ou, role}
@@ -262,7 +262,7 @@ class LdapUserController extends Controller
 
             foreach ($existingEntries as $entry) {
                 $existingOu = strtolower($this->extractOu($entry) ?? '');
-                
+
                 // Verificar se alguma das organizações solicitadas já tem esse usuário
                 foreach ($unitsInput as $inputOu) {
                     if (strtolower($inputOu) === $existingOu) {
@@ -325,13 +325,11 @@ class LdapUserController extends Controller
                 $entry->setFirstAttribute('givenName',  $request->givenName);
                 $entry->setFirstAttribute('sn',         $request->sn);
                 $entry->setFirstAttribute('cn',         $request->givenName . ' ' . $request->sn);
-                $entry->setFirstAttribute('mail',       is_array($request->mail) ?
+                $entry->setFirstAttribute('mail', is_array($request->mail) ?
                     ($request->mail[0] ?? '') :
                     $request->mail);
                 $entry->setFirstAttribute('employeeNumber', $cpfDigits);
-                if ($request->filled('description')) {
-                    $entry->setFirstAttribute('description', $request->description);
-                }
+                $entry->setFirstAttribute('description', $request->description);
                 // Senha por organização: ativo (hash puro) / inativo (hash + '####')
                 $unitPassword = $hashedPassword;
                 if ($isActive === false) {
@@ -485,7 +483,7 @@ class LdapUserController extends Controller
                 'givenName' => 'sometimes|required|string|max:255',
                 'sn' => 'sometimes|required|string|max:255',
                 'mail' => 'sometimes|required|email',
-                'description' => 'sometimes|nullable|email|max:255',
+                'description' => 'sometimes|required|email|max:255',
                 'userPassword' => 'sometimes|nullable|string|min:6',
                 'organizationalUnits' => 'sometimes|array',
                 // aceitar string ou objeto {ou, role}
