@@ -234,10 +234,17 @@ class AuthController extends Controller
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
 
-        // Buscar usuário - lógica diferente para root vs outros usuários
+                // Buscar usuário - lógica diferente para root vs outros usuários
         if ($ou === 'admin') {
             // Para usuários root: buscar apenas pelo uid (estão na raiz do LDAP)
             $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
+            
+            \Log::info('Login Web - Busca com modelo', [
+                'uid' => $credentials['uid'],
+                'query' => 'LdapUserModel::where("uid", "' . $credentials['uid'] . '")->first()',
+                'user_found' => $user ? true : false,
+                'user_dn' => $user ? $user->getDn() : null
+            ]);
         } else {
             // Para outros usuários: usar busca robusta por OU
             $user = $this->findUserInOu($credentials['uid'], $ou);
