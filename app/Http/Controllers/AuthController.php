@@ -234,17 +234,39 @@ class AuthController extends Controller
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
 
-                // Buscar usuário - lógica diferente para root vs outros usuários
+        // Buscar usuário - lógica diferente para root vs outros usuários
         if ($ou === 'admin') {
             // Para usuários root: buscar apenas pelo uid (estão na raiz do LDAP)
-            $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
-            
-            \Log::info('Login Web - Busca com modelo', [
+
+            // Debug: vamos testar exatamente como o comando faz
+            \Log::info('Login Web - Antes da busca', [
                 'uid' => $credentials['uid'],
-                'query' => 'LdapUserModel::where("uid", "' . $credentials['uid'] . '")->first()',
-                'user_found' => $user ? true : false,
-                'user_dn' => $user ? $user->getDn() : null
+                'uid_length' => strlen($credentials['uid']),
+                'uid_type' => gettype($credentials['uid']),
+                'ldap_host' => config('ldap.connections.default.hosts.0'),
+                'ldap_base_dn' => config('ldap.connections.default.base_dn')
             ]);
+
+            $user = \App\Ldap\LdapUserModel::where('uid', $credentials['uid'])->first();
+
+            \Log::info('Login Web - Depois da busca', [
+                'uid' => $credentials['uid'],
+                'user_found' => $user ? true : false,
+                'user_dn' => $user ? $user->getDn() : null,
+                'user_attributes' => $user ? $user->getAttributes() : null
+            ]);
+
+            // Se não encontrou, vamos tentar uma busca mais ampla
+            if (!$user) {
+                \Log::info('Login Web - Tentando busca ampla...');
+                $allUsers = \App\Ldap\LdapUserModel::where('uid', 'like', '*')->limit(5)->get();
+                \Log::info('Login Web - Usuários encontrados na busca ampla', [
+                    'count' => $allUsers->count(),
+                    'users' => $allUsers->map(function ($u) {
+                        return ['uid' => $u->uid, 'dn' => $u->getDn()];
+                    })
+                ]);
+            }
         } else {
             // Para outros usuários: usar busca robusta por OU
             $user = $this->findUserInOu($credentials['uid'], $ou);
