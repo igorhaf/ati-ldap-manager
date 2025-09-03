@@ -11,10 +11,10 @@ class LdapUserModel extends LdapUser
      *
      * @var array
      */
+    // Usar apenas 'inetOrgPerson' para garantir que entradas como o usuário root
+    // (que podem não listar explicitamente 'person' / 'organizationalPerson')
+    // sejam retornadas nas buscas.
     public static array $objectClasses = [
-        'top',
-        'person',
-        'organizationalPerson',
         'inetOrgPerson',
     ];
 
@@ -23,8 +23,9 @@ class LdapUserModel extends LdapUser
      *
      * @var array
      */
+    // Garantir que 'mail' seja tratado como string, conforme regra do projeto
     protected array $casts = [
-        'mail' => 'array',
+        'mail' => 'string',
     ];
 
     // Removidos os atributos customizados que causavam loop infinito
@@ -50,4 +51,4 @@ class LdapUserModel extends LdapUser
         $this->setFirstAttribute('sn', $parts[1] ?? '');
         $this->setFirstAttribute('cn', $value);
     }
-} 
+}

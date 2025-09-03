@@ -283,6 +283,52 @@ class AuthController extends Controller
                 } catch (\Exception $e) {
                     \Log::error('Login Web - Erro na busca ampla', ['error' => $e->getMessage()]);
                 }
+
+                // Fallback: busca crua via conexão LDAP (sem escopos de modelo)
+                try {
+                    \Log::info('Login Web - Fallback raw query (root) iniciada');
+                    $connection = \LdapRecord\Container::getConnection('default');
+                    $results = $connection->query()
+                        ->setDn(config('ldap.connections.default.base_dn'))
+                        ->whereEquals('uid', $credentials['uid'])
+                        ->limit(1)
+                        ->get();
+
+                    $count = is_array($results) ? count($results) : (method_exists($results, 'count') ? $results->count() : 0);
+                    \Log::info('Login Web - Fallback raw query (root) resultados', [
+                        'results_count' => $count,
+                    ]);
+
+                    if ($count > 0) {
+                        $entry = is_array($results) ? $results[0] : $results->first();
+                        $dn = is_array($entry) && isset($entry['dn']) ? $entry['dn'] : (is_object($entry) && isset($entry['dn']) ? $entry['dn'] : null);
+
+                        $fallbackUser = new \App\Ldap\LdapUserModel();
+                        if (is_array($entry)) {
+                            $fallbackUser->setRawAttributes($entry);
+                        } elseif (is_object($entry) && method_exists($entry, 'getAttributes')) {
+                            $fallbackUser->setRawAttributes($entry->getAttributes());
+                        }
+                        if ($dn) {
+                            $fallbackUser->setDn($dn);
+                        }
+
+                        // Validar se possui uid e userPassword
+                        $hasUid = (bool) $fallbackUser->getFirstAttribute('uid');
+                        $hasPass = (bool) $fallbackUser->getFirstAttribute('userPassword');
+                        \Log::info('Login Web - Fallback raw query (root) mapeado para modelo', [
+                            'dn' => $fallbackUser->getDn(),
+                            'has_uid' => $hasUid,
+                            'has_userPassword' => $hasPass,
+                        ]);
+
+                        if ($hasUid) {
+                            $user = $fallbackUser;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Login Web - Fallback raw query (root) falhou', ['error' => $e->getMessage()]);
+                }
             }
         } else {
             // Para outros usuários: usar busca robusta por OU
