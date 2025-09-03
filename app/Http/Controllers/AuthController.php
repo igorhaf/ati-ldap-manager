@@ -259,13 +259,17 @@ class AuthController extends Controller
             // Se não encontrou, vamos tentar uma busca mais ampla
             if (!$user) {
                 \Log::info('Login Web - Tentando busca ampla...');
-                $allUsers = \App\Ldap\LdapUserModel::where('uid', 'like', '*')->limit(5)->get();
-                \Log::info('Login Web - Usuários encontrados na busca ampla', [
-                    'count' => $allUsers->count(),
-                    'users' => $allUsers->map(function ($u) {
-                        return ['uid' => $u->uid, 'dn' => $u->getDn()];
-                    })
-                ]);
+                try {
+                    $allUsers = \App\Ldap\LdapUserModel::whereHas('uid')->limit(5)->get();
+                    \Log::info('Login Web - Usuários encontrados na busca ampla', [
+                        'count' => $allUsers->count(),
+                        'users' => $allUsers->map(function ($u) {
+                            return ['uid' => $u->uid, 'dn' => $u->getDn()];
+                        })
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Login Web - Erro na busca ampla', ['error' => $e->getMessage()]);
+                }
             }
         } else {
             // Para outros usuários: usar busca robusta por OU
