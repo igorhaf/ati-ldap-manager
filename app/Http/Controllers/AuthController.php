@@ -169,12 +169,38 @@ class AuthController extends Controller
             if (!$connection) {
                 \Log::info('AuthController: Inicializando LdapRecord Container');
 
+                // Config carregada (pode estar em cache)
                 $config = config('ldap.connections.default');
-                $connection = new \LdapRecord\Connection($config);
-                \LdapRecord\Container::addConnection($connection, 'default');
-                \LdapRecord\Container::setDefaultConnection('default');
 
-                \Log::info('AuthController: LdapRecord Container inicializado');
+                // Overrides a partir do .env para evitar host/base_dn "ldap" / "dc=example,dc=com"
+                $envConfig = [
+                    'hosts' => [env('LDAP_HOST', $config['hosts'][0] ?? '127.0.0.1')],
+                    'username' => env('LDAP_USERNAME', $config['username'] ?? null),
+                    'password' => env('LDAP_PASSWORD', $config['password'] ?? null),
+                    'port' => (int) env('LDAP_PORT', $config['port'] ?? 389),
+                    'base_dn' => env('LDAP_BASE_DN', $config['base_dn'] ?? ''),
+                    'timeout' => (int) env('LDAP_TIMEOUT', $config['timeout'] ?? 10),
+                    'use_ssl' => filter_var(env('LDAP_SSL', $config['use_ssl'] ?? false), FILTER_VALIDATE_BOOL),
+                    'use_tls' => filter_var(env('LDAP_TLS', $config['use_tls'] ?? false), FILTER_VALIDATE_BOOL),
+                ];
+
+                // Mesclar preservando demais chaves
+                $config = array_merge($config ?? [], $envConfig);
+
+                \Log::info('AuthController: Config LDAP (após overrides)', [
+                    'host' => $config['hosts'][0] ?? null,
+                    'base_dn' => $config['base_dn'] ?? null,
+                ]);
+
+                // Criar nova conexão e marcar como default (nome distinto para evitar colisão)
+                $runtime = new \LdapRecord\Connection($config);
+                \LdapRecord\Container::addConnection($runtime, 'runtime');
+                \LdapRecord\Container::setDefaultConnection('runtime');
+
+                \Log::info('AuthController: LdapRecord Container inicializado', [
+                    'host' => $config['hosts'][0] ?? null,
+                    'base_dn' => $config['base_dn'] ?? null,
+                ]);
             }
         } catch (\Exception $e) {
             \Log::warning('AuthController: Erro ao inicializar LdapRecord', [

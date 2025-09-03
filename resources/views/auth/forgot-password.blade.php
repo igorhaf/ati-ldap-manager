@@ -42,6 +42,23 @@
             </div>
             <button type="submit" class="w-full py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700">Enviar link</button>
         </form>
+        
+        <!-- Teste de envio de e-mail -->
+        <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <h3 class="text-sm font-medium text-yellow-800 mb-2">🧪 Teste de E-mail</h3>
+            <form method="POST" action="{{ route('password.test-email') }}" class="space-y-3">
+                @csrf
+                <div>
+                    <input type="email" name="test_email" placeholder="E-mail para teste" required class="w-full px-3 py-2 border border-yellow-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm">
+                </div>
+                <button type="submit" class="w-full py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm">Testar Envio</button>
+            </form>
+            @if (session('test_result'))
+                <div class="mt-2 p-2 bg-white rounded text-xs">
+                    <strong>Resultado:</strong> {{ session('test_result') }}
+                </div>
+            @endif
+        </div>
         <p class="text-xs text-gray-500 mt-4">Você receberá um link para redefinir sua senha, caso o e-mail exista.</p>
     </div>
 

@@ -34,4 +34,35 @@ class ForgotPasswordController extends Controller
         // Mensagem genérica para evitar enumeração de usuários
         return back()->with('status', 'Se o e-mail existir, enviamos um link para redefinição.');
     }
+
+    public function testEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'test_email' => ['required', 'email'],
+        ]);
+
+        try {
+            $testUrl = 'https://contas.trocasenha.sei.pe.gov.br/TESTE123';
+            Mail::to($validated['test_email'])->send(new PasswordResetLink($testUrl));
+
+            $result = "✅ E-mail enviado com sucesso para {$validated['test_email']}";
+            \Log::info('Teste de e-mail realizado', [
+                'email' => $validated['test_email'],
+                'mailer' => config('mail.default'),
+                'smtp_host' => config('mail.mailers.smtp.host'),
+                'smtp_port' => config('mail.mailers.smtp.port')
+            ]);
+        } catch (\Exception $e) {
+            $result = "❌ Erro ao enviar e-mail: " . $e->getMessage();
+            \Log::error('Erro no teste de e-mail', [
+                'email' => $validated['test_email'],
+                'error' => $e->getMessage(),
+                'mailer' => config('mail.default'),
+                'smtp_host' => config('mail.mailers.smtp.host'),
+                'smtp_port' => config('mail.mailers.smtp.port')
+            ]);
+        }
+
+        return back()->with('test_result', $result);
+    }
 }
