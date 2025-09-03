@@ -22,13 +22,50 @@ class ForgotPasswordController extends Controller
             'captcha' => ['required', 'captcha'],
         ]);
 
+        \Log::info('Password Reset - Iniciando processo', [
+            'email' => $validated['email'],
+            'mailer' => config('mail.default'),
+            'smtp_host' => config('mail.mailers.smtp.host'),
+            'smtp_port' => config('mail.mailers.smtp.port'),
+            'smtp_encryption' => config('mail.mailers.smtp.encryption'),
+            'from_address' => config('mail.from.address'),
+            'from_name' => config('mail.from.name')
+        ]);
+
         // Verificar existência do e-mail de redirecionamento no LDAP (campo description)
         $user = \App\Ldap\LdapUserModel::where('description', strtolower($validated['email']))->first();
 
         if ($user) {
-            $plainToken = $service->createTokenForEmail($validated['email']);
-            $resetUrl = 'https://contas.trocasenha.sei.pe.gov.br/' . $plainToken;
-            Mail::to($validated['email'])->send(new PasswordResetLink($resetUrl));
+            \Log::info('Password Reset - Usuário encontrado no LDAP', [
+                'email' => $validated['email'],
+                'user_dn' => $user->getDn()
+            ]);
+
+            try {
+                $plainToken = $service->createTokenForEmail($validated['email']);
+                $resetUrl = 'https://contas.trocasenha.sei.pe.gov.br/' . $plainToken;
+
+                \Log::info('Password Reset - Enviando e-mail', [
+                    'email' => $validated['email'],
+                    'reset_url' => $resetUrl
+                ]);
+
+                Mail::to($validated['email'])->send(new PasswordResetLink($resetUrl));
+
+                \Log::info('Password Reset - E-mail enviado com sucesso', [
+                    'email' => $validated['email']
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Password Reset - Erro ao enviar e-mail', [
+                    'email' => $validated['email'],
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+        } else {
+            \Log::info('Password Reset - Usuário não encontrado no LDAP', [
+                'email' => $validated['email']
+            ]);
         }
 
         // Mensagem genérica para evitar enumeração de usuários
