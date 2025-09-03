@@ -243,17 +243,37 @@ class AuthController extends Controller
             $user = $this->findUserInOu($credentials['uid'], $ou);
         }
 
+        \Log::info('Login Web - Busca de usuário', [
+            'uid' => $credentials['uid'],
+            'ou' => $ou,
+            'user_found' => $user ? true : false,
+            'user_dn' => $user ? $user->getDn() : null
+        ]);
+
         if (!$user) {
             if ($ou === 'admin') {
+                \Log::warning('Login Web - Usuário root não encontrado', ['uid' => $credentials['uid']]);
                 return back()->withErrors(['uid' => 'Usuário root não encontrado.'])->onlyInput('uid');
             } else {
+                \Log::warning('Login Web - Usuário não encontrado na OU', ['uid' => $credentials['uid'], 'ou' => $ou]);
                 return back()->withErrors(['uid' => "Usuário não encontrado para a OU '{$ou}'."])->onlyInput('uid');
             }
         }
 
         // Verificar senha usando SSHA
         $storedPassword = $user->getFirstAttribute('userPassword');
+        \Log::info('Login Web - Verificação de senha', [
+            'uid' => $credentials['uid'],
+            'stored_password_exists' => !empty($storedPassword),
+            'stored_password_prefix' => substr($storedPassword ?? '', 0, 10),
+            'password_length' => strlen($credentials['password'])
+        ]);
+
         if (!\App\Utils\LdapUtils::verifySsha($credentials['password'], $storedPassword)) {
+            \Log::warning('Login Web - Senha inválida', [
+                'uid' => $credentials['uid'],
+                'stored_hash_prefix' => substr($storedPassword ?? '', 0, 15)
+            ]);
             return back()->withErrors(['uid' => 'Credenciais inválidas'])->onlyInput('uid');
         }
 
