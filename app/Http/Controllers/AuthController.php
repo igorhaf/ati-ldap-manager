@@ -90,7 +90,7 @@ class AuthController extends Controller
             $user = \App\Ldap\LdapUserModel::where('uid', $uid)
                 ->where('ou', $ou)
                 ->first();
-            
+
             if ($user) {
                 \Log::info('AuthController: Usuário encontrado via método 1 (atributo ou)', [
                     'dn' => $user->getDn()
@@ -105,7 +105,7 @@ class AuthController extends Controller
         try {
             $expectedDn = "uid={$uid},ou={$ou},{$baseDn}";
             $user = \App\Ldap\LdapUserModel::find($expectedDn);
-            
+
             if ($user) {
                 \Log::info('AuthController: Usuário encontrado via método 2 (DN direto)', [
                     'dn' => $user->getDn()
@@ -121,7 +121,7 @@ class AuthController extends Controller
             $user = \App\Ldap\LdapUserModel::in("ou={$ou},{$baseDn}")
                 ->where('uid', $uid)
                 ->first();
-            
+
             if ($user) {
                 \Log::info('AuthController: Usuário encontrado via método 3 (base específica)', [
                     'dn' => $user->getDn()
@@ -135,7 +135,7 @@ class AuthController extends Controller
         // Método 4: Busca geral e filtragem por DN
         try {
             $users = \App\Ldap\LdapUserModel::where('uid', $uid)->get();
-            
+
             foreach ($users as $user) {
                 $dn = $user->getDn();
                 // Verificar se o DN contém a OU especificada
@@ -154,7 +154,7 @@ class AuthController extends Controller
             'uid' => $uid,
             'ou' => $ou
         ]);
-        
+
         return null;
     }
 
@@ -165,15 +165,15 @@ class AuthController extends Controller
     {
         try {
             $connection = \LdapRecord\Container::getDefaultConnection();
-            
+
             if (!$connection) {
                 \Log::info('AuthController: Inicializando LdapRecord Container');
-                
+
                 $config = config('ldap.connections.default');
                 $connection = new \LdapRecord\Connection($config);
                 \LdapRecord\Container::addConnection($connection, 'default');
                 \LdapRecord\Container::setDefaultConnection('default');
-                
+
                 \Log::info('AuthController: LdapRecord Container inicializado');
             }
         } catch (\Exception $e) {
@@ -192,20 +192,20 @@ class AuthController extends Controller
     {
         // Log do host recebido para debug
         \Log::info('AuthController: Host recebido', ['host' => $host]);
-        
+
         // Caso especial para usuários root
         if ($host === 'contas.sei.pe.gov.br') {
             \Log::info('AuthController: Detectado usuário root');
             return 'admin';
         }
-        
+
         // Para outras OUs: contas.moreno.sei.pe.gov.br => moreno
         if (preg_match('/contas\\.([a-z0-9-]+)\\.sei\\.pe\\.gov\\.br/i', $host, $matches)) {
             $ou = $matches[1];
             \Log::info('AuthController: OU extraída', ['ou' => $ou, 'host' => $host]);
             return $ou;
         }
-        
+
         \Log::warning('AuthController: Não foi possível extrair OU do host', ['host' => $host]);
         return null;
     }
@@ -219,7 +219,18 @@ class AuthController extends Controller
 
         $host = $this->getOriginalHost($request);
         $ou = $this->extractOuFromHost($host);
+
+        // Debug temporário
+        \Log::info('Login Web Debug', [
+            'uid' => $credentials['uid'],
+            'host_detected' => $host,
+            'ou_extracted' => $ou,
+            'request_host' => $request->getHost(),
+            'request_headers' => $request->headers->all()
+        ]);
+
         if (!$ou) {
+            \Log::warning('Login falhou: URL inválida', ['host' => $host]);
             return back()->withErrors(['uid' => 'URL inválida para login.'])->onlyInput('uid');
         }
 
@@ -294,16 +305,16 @@ class AuthController extends Controller
 
         if ($role === RoleResolver::ROLE_ROOT) {
             $host = $this->getOriginalHost($request);
-            
+
             if ($host !== 'contas.sei.pe.gov.br') {
                 if ($request->expectsJson()) {
                     abort(403, 'Usuários root só podem acessar via contas.sei.pe.gov.br');
                 }
-                
+
                 abort(403, 'Usuários root só podem acessar via contas.sei.pe.gov.br');
             }
         }
 
         return true;
     }
-} 
+}
